@@ -1,0 +1,201 @@
+import express from "express";
+
+import { Server, Socket } from "socket.io";
+import { updateUserStatus } from "../model/User.ts";
+
+import { createChat, getChatsbyUserId, getChatbyId } from "../model/Chat.ts";
+
+export const SOCKET_EVENTS = {
+  MESSAGE_HISTORY: "message_history", // no sue
+  NEW_MESSAGE: "new_message", // no use
+  USER_PRESENCE: "user_presence", // no use
+  USER_TYPING: "user_typing", // no use
+} as const;
+
+// =========================================================================
+// REST API ENDPOINTS FOR CHAT MANAGEMENT
+// =========================================================================
+
+/**
+ * @function getUserChats
+ * @param {express.Request} req - The Express request object containing the user session
+ * @param {express.Response} res - The Express response object used to send back the chat history channels
+ * @returns {Promise<void>} Sends a JSON list of all active chats for the authenticated user
+ * @description Retrieves all direct messages and group conversations linked to the authenticated user's ID from memory.
+ */
+export const getUserChats = async (
+  req: express.Request,
+  res: express.Response,
+) => {
+  // TODO: 1. Extract the `userId` from the current active session state.
+  // TODO: 2. Validate the identity token (if missing, respond immediately with a 401 Unauthorized status).
+  // TODO: 3. Query the data structures for all conversations mapped to the user by calling `getChatsByUserId(userId)`.
+  // TODO: 4. Respond with the compiled list of direct and group chat structures in JSON format alongside a 200 OK status.
+};
+
+/**
+ * @function createGroupChat
+ * @param {express.Request} req - The Express request object containing group configuration parameters within the body
+ * @param {express.Response} res - The Express response object used to return the initialized group record
+ * @returns {Promise<void>} Sends a JSON response with the newly generated group chat details
+ * @description Compiles selected participant identifiers alongside the creator, creates a distinct room structure, and hooks up history records.
+ */
+export const createGroupChat = async (
+  req: express.Request,
+  res: express.Response,
+) => {
+  // TODO: 1. Extract the group `name` and the initial array of member credentials (`participantIds`) from `req.body`.
+  // TODO: 2. Capture the `userId` of the requesting user from the active session store.
+  // TODO: 3. Enforce payload structural validation: verify group name presence and ensure `participantIds` is an array instance (return 400 Bad Request if invalid).
+  // TODO: 4. Merge the current creator's `userId` with the given `participantIds` list within a Set or unique array to avoid identity duplication.
+  // TODO: 5. Invoke the model constructor `createChat(name, true, uniqueParticipants)` to instantiate the group chat environment.
+  // TODO: 6. Dispatch the resulting group object payload in JSON format with a 201 Created status.
+};
+
+// =========================================================================
+// CONVERSATION MANAGEMENT EVENTS (SOCKET.IO)
+// =========================================================================
+
+/**
+ * @function handleSocketConnect
+ * @param {Socket} socket - The connected client socket instance
+ * @param {Server} io - The global Socket.io server instance
+ * @returns {void}
+ * @description Controller logic for initializing a user's real-time session, binding identity data, and broadcasting their online status.
+ */
+export const handleSocketConnect = (socket: Socket, io: Server): void => {
+  // - Extract `userId` and `username` from the connection handshake options or session cookies.
+  // - Bind these values securely to the socket instance data space (`socket.data.userId` and `socket.data.username`) for subsequent event lookup context.
+  // - Invoke `updateUserStatus(username, "online")` to explicitly synchronize memory data state.
+  // - Broadcast presence payload globally via `socket.broadcast.emit("user_presence", { username, status: "online" })` to visually update remote Astro client views.
+  const session = (socket.request as any).session;
+  const userId = session?.userId || socket.handshake.auth?.userId;
+  const username = session?.username || socket.handshake.auth?.username;
+
+  // Validate the presence of essential identity parameters; if missing, terminate the connection immediately to prevent unauthorized access.
+  if (!userId || !username) {
+    console.warn(
+      `[Socket Warning] Connection rejected: Missing identity parameters.`,
+    );
+    socket.disconnect(true);
+    return;
+  }
+
+  // Bind user identity to the socket instance for future reference in event handlers
+  socket.data.userId = userId;
+  socket.data.username = username;
+
+  console.log(`[Socket Connected] MVC Layer - User "${username}" linked.`);
+
+  // Update user status in memory
+  updateUserStatus(username, "online");
+
+  // Broadcast presence update to all other clients
+  socket.broadcast.emit(SOCKET_EVENTS.USER_PRESENCE, {
+    userId: socket.data.userId,
+    username: socket.data.username,
+    status: "online",
+  });
+};
+
+/**
+ * @function handleJoinChat
+ * @param {Socket} socket - The client socket instance initiating the room connection
+ * @param {Server} io - The global Socket.io server instance
+ * @param {Object} payload - Event payload parameters
+ * @param {string} payload.chatId - Unique chat identification room token
+ * @returns {void}
+ * @description Validates room allocation requests, anchors the socket context down onto channels, and forces historical logs delivery.
+ */
+export const handleJoinChat = (
+  socket: Socket,
+  io: Server,
+  payload: { chatId: string },
+): void => {
+  // TODO: 1. Extract `chatId` from payload and validate target room existence via `getChatById(chatId)`.
+  // TODO: 2. Force current socket execution instance context to enter the room block: `socket.join(chatId)`.
+  // TODO: 3. Retrieve historical messaging datasets using `getMessagesForChat(chatId)`.
+  // TODO: 4. Dispatch history array packet exclusively backwards to the caller using `socket.emit("message_history", messages)`.
+  // ?  EMIT: socket.emit(SOCKET_EVENTS.MESSAGE_HISTORY, messages)
+};
+
+/**
+ * @function handleLeaveChat
+ * @param {Socket} socket - The client socket instance executing the departure intent
+ * @param {Server} io - The global Socket.io server instance
+ * @param {Object} payload - Event payload parameters
+ * @param {string} payload.chatId - Unique chat identification room token
+ * @returns {void}
+ * @description Tears down the socket mapping loop from active specific channel rooms to isolate communication updates.
+ */
+export const handleLeaveChat = (
+  socket: Socket,
+  io: Server,
+  payload: { chatId: string },
+): void => {
+  // TODO: 1. Extract `chatId` from payload parameters.
+  // TODO: 2. Revoke room subscription channels by invoking `socket.leave(chatId)`.
+};
+
+/**
+ * @function handleSendMessage
+ * @param {Socket} socket - The source sender client socket instance context
+ * @param {Server} io - The global Socket.io server instance
+ * @param {Object} payload - Event payload parameters
+ * @param {string} payload.chatId - Destination target conversation channel identifier
+ * @param {string} payload.text - Raw textual string contents
+ * @returns {void}
+ * @description Processes incoming text messages, updates memory history models, and mirrors data packages globally to target channels.
+ */
+export const handleSendMessage = (
+  socket: Socket,
+  io: Server,
+  payload: { chatId: string; text: string },
+): void => {
+  // TODO: 1. Extract `chatId` and `text` properties from the incoming payload block.
+  // TODO: 2. Capture authenticated sender details securely through context records: `const senderId = socket.data.userId`.
+  // TODO: 3. Invoke data layout mutators to commit text blocks onto memory via `addMessageToChat(chatId, senderId, text)`.
+  // TODO: 4. Disseminate resulting message entities downstream across all room connections with `io.to(chatId).emit("new_message", newMessage)`.
+  // ? EMIT: io.to(chatId).emit(SOCKET_EVENTS.NEW_MESSAGE, newMessage)
+};
+
+/**
+ * @function handleTyping
+ * @param {Socket} socket - The client socket instance modifying typing states
+ * @param {Server} io - The global Socket.io server instance
+ * @param {Object} payload - Event payload parameters
+ * @param {string} payload.chatId - Active chat room selection tracking token
+ * @param {boolean} payload.isTyping - Status flag representing composition changes
+ * @returns {void}
+ * @description Forwards visual user typing state markers back onto alternative channel room peers for client display synchronization.
+ */
+export const handleTyping = (
+  socket: Socket,
+  io: Server,
+  payload: { chatId: string; isTyping: boolean },
+): void => {
+  // TODO: 1. Extract structural properties `chatId` and `isTyping` from the transaction payload.
+  // TODO: 2. Relay typing state broadcast arrays safely to neighboring participants: `socket.to(chatId).emit("user_typing", { chatId, user: socket.data.username, isTyping })`.
+  // ?  EMIT: socket.to(chatId).emit(SOCKET_EVENTS.USER_TYPING, { chatId, user: socket.data.username, isTyping })
+};
+
+/**
+ * @function handleSocketDisconnect
+ * @param {Socket} socket - The client socket instance going through connection drop cycles
+ * @param {Server} io - The global Socket.io server instance
+ * @returns {void}
+ * @description Handles graceful connection breakdowns, reverses network session indices to offline status flags, and warns active system instances.
+ */
+export const handleSocketDisconnect = (socket: Socket, io: Server): void => {
+  const username = socket.data.username;
+
+  if (username) {
+    updateUserStatus(username, "offline");
+
+    io.emit("user_presence", {
+      userId: socket.data.userId,
+      username: username,
+      status: "offline",
+    });
+  }
+};

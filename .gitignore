@@ -1,0 +1,59 @@
+# ==========================================
+# 🚀 DEPENDENCIES AND BUILD OUTPUTS
+# ==========================================
+node_modules/
+dist/
+.astro/
+build/
+.cache/
+
+# ==========================================
+# 🔐 SECURITY AND ENVIRONMENT VARIABLES
+# ==========================================
+.env
+.env.local
+.env.production
+.env.development
+.env.*.local
+
+# ==========================================
+# 📝 LOGS (NPM, Yarn, PNPM)
+# ==========================================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==========================================
+# 🛠️ IDE AND CODE EDITORS
+# ==========================================
+# VS Code
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# JetBrains (WebStorm, IntelliJ)
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ==========================================
+# 💻 OPERATING SYSTEM FILES
+# ==========================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+Ehthumbs.db
+Desktop.ini
+
+# Linux
+.fuse_hidden*
+.directory
