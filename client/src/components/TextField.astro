@@ -1,0 +1,52 @@
+---
+interface Props {
+  label?: string;
+  type?: string;
+  name: string;
+  placeholder?: string;
+  required?: boolean;
+  value?: string;
+  class?: string;
+}
+
+const {
+  label,
+  type = 'text',
+  name,
+  placeholder,
+  required = false,
+  value,
+  class: className = '',
+} = Astro.props as Props;
+
+const inputClass =
+  `w-full rounded-lg border border-line-200 bg-white px-3.5 py-2.5 text-sm text-text-gray-50 placeholder:text-text-gray-50 focus:border-action-600 focus:outline-none focus:ring-2 focus:ring-action-600/30 ${className}`;
+---
+
+{label ? (
+  <label class="block">
+    <span class="mb-1.5 block text-xs font-medium text-text-gray">
+      {label}
+    </span>
+
+    <input
+      type={type}
+      name={name}
+      id={name}
+      placeholder={placeholder}
+      required={required}
+      value={value}
+      class={inputClass}
+    />
+  </label>
+) : (
+  <input
+    type={type}
+    name={name}
+    id={name}
+    placeholder={placeholder}
+    required={required}
+    value={value}
+    class={inputClass}
+  />
+)}
