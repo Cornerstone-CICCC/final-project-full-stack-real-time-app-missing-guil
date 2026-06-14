@@ -1,0 +1,81 @@
+---
+// CHAT PAGE
+
+// Layout
+import MainLayout from "../../layouts/MainLayout.astro";
+
+// Components
+import SearchField from "../../components/SearchField.astro";
+import ChatListItem from "../../components/ChatListItem.astro";
+
+import ChatWindow from "../../components/ChatWindow.astro";
+
+// Assets
+import chatIcon from "../../assets/icon/green/chat.svg?url";
+
+
+import { redirect } from "astro:middleware";
+
+// return Astro.redirect("/chat/1");
+
+---
+
+<MainLayout title="Chat" active="Chat" container="w-full">
+  <div class="flex h-screen">
+
+    <!-- LEFT: Chat List -->
+    <div class="w-100 p-4 flex flex-col shadow-lg">
+
+      <h1 class="text-3xl font-bold mb-4 flex items-center gap-2 text-primary-60">
+        <img src={chatIcon} alt="Chat Icon" class="h-8 w-8" />
+        Chat
+      </h1>
+
+      <!-- Search -->
+      <SearchField placeholder="Search..." />
+
+      <!-- List -->
+      <div class="mt-4 space-y-2 overflow-y-auto flex-1">
+
+
+
+
+        <ChatListItem
+          avatar="/assets/images/user1.jpg"
+          name="John Doe"
+          status="online"
+          timestamp="2:30 PM"
+          unread={3}
+          href="/chat/1"
+        />
+
+        <ChatListItem
+          avatar="/assets/images/user2.jpg"
+          name="Jane Smith"
+          status="offline"
+          timestamp="1:45 PM"
+          href="/chat/2"
+        />
+
+        <ChatListItem
+          avatar="/assets/images/user3.jpg"
+          name="Bob Johnson"
+          status="online"
+          timestamp="12:00 PM"
+          href="/chat/3"
+        />
+
+      </div>
+    </div>
+
+    <!-- RIGHT: Chat Room -->
+    <div class="flex-1 bg-gray-100 relative">
+
+      <p class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-400 text-lg text-center">
+        Select a chat to start messaging
+      </p>
+
+    </div>
+
+  </div>
+</MainLayout>

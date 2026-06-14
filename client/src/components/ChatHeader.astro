@@ -1,0 +1,76 @@
+---
+import "../styles/global.css";
+import Avatar from "./Avatar.astro";
+
+import logoutIcon from "../assets/icon/green/logout.svg?url";
+
+interface Props {
+  avatar: string;
+  name: string;
+  status: "online" | "offline";
+  lastTimestamp?: string | null;
+}
+
+function getTimeAgo(date: string | Date) {
+  const now = new Date();
+  const past = new Date(date);
+  const diff = now.getTime() - past.getTime();
+
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  return `${days}d ago`;
+}
+
+const {
+  avatar,
+  name,
+  status = "offline",
+  lastTimestamp = null,
+} = Astro.props as Props;
+---
+
+<div class="flex items-center gap-4 p-4 shadow-md">
+  <!-- LEFT: Avatar + Name -->
+  <div class="flex items-center gap-3 flex-1">
+    <Avatar image={avatar} name={name} />
+
+    <div class="flex flex-col">
+      <span class="font-medium">{name}</span>
+
+      {
+        lastTimestamp ? (
+          <span class="text-sm text-text-gray">
+            last message {getTimeAgo(lastTimestamp)}
+          </span>
+        ) : (
+          <span class="text-sm text-text-gray italic">start chatting</span>
+        )
+      }
+    </div>
+  </div>
+
+  <!-- STATUS -->
+  <div
+    class={`flex items-center gap-1 text-sm font-medium ${
+      status === "online" ? "text-green" : "text-gray-400"
+    }`}
+  >
+    <span
+      class={`h-2 w-2 rounded-full ${
+        status === "online" ? "bg-green" : "bg-gray-300"
+      }`}></span>
+    <span>{status}</span>
+  </div>
+
+  <!-- LOGOUT ICON -->
+  <!-- <img
+    src={logoutIcon}
+    alt="logout"
+    class="w-5 h-5 ml-2 opacity-60 hover:opacity-100 cursor-pointer"
+  /> -->
+</div>

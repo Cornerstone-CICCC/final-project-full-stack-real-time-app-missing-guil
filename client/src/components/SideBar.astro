@@ -1,0 +1,78 @@
+---
+import "../styles/global.css";
+
+import logo from "../assets/logo.svg?url";
+
+import homeOutlined from "../assets/icon/outlined/home.svg?url";
+import chatOutlined from "../assets/icon/outlined/chat.svg?url";
+import roomsOutlined from "../assets/icon/outlined/rooms.svg?url";
+import profileOutlined from "../assets/icon/outlined/profile.svg?url";
+import logoutOutlined from "../assets/icon/outlined/logout.svg?url";
+
+import homeFilled from "../assets/icon/filled/home.svg?url";
+import chatFilled from "../assets/icon/filled/chat.svg?url";
+import roomsFilled from "../assets/icon/filled/rooms.svg?url";
+import profileFilled from "../assets/icon/filled/profile.svg?url";
+
+
+interface Props {
+  active?: "Home" | "Chat" | "Rooms" | "Profile" | "Logout";
+}
+
+const { active } = Astro.props as Props;
+
+const links = [
+  {
+    name: 'Home',
+    outlinedIcon: homeOutlined,
+    filledIcon: homeFilled,
+    href: '/home',
+  },
+  {
+    name: 'Chat',
+    outlinedIcon: chatOutlined,
+    filledIcon: chatFilled,
+    href: '/chat',
+  },
+  {
+    name: 'Rooms',
+    outlinedIcon: roomsOutlined,
+    filledIcon: roomsFilled,
+    href: '/rooms',
+  },
+  {
+    name: 'Profile',
+    outlinedIcon: profileOutlined,
+    filledIcon: profileFilled,
+    href: '/profile',
+  },
+  {
+    name: 'Logout',
+    outlinedIcon: logoutOutlined,
+    href: '/',
+  },
+];
+---
+
+<aside class="w-24 bg-primary-60 p-6 shadow-2xl">
+  <div class="mb-10 flex items-center justify-center">
+    <img src={logo} alt="MatchDay Logo" class="h-auto w-18" />
+  </div>
+  <nav class="space-y-4">
+    {
+      links.map((link) => (
+        <a
+          href={link.href}
+          class={`flex flex-col items-center gap-2 rounded-lg p-2 text-sm transition-all duration-200 hover:opacity-100 ${
+            active === link.name
+              ? "opacity-100 text-white font-bold"
+              : "opacity-60 text-bg"
+          }`}
+        >
+          <img src={active === link.name ? link.filledIcon : link.outlinedIcon} alt={`${link.name} icon`} class="h-auto w-6" />
+          {link.name}
+        </a>
+      ))
+    }
+  </nav>
+</aside>

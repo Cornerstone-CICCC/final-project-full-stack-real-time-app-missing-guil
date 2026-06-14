@@ -1,0 +1,112 @@
+---
+import "../styles/global.css";
+import Avatar from "./Avatar.astro";
+import logoutIcon from "../assets/icon/green/logout.svg?url";
+
+interface Member {
+  name: string;
+  avatar: string;
+}
+
+interface Props {
+  name: string;
+  memberCount: number;
+  onlineCount: number;
+  members?: Member[];
+}
+
+const {
+  name,
+  memberCount,
+  onlineCount,
+  members = [],
+} = Astro.props as Props;
+
+const previewMembers = members.slice(0, 3);
+const overflow = Math.max(0, memberCount - previewMembers.length);
+---
+
+<div class="flex items-center justify-between px-5 py-3 bg-bg border-b shadow-sm">
+
+  <!-- LEFT -->
+  <div class="flex items-center gap-3 flex-1 min-w-0">
+
+    <!-- Room Avatar -->
+    <div
+      class="h-11 w-11 rounded-full bg-primary flex items-center justify-center text-white font-bold text-lg shadow flex-shrink-0"
+    >
+      #
+    </div>
+
+    <!-- Room Info -->
+    <div class="min-w-0">
+      <h2 class="font-semibold text-text-black truncate">
+        {name}
+      </h2>
+
+      <div class="flex items-center gap-2 text-xs text-text-gray">
+        <span>{memberCount} members</span>
+        <span>•</span>
+        <span>{onlineCount} online</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="flex items-center gap-4 flex-shrink-0">
+
+    <!-- Member Avatars -->
+    <div class="flex items-center">
+      {previewMembers.map((member, index) => (
+        <div
+          class="h-8 w-8 overflow-hidden rounded-full ring-2 ring-bg bg-white"
+          style={`margin-left:${index === 0 ? "0" : "-10px"};
+          position:relative;
+          z-index:${previewMembers.length - index};`}
+        >
+          {member.avatar ? (
+            <img
+              src={member.avatar}
+              alt={member.name}
+              class="h-full w-full object-cover"
+            />
+          ) : (
+            <Avatar
+              image=""
+              name={member.name}
+            />
+          )}
+        </div>
+      ))}
+
+      {overflow > 0 && (
+        <div
+          class="h-8 w-8 rounded-full ring-2 ring-bg bg-primary flex items-center justify-center text-xs font-bold text-white"
+          style="margin-left:-10px;"
+        >
+          +{overflow}
+        </div>
+      )}
+    </div>
+
+    <!-- Online Status -->
+    <div class="flex items-center gap-1 text-sm font-medium text-green whitespace-nowrap">
+      <span class="h-2 w-2 rounded-full bg-green"></span>
+      <span>{onlineCount}</span>
+    </div>
+
+    <!-- Leave Room -->
+    <button
+      class="opacity-60 hover:opacity-100 transition-opacity"
+      aria-label="Leave room"
+    >
+      <img
+        src={logoutIcon}
+        alt="Leave room"
+        class="h-5 w-5"
+      />
+    </button>
+
+  </div>
+
+</div>

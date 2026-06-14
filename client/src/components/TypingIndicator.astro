@@ -1,0 +1,17 @@
+---
+interface Props {
+  id?: string;
+  message?: string;
+  class?: string;
+}
+
+const {
+  id = "typing-indicator",
+  message = "",
+  class: className = "",
+} = Astro.props as Props;
+---
+
+<div id={id} class={`relative px-6 py-1 text-sm font-medium text-primary min-h-6 ${className}`}>
+  {message}
+</div>

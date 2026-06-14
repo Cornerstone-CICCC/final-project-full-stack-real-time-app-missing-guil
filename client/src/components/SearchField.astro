@@ -1,0 +1,24 @@
+---
+import "../styles/global.css";
+import searchIcon from "../assets/icon/green/search.svg?url";
+
+interface Props {
+  placeholder?: string;
+  value?: string;
+}
+
+const { placeholder = "Search...", value = "" } = Astro.props as Props;
+---
+
+<div class="relative">
+  <input
+    type="search"
+    placeholder={placeholder}
+    class="w-full rounded-lg border border-line-200 bg-cream-50 py-2 pl-9 pr-3 text-sm focus:border-action-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-action-600/30"
+  />
+  <img
+    src={searchIcon}
+    alt="Search Icon"
+    class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-500"
+  />
+</div>

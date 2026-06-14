@@ -4,7 +4,7 @@
 import AuthLayout from '../../layouts/AuthLayout.astro';
 import Button from '../../components/Button.astro';
 import TextField from '../../components/TextField.astro';
-import Checkbox from '../../components/Checkbox.astro';
+import CheckBox from '../../components/CheckBox.astro';
 
 ---
 
@@ -18,9 +18,9 @@ import Checkbox from '../../components/Checkbox.astro';
     <TextField name="password" type="password" placeholder="••••••••" required />
     <TextField name="confirmPassword" type="password" placeholder="••••••••" required />
 
-    <Checkbox name="terms" class="text-sm text-text-gray w-full whitespace-nowrap">
+    <CheckBox name="terms" class="text-sm text-text-gray w-full whitespace-nowrap">
       I agree with the <a href="/" class="font-medium text-primary hover:underline">terms of service and privacy policy*</a>
-    </Checkbox>
+    </CheckBox>
 
     <Button type="submit" variant="primary" class="w-full" href='/profile'>Register</Button>
   </form>

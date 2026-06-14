@@ -1,0 +1,70 @@
+---
+
+///NOT YET
+
+interface Props {
+  message: string;
+  timestamp?: string;
+  isOwn?: boolean;
+  reaction?: string;
+  read?: boolean;
+}
+
+const {
+  message,
+  timestamp,
+  isOwn = false,
+  reaction,
+  read = false,
+} = Astro.props as Props;
+---
+
+<div class={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-1`}>
+  <div class={`relative max-w-xs lg:max-w-md px-4 py-2.5 rounded-2xl text-sm shadow-sm ${
+    isOwn
+      ? 'bg-primary text-white rounded-br-sm'
+      : 'bg-white text-text-black rounded-bl-sm'
+  }`}>
+
+    <p class="leading-relaxed">{message}</p>
+
+    <!-- Timestamp + read receipt row -->
+    <div class={`flex items-center gap-1 mt-1 ${isOwn ? 'justify-end' : 'justify-end'}`}>
+      {timestamp && (
+        <span class={`text-[10px] ${isOwn ? 'text-white/70' : 'text-text-gray'}`}>
+          {timestamp}
+        </span>
+      )}
+      {isOwn && (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class={`h-3.5 w-3.5 ${read ? 'text-white' : 'text-white/50'}`}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          {read ? (
+            <!-- Double checkmark for read -->
+            <>
+              <polyline points="4 12 8 16 20 5" />
+              <polyline points="1 12 5 16 17 5" style="transform: translateX(-3px)" />
+            </>
+          ) : (
+            <!-- Single checkmark for sent -->
+            <polyline points="4 12 9 17 20 6" />
+          )}
+        </svg>
+      )}
+    </div>
+
+    <!-- Emoji reaction badge -->
+    {reaction && (
+      <span class="absolute -bottom-3 right-2 bg-bg rounded-full px-1.5 py-0.5 text-sm shadow border border-gray-100">
+        {reaction}
+      </span>
+    )}
+  </div>
+</div>

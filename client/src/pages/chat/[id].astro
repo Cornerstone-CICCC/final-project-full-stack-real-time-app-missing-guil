@@ -1,0 +1,98 @@
+---
+export const prerender = false;
+
+import MainLayout from "../../layouts/MainLayout.astro";
+import SearchField from "../../components/SearchField.astro";
+import ChatListItem from "../../components/ChatListItem.astro";
+import chatIcon from "../../assets/icon/green/chat.svg?url";
+
+import ChatHeader from "../../components/ChatHeader.astro";
+import ChatBubble from "../../components/ChatBubble.astro";
+
+// fake data (replace with DB later)
+type ChatUser = {
+  id: string;
+  name: string;
+  status: "online" | "offline";
+  avatar: string;
+  timestamp: string;
+  unread?: number;
+};
+
+const users: ChatUser[] = [
+  { id: "1", name: "John Doe", status: "online", avatar: "", timestamp: "2:30 PM", unread: 3 },
+  { id: "2", name: "Jane Smith", status: "offline", avatar: "", timestamp: "1:45 PM", unread: 0 },
+  { id: "3", name: "Bob Johnson", status: "online", avatar: "", timestamp: "12:00 PM", unread: 0 },
+];
+
+const { id } = Astro.params;
+
+const activeUser = users.find((u) => u.id === id);
+---
+
+<MainLayout title="Chat" active="Chat" container="w-full">
+  <div class="flex h-screen">
+
+    <!-- LEFT: Chat List -->
+    <div class="w-100 p-4 flex flex-col shadow-lg">
+
+      <h1 class="text-3xl font-bold mb-4 flex items-center gap-2 text-primary-60">
+        <img src={chatIcon} class="h-8 w-8" />
+        Chat
+      </h1>
+
+      <SearchField placeholder="Search..." />
+
+      <div class="mt-4 space-y-2 overflow-y-auto flex-1">
+
+        {users.map((user) => (
+          <ChatListItem
+            avatar={user.avatar}
+            name={user.name}
+            status={user.status}
+            timestamp={user.timestamp}
+            href={`/chat/${user.id}`}
+            active={user.id === id}
+            unread={user.unread}
+          />
+        ))}
+
+      </div>
+    </div>
+
+    <!-- RIGHT: Chat Window -->
+<div class="flex-1 bg-gray-100 relative flex flex-col">
+
+  {activeUser ? (
+    <>
+      <!-- Chat Header -->
+      <ChatHeader
+        name={activeUser.name}
+        status={activeUser.status}
+        avatar={activeUser.avatar}
+        lastTimestamp={activeUser.timestamp}
+      />
+
+      <!-- Chat Messages -->
+      <div class="flex-1 p-6 text-gray-400">
+        Chat messages will go here...
+      </div>
+    </>
+  ) : (
+    <p class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-400 text-lg">
+      Select a chat to start messaging
+    </p>
+  )}
+
+<ChatBubble
+  message="Hey, how are you?"
+  timestamp="2:30 PM"
+  isOwn={false}
+  avatar=""
+/>
+</div>
+
+
+</div>
+
+</MainLayout>
