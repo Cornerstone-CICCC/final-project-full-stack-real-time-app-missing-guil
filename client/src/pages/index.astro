@@ -1,17 +1,33 @@
 ---
 // LOGIN PAGE
+
+
+import AuthLayout from '../layouts/AuthLayout.astro';
+import Button from '../components/Button.astro';
+import TextField from '../components/TextField.astro';
+import Checkbox from '../components/Checkbox.astro';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<AuthLayout title="Log in">
+  <h1 class="font-display text-5xl font-bold text-text-black">Log in</h1>
+  <p class="mt-1 mb-6 text-sm text-text-gray">Please enter your account details</p>
+
+  <form class="space-y-4" method="post" action="/login">
+    <TextField name="email" type="email" placeholder="you@example.com" required />
+    <TextField name="password" type="password" placeholder="••••••••" required />
+
+    <div class="flex items-center justify-between pt-1">
+      <Checkbox name="remember">Remember me</Checkbox>
+      <a href="/forgot-password" class="text-sm font-medium hover:underline text-primary">
+        Forgot password?
+      </a>
+    </div>
+
+    <Button type="submit" variant="primary" class="w-full" href="/home">Log in</Button>
+  </form>
+
+  <p class="mt-5 text-center text-sm text-text-gray">
+    Don't have an account?
+    <a href="/register" class="font-medium hover:underline text-primary">Register</a>
+  </p>
+</AuthLayout>

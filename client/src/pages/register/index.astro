@@ -1,0 +1,32 @@
+---
+// REGISTER PAGE
+
+import AuthLayout from '../../layouts/AuthLayout.astro';
+import Button from '../../components/Button.astro';
+import TextField from '../../components/TextField.astro';
+import Checkbox from '../../components/Checkbox.astro';
+
+---
+
+<AuthLayout title="Register" container="max-w-md">
+  <h1 class="font-display text-5xl font-bold text-text-black">Register</h1>
+  <p class="mt-1 mb-6 text-sm text-text-gray">Please enter your account details</p>
+
+  <form class="space-y-4" method="post" action="/register">
+    <TextField name="username" placeholder="Username" required />
+    <TextField name="email" type="email" placeholder="you@example.com" required />
+    <TextField name="password" type="password" placeholder="••••••••" required />
+    <TextField name="confirmPassword" type="password" placeholder="••••••••" required />
+
+    <Checkbox name="terms" class="text-sm text-text-gray w-full whitespace-nowrap">
+      I agree with the <a href="/" class="font-medium text-primary hover:underline">terms of service and privacy policy*</a>
+    </Checkbox>
+
+    <Button type="submit" variant="primary" class="w-full" href='/profile'>Register</Button>
+  </form>
+
+  <p class="mt-5 text-center text-sm text-text-gray">
+    Already have an account?
+    <a href="/" class="font-medium text-primary hover:underline">Log in</a>
+  </p>
+</AuthLayout>
