@@ -40,7 +40,21 @@ const {
     <Avatar image={avatar} name={name} />
 
     <div class="flex flex-col">
-      <span class="font-medium">{name}</span>
+      <div class="flex flex-row items-center gap-2">
+        <span class="font-medium">{name}</span>
+        <!-- STATUS -->
+        <div
+          class={`flex items-center gap-1 text-sm font-medium ${
+            status === "online" ? "text-green" : "text-gray-400"
+          }`}
+        >
+          <span
+            class={`h-2 w-2 rounded-full ${
+              status === "online" ? "bg-green" : "bg-gray-300"
+            }`}></span>
+          <span>{status}</span>
+        </div>
+      </div>
 
       {
         lastTimestamp ? (
@@ -52,19 +66,6 @@ const {
         )
       }
     </div>
-  </div>
-
-  <!-- STATUS -->
-  <div
-    class={`flex items-center gap-1 text-sm font-medium ${
-      status === "online" ? "text-green" : "text-gray-400"
-    }`}
-  >
-    <span
-      class={`h-2 w-2 rounded-full ${
-        status === "online" ? "bg-green" : "bg-gray-300"
-      }`}></span>
-    <span>{status}</span>
   </div>
 
   <!-- LOGOUT ICON -->
