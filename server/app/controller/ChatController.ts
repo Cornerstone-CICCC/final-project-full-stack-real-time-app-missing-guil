@@ -113,7 +113,7 @@ export const handleSocketConnect = (socket: Socket, io: Server): void => {
   socket.data.userId = userId;
   socket.data.username = username;
 
-  console.log(`[Socket Connected] MVC Layer - User "${username}" linked.`);
+  console.log(`[Socket Connected] User "${username}" linked.`);
 
   // Update user status in memory
   updateUserStatus(username, "online");
