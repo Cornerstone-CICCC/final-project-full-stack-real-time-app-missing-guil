@@ -9,6 +9,9 @@ import chatIcon from "../../assets/icon/green/chat.svg?url";
 import ChatHeader from "../../components/ChatHeader.astro";
 import ChatBubble from "../../components/ChatBubble.astro";
 
+import TypeBox from "../../components/TypeBox.astro";
+import TypingIndicator from "../../components/TypingIndicator.astro";
+
 // fake data (replace with DB later)
 type ChatUser = {
   id: string;
@@ -73,26 +76,56 @@ const activeUser = users.find((u) => u.id === id);
         lastTimestamp={activeUser.timestamp}
       />
 
-      <!-- Chat Messages -->
-      <div class="flex-1 p-6 text-gray-400">
-        Chat messages will go here...
-      </div>
-    </>
-  ) : (
-    <p class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-400 text-lg">
-      Select a chat to start messaging
-    </p>
-  )}
+          <div class="home-bg absolute inset-0 opacity-40 pointer-events-none" />
 
-<ChatBubble
-  message="Hey, how are you?"
-  timestamp="2:30 PM"
-  isOwn={false}
-  avatar=""
-/>
-</div>
+          <div
+            id="messages-list"
+            class="relative flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-1"
+          >
+            <div class="flex items-center gap-3 my-3">
+              <hr class="flex-1 border-gray-300/60" />
+              <span class="text-xs font-medium text-gray-500 bg-white/70 px-3 py-0.5 rounded-full backdrop-blur-sm">
+                Today
+              </span>
+              <hr class="flex-1 border-gray-300/60" />
+            </div>
 
+            <ChatBubble
+              message="OMG 🤫 do you remember what you did last night at the work night out?"
+              timestamp="18:12"
+              isOwn={false}
+              reaction="❤️"
+            />
+            <ChatBubble
+              message="no haha"
+              timestamp="18:16"
+              isOwn={true}
+              read={true}
+            />
+            <ChatBubble
+              message="i don't remember anything 😅"
+              timestamp="18:16"
+              isOwn={true}
+              read={true}
+            />
+          </div>
 
-</div>
+          <TypingIndicator message="David is typing ..." />
+
+          <TypeBox />
+
+        </>
+      ) : (
+        <>
+          <div class="home-bg absolute inset-0 opacity-30" />
+          <p class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-500 text-lg text-center z-10">
+            Select a room to start messaging
+          </p>
+        </>
+      )}
+    </div>
+
+  </div>
+
 
 </MainLayout>

@@ -4,12 +4,15 @@ export const prerender = false;
 import MainLayout from "../../layouts/MainLayout.astro";
 import SearchField from "../../components/SearchField.astro";
 import ChatListItem from "../../components/ChatListItem.astro";
-import chatIcon from "../../assets/icon/green/chat.svg?url";
+import RoomIcon from "../../assets/icon/green/rooms.svg?url";
 
 import RoomHeader from "../../components/RoomHeader.astro";
 import ChatBubble from "../../components/ChatBubble.astro";
 import TypeBox from "../../components/TypeBox.astro";
 import TypingIndicator from "../../components/TypingIndicator.astro";
+
+import Button from "../../components/Button.astro";
+import PlusIcon from "../../assets/icon/outlined/plus.svg?url";
 
 // fake data (replace with DB later)
 type Room = {
@@ -70,12 +73,20 @@ const activeRoom = rooms.find((r) => r.id === id);
   <div class="flex h-screen">
 
     <!-- LEFT: Room list -->
-    <div class="w-100 p-4 flex flex-col shadow-lg">
+    <aside class="w-100 p-4 flex flex-col shadow-lg">
+
+      <div class="flex flex-row justify-between items-center">
 
       <h1 class="text-3xl font-bold mb-4 flex items-center gap-2 text-primary-60">
-        <img src={chatIcon} class="h-8 w-8" alt="rooms" />
+        <img src={RoomIcon} alt="Rooms" class="h-8 w-8" />
         Rooms
       </h1>
+
+      <Button variant="primary" class="text-sm mb-4">
+        <img src={PlusIcon} alt="Add Room" class="h-5 w-5" />
+        Add Room
+      </Button>
+      </div>
 
       <SearchField placeholder="Search..." />
 
@@ -92,7 +103,7 @@ const activeRoom = rooms.find((r) => r.id === id);
           />
         ))}
       </div>
-    </div>
+    </aside>
 
     <!-- RIGHT: Chat window -->
     <div class="flex-1 relative flex flex-col overflow-hidden bg-bg">

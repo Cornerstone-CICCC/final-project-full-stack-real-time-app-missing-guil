@@ -1,15 +1,19 @@
 ---
 import "../styles/global.css";
 import Avatar from "./Avatar.astro";
-import logoutIcon from "../assets/icon/green/logout.svg?url";
+import logoutIcon from "../assets/icon/outlined/logout.svg?url";
+
+import Button from "./Button.astro";
 
 interface Member {
   name: string;
   avatar: string;
+  status: "online" | "offline";
 }
 
 interface Props {
   name: string;
+  avatar: string;
   memberCount: number;
   onlineCount: number;
   members?: Member[];
@@ -17,96 +21,49 @@ interface Props {
 
 const {
   name,
+  avatar,
   memberCount,
   onlineCount,
   members = [],
 } = Astro.props as Props;
 
-const previewMembers = members.slice(0, 3);
-const overflow = Math.max(0, memberCount - previewMembers.length);
+const onlineMembers = members.filter((m) => m.status === "online");
+const previewMembers = onlineMembers.slice(0, 3);
+const overflow = onlineCount - previewMembers.length;
 ---
 
-<div class="flex items-center justify-between px-5 py-3 bg-bg border-b shadow-sm">
+<div class="relative z-10 flex items-center gap-4 px-5 py-3 bg-bg  shadow-sm">
 
-  <!-- LEFT -->
+  <!-- LEFT: Group avatar + name + total members -->
   <div class="flex items-center gap-3 flex-1 min-w-0">
 
-    <!-- Room Avatar -->
-    <div
-      class="h-11 w-11 rounded-full bg-primary flex items-center justify-center text-white font-bold text-lg shadow flex-shrink-0"
-    >
-      #
-    </div>
+ <Avatar image={avatar} name={name} />
 
-    <!-- Room Info -->
     <div class="min-w-0">
-      <h2 class="font-semibold text-text-black truncate">
-        {name}
-      </h2>
-
-      <div class="flex items-center gap-2 text-xs text-text-gray">
-        <span>{memberCount} members</span>
-        <span>•</span>
-        <span>{onlineCount} online</span>
-      </div>
+      <p class="font-bold text-text-black truncate">{name}</p>
+      <div class="min-w-0 flex flex-row items-center gap-2 text-sm text-text-gray">
+        <p class="text-xs text-text-gray">{memberCount} members</p>
+        <!-- Online count -->
+          <span
+      class="h-2 w-2 rounded-full bg-green"></span>
+        <span class="text-xs text-green whitespace-nowrap">
+          {onlineCount} members online
+        </span>
+  </div>
     </div>
+
   </div>
 
-  <!-- RIGHT -->
+  <!-- RIGHT: stacked avatars + online count + exit -->
   <div class="flex items-center gap-4 flex-shrink-0">
 
-    <!-- Member Avatars -->
-    <div class="flex items-center">
-      {previewMembers.map((member, index) => (
-        <div
-          class="h-8 w-8 overflow-hidden rounded-full ring-2 ring-bg bg-white"
-          style={`margin-left:${index === 0 ? "0" : "-10px"};
-          position:relative;
-          z-index:${previewMembers.length - index};`}
-        >
-          {member.avatar ? (
-            <img
-              src={member.avatar}
-              alt={member.name}
-              class="h-full w-full object-cover"
-            />
-          ) : (
-            <Avatar
-              image=""
-              name={member.name}
-            />
-          )}
-        </div>
-      ))}
 
-      {overflow > 0 && (
-        <div
-          class="h-8 w-8 rounded-full ring-2 ring-bg bg-primary flex items-center justify-center text-xs font-bold text-white"
-          style="margin-left:-10px;"
-        >
-          +{overflow}
-        </div>
-      )}
-    </div>
 
-    <!-- Online Status -->
-    <div class="flex items-center gap-1 text-sm font-medium text-green whitespace-nowrap">
-      <span class="h-2 w-2 rounded-full bg-green"></span>
-      <span>{onlineCount}</span>
-    </div>
-
-    <!-- Leave Room -->
-    <button
-      class="opacity-60 hover:opacity-100 transition-opacity"
-      aria-label="Leave room"
-    >
-      <img
-        src={logoutIcon}
-        alt="Leave room"
-        class="h-5 w-5"
-      />
-    </button>
-
+    <!-- Exit room -->
+    <Button variant="primary" class="text-sm">
+      <img src={logoutIcon} alt="Logout" class="h-5 w-5" />
+      Leave Room
+    </Button>
   </div>
 
 </div>

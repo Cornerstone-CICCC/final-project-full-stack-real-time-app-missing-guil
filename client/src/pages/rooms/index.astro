@@ -10,7 +10,7 @@ import ChatWindow from '../../components/ChatWindow.astro';
 
 import Button from '../../components/Button.astro';
 
-import roomsIcon from '../../assets/icon/green/rooms.svg?url';
+import RoomsIcon from '../../assets/icon/green/rooms.svg?url';
 
 const { id } = Astro.params;
 ---
@@ -24,7 +24,7 @@ const { id } = Astro.params;
       <div class="flex flex-row justify-between items-center">
 
       <h1 class="text-3xl font-bold mb-4 flex items-center gap-2 text-primary-60">
-        <img src={roomsIcon} alt="Rooms" class="h-8 w-8" />
+        <img src={RoomsIcon} alt="Rooms" class="h-8 w-8" />
         Rooms
       </h1>
 

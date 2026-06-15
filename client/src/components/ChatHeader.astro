@@ -34,7 +34,7 @@ const {
 } = Astro.props as Props;
 ---
 
-<div class="flex items-center gap-4 p-4 shadow-md">
+<div class="relative z-10 flex items-center gap-4 px-5 py-3 bg-bg  shadow-sm">
   <!-- LEFT: Avatar + Name -->
   <div class="flex items-center gap-3 flex-1">
     <Avatar image={avatar} name={name} />
