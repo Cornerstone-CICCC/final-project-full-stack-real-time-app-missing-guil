@@ -11,6 +11,9 @@ import ChatWindow from '../../components/ChatWindow.astro';
 import Button from '../../components/Button.astro';
 
 import RoomsIcon from '../../assets/icon/green/rooms.svg?url';
+import PlusIcon from '../../assets/icon/outlined/plus.svg?url';
+
+import InviteModal from '../../components/InviteModal.astro';
 
 const { id } = Astro.params;
 ---
@@ -28,7 +31,8 @@ const { id } = Astro.params;
         Rooms
       </h1>
 
-      <Button variant="primary" class="text-sm mb-4">
+      <Button id="open-invite-modal" variant="primary" class="text-sm mb-4 cursor-pointer">
+        <img src={PlusIcon} alt="Add Room" class="h-5 w-5" />
         Add Room
       </Button>
       </div>
@@ -75,4 +79,11 @@ const { id } = Astro.params;
     </div>
 
   </div>
+<InviteModal />
 </MainLayout>
+
+<script>
+  document.getElementById('open-invite-modal')?.addEventListener('click', () => {
+    document.dispatchEvent(new CustomEvent('open-invite-modal'));
+  });
+</script>

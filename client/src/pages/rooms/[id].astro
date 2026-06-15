@@ -14,6 +14,8 @@ import TypingIndicator from "../../components/TypingIndicator.astro";
 import Button from "../../components/Button.astro";
 import PlusIcon from "../../assets/icon/outlined/plus.svg?url";
 
+import InviteModal from "../../components/InviteModal.astro";
+
 // fake data (replace with DB later)
 type Room = {
   id: string;
@@ -82,7 +84,7 @@ const activeRoom = rooms.find((r) => r.id === id);
         Rooms
       </h1>
 
-      <Button variant="primary" class="text-sm mb-4">
+      <Button id="open-invite-modal" variant="primary" class="text-sm mb-4 cursor-pointer">
         <img src={PlusIcon} alt="Add Room" class="h-5 w-5" />
         Add Room
       </Button>
@@ -167,6 +169,13 @@ const activeRoom = rooms.find((r) => r.id === id);
     </div>
 
   </div>
+<InviteModal />
 </MainLayout>
+
+<script>
+  document.getElementById('open-invite-modal')?.addEventListener('click', () => {
+    document.dispatchEvent(new CustomEvent('open-invite-modal'));
+  });
+</script>
 
 
