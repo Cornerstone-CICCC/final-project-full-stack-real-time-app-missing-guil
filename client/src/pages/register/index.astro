@@ -11,21 +11,29 @@ import CheckBox from '../../components/CheckBox.astro';
   <p class="mt-1 mb-6 text-sm text-text-gray">Please enter your account details</p>
 
   <form id="registerForm" class="space-y-4" method="post">
-    <TextField name="username" placeholder="Username" required />
-    <p id="username-error" class="error-msg text-red-500 text-xs h-4"></p>
-
-    <TextField name="email" type="email" placeholder="you@example.com" required />
-    <p id="email-error" class="error-msg text-red-500 text-xs h-4"></p>
-
-    <div class="relative">
-      <TextField name="password" type="password" placeholder="Password" required />
-      <span id="togglePassword" class="absolute right-3 top-[38px] cursor-pointer text-xs text-gray-500 select-none">Show</span>
+    <div class="space-y-1">
+      <TextField name="username" placeholder="Username" required />
+      <p id="username-error" class="error-msg text-red-500 text-xs empty:hidden"></p>
     </div>
-    <p class="text-gray-400 text-[10px] mt-1">At least 5 chars, 1 uppercase, 1 number, 1 special char</p>
-    <p id="password-error" class="error-msg text-red-500 text-xs h-4"></p>
 
-    <TextField name="confirmPassword" type="password" placeholder="Confirm Password" required />
-    <p id="confirmPassword-error" class="error-msg text-red-500 text-xs h-4"></p>
+    <div class="space-y-1">
+      <TextField name="email" type="email" placeholder="you@example.com" required />
+      <p id="email-error" class="error-msg text-red-500 text-xs empty:hidden"></p>
+    </div>
+
+    <div class="space-y-1">
+      <div class="relative flex items-center">
+        <TextField name="password" type="password" placeholder="Password" required class="w-full" />
+        <span id="togglePassword" class="absolute right-3 cursor-pointer text-xs text-gray-500 select-none">Show</span>
+      </div>
+      <p class="text-gray-400 text-[10px] mt-1">At least 5 chars, 1 uppercase, 1 number, 1 special char</p>
+      <p id="password-error" class="error-msg text-red-500 text-xs empty:hidden"></p>
+    </div>
+
+    <div class="space-y-1">
+      <TextField name="confirmPassword" type="password" placeholder="Confirm Password" required />
+      <p id="confirmPassword-error" class="error-msg text-red-500 text-xs empty:hidden"></p>
+    </div>
 
     <CheckBox name="terms" class="text-sm text-text-gray w-full whitespace-nowrap">
       I agree with the <a href="/" class="font-medium text-primary hover:underline">terms of service and privacy policy*</a>
@@ -44,10 +52,9 @@ import CheckBox from '../../components/CheckBox.astro';
   const btn = document.getElementById('registerBtn');
   const toggle = document.getElementById('togglePassword');
   const passInput = document.querySelector('input[name="password"]') as HTMLInputElement;
-  const inputs = document.querySelectorAll('input');
 
   // 사용자가 입력하기 시작하면 에러 메시지 초기화
-  inputs.forEach((input) => {
+  document.querySelectorAll('input').forEach((input) => {
     input.addEventListener('input', () => {
       (input as HTMLElement).style.borderColor = '';
       const errorEl = document.getElementById(`${input.getAttribute('name')}-error`);
@@ -80,27 +87,24 @@ import CheckBox from '../../components/CheckBox.astro';
     if (!email) { 
       document.getElementById('email-error')!.textContent = "Email is required"; hasError = true; 
     } else if (!emailRegex.test(email)) { 
-      document.getElementById('email-error')!.textContent = "Invalid email format"; hasError = true; 
-    }
+      document.getElementById('email-error')!.textContent = "Invalid email format"; hasError = true; }
 
     if (!password) { 
       document.getElementById('password-error')!.textContent = "Password is required"; hasError = true; 
     } else if (!passRegex.test(password)) { 
-      document.getElementById('password-error')!.textContent = "Invalid password format"; hasError = true; 
-    }
+      document.getElementById('password-error')!.textContent = "Invalid password format"; hasError = true; }
 
     if (!confirmPassword) { 
       document.getElementById('confirmPassword-error')!.textContent = "Confirm Password is required"; hasError = true; 
     } else if (password !== confirmPassword) { 
-      document.getElementById('confirmPassword-error')!.textContent = "Passwords do not match"; hasError = true; 
-    }
+      document.getElementById('confirmPassword-error')!.textContent = "Passwords do not match"; hasError = true; }
 
     if (hasError) return;
 
     const res = await fetch('http://localhost:3000/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, email, password }) // 서버에서 confirmPassword는 저장하지 않으므로 제외하고 전송
+      body: JSON.stringify({ username, email, password })
     });
 
     const data = await res.json();

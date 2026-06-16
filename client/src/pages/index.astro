@@ -11,11 +11,15 @@ import CheckBox from '../components/CheckBox.astro';
   <p class="mt-1 mb-6 text-sm text-text-gray">Please enter your account details</p>
 
   <form id="loginForm" class="space-y-4" method="post">
-    <TextField name="email" placeholder="Email" required />
-    <p id="email-error" class="error-msg text-red-500 text-xs h-4"></p>
+    <div class="space-y-1">
+      <TextField name="email" placeholder="Email" required />
+      <p id="email-error" class="error-msg text-red-500 text-xs empty:hidden"></p>
+    </div>
 
-    <TextField name="password" type="password" placeholder="••••••••" required />
-    <p id="password-error" class="error-msg text-red-500 text-xs h-4"></p>
+    <div class="space-y-1">
+      <TextField name="password" type="password" placeholder="••••••••" required />
+      <p id="password-error" class="error-msg text-red-500 text-xs empty:hidden"></p>
+    </div>
 
     <div class="flex items-center justify-between pt-1">
       <CheckBox name="remember">Remember me</CheckBox>
@@ -37,7 +41,6 @@ import CheckBox from '../components/CheckBox.astro';
   const btn = document.getElementById('loginBtn');
   const inputs = document.querySelectorAll('input');
 
-  // Clear errors when the user starts typing
   inputs.forEach((input) => {
     input.addEventListener('input', () => {
       (input as HTMLElement).style.borderColor = '';
