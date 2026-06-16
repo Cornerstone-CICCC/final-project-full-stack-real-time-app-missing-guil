@@ -3,7 +3,7 @@ import express from "express";
 import { Server, Socket } from "socket.io";
 import { updateUserStatus, findUserById } from "../model/User.ts";
 
-import { createChat, getChatsbyUserId, getChatbyId } from "../model/Chat.ts";
+import { createChat, getChatsbyUserId, getChatbyId, addParticipantToChat } from "../model/Chat.ts";
 
 export const SOCKET_EVENTS = {
   MESSAGE_HISTORY: "message_history", // no sue
@@ -162,6 +162,8 @@ export const joinGroupChat = async (req: express.Request, res: express.Response)
     }
 
     chat.participantIds.push(userId);
+    const updatedChat = addParticipantToChat(chatId, userId);
+    // req.app.get("io").to(chatId).emit("user_joined_group", { chatId, userId });
     res.status(200).json(chat);
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });

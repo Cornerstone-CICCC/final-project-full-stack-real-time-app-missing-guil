@@ -95,3 +95,22 @@ export const addMessageToChat = (
 export function getMessagesForChat(chatId: string): ChatMessage[] {
   return messages[chatId] || [];
 }
+
+/**
+ * @function addParticipantToChat
+ * @param {string} chatId - The unique ID of the chat room
+ * @param {string} userId - The unique ID of the user to add
+ * @returns {Chat | undefined} The updated chat object, or undefined if not found
+ * @description Persists a new user ID into the participant array of a specific chat room in memory.
+ */
+export const addParticipantToChat = (
+  chatId: string,
+  userId: string,
+): Chat | undefined => {
+  const chat = chats.find((c) => c.id === chatId);
+  if (chat && !chat.participantIds.includes(userId)) {
+    chat.participantIds.push(userId);
+    return chat;
+  }
+  return chat;
+};
