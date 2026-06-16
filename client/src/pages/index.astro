@@ -35,6 +35,16 @@ import CheckBox from '../components/CheckBox.astro';
 
 <script>
   const btn = document.getElementById('loginBtn');
+  const inputs = document.querySelectorAll('input');
+
+  // Clear errors when the user starts typing
+  inputs.forEach((input) => {
+    input.addEventListener('input', () => {
+      (input as HTMLElement).style.borderColor = '';
+      const errorEl = document.getElementById(`${input.getAttribute('name')}-error`);
+      if (errorEl) errorEl.textContent = '';
+    });
+  });
   
   btn?.addEventListener('click', async () => {
     document.querySelectorAll('.error-msg').forEach(el => (el as HTMLElement).textContent = '');
