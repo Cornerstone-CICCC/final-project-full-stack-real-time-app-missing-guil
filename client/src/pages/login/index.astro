@@ -24,7 +24,6 @@
       const username = (document.querySelector('input[name="username"]') as HTMLInputElement).value;
       const password = (document.querySelector('input[name="password"]') as HTMLInputElement).value;
 
-      // 빈칸 검사
       let hasError = false;
       if (!username) { document.getElementById('username-error')!.textContent = "Username is required"; hasError = true; }
       if (!password) { document.getElementById('password-error')!.textContent = "Password is required"; hasError = true; }

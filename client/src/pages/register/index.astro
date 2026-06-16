@@ -28,7 +28,6 @@
     const toggle = document.getElementById('togglePassword');
     const pass = document.getElementById('password') as HTMLInputElement;
 
-    // Show/Hide 기능
     toggle?.addEventListener('click', () => {
       pass.type = pass.type === 'password' ? 'text' : 'password';
       toggle.textContent = pass.type === 'password' ? 'Show' : 'Hide';
