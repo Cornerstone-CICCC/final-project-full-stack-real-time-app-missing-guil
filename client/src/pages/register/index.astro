@@ -1,28 +1,37 @@
 ---
 // REGISTER PAGE
-
 import AuthLayout from '../../layouts/AuthLayout.astro';
 import Button from '../../components/Button.astro';
 import TextField from '../../components/TextField.astro';
 import CheckBox from '../../components/CheckBox.astro';
-
 ---
 
 <AuthLayout title="Register" container="max-w-md">
   <h1 class="font-display text-5xl font-bold text-text-black">Register</h1>
   <p class="mt-1 mb-6 text-sm text-text-gray">Please enter your account details</p>
 
-  <form class="space-y-4" method="post" action="/register">
+  <form id="registerForm" class="space-y-4" method="post">
     <TextField name="username" placeholder="Username" required />
+    <p id="username-error" class="error-msg text-red-500 text-xs h-4"></p>
+
     <TextField name="email" type="email" placeholder="you@example.com" required />
-    <TextField name="password" type="password" placeholder="••••••••" required />
-    <TextField name="confirmPassword" type="password" placeholder="••••••••" required />
+    <p id="email-error" class="error-msg text-red-500 text-xs h-4"></p>
+
+    <div class="relative">
+      <TextField name="password" type="password" placeholder="Password" required />
+      <span id="togglePassword" class="absolute right-3 top-[38px] cursor-pointer text-xs text-gray-500 select-none">Show</span>
+    </div>
+    <p class="text-gray-400 text-[10px] mt-1">At least 5 chars, 1 uppercase, 1 number, 1 special char</p>
+    <p id="password-error" class="error-msg text-red-500 text-xs h-4"></p>
+
+    <TextField name="confirmPassword" type="password" placeholder="Confirm Password" required />
+    <p id="confirmPassword-error" class="error-msg text-red-500 text-xs h-4"></p>
 
     <CheckBox name="terms" class="text-sm text-text-gray w-full whitespace-nowrap">
       I agree with the <a href="/" class="font-medium text-primary hover:underline">terms of service and privacy policy*</a>
     </CheckBox>
 
-    <Button type="submit" variant="primary" class="w-full" href='/profile'>Register</Button>
+    <Button id="registerBtn" type="button" variant="primary" class="w-full">Register</Button>
   </form>
 
   <p class="mt-5 text-center text-sm text-text-gray">
@@ -30,3 +39,65 @@ import CheckBox from '../../components/CheckBox.astro';
     <a href="/" class="font-medium text-primary hover:underline">Log in</a>
   </p>
 </AuthLayout>
+
+<script>
+  const btn = document.getElementById('registerBtn');
+  const toggle = document.getElementById('togglePassword');
+  const passInput = document.querySelector('input[name="password"]') as HTMLInputElement;
+
+  toggle?.addEventListener('click', () => {
+    const isPassword = passInput.type === 'password';
+    passInput.type = isPassword ? 'text' : 'password';
+    toggle.textContent = isPassword ? 'Hide' : 'Show';
+  });
+
+  btn?.addEventListener('click', async () => {
+    document.querySelectorAll('.error-msg').forEach(el => (el as HTMLElement).textContent = '');
+    
+    const username = (document.querySelector('input[name="username"]') as HTMLInputElement).value;
+    const email = (document.querySelector('input[name="email"]') as HTMLInputElement).value;
+    const password = passInput.value;
+    const confirmPassword = (document.querySelector('input[name="confirmPassword"]') as HTMLInputElement).value;
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const passRegex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{5,})/;
+
+    let hasError = false;
+
+    if (!username) { document.getElementById('username-error')!.textContent = "Username is required"; hasError = true; }
+    
+    if (!email) { 
+      document.getElementById('email-error')!.textContent = "Email is required"; hasError = true; 
+    } else if (!emailRegex.test(email)) { 
+      document.getElementById('email-error')!.textContent = "Invalid email format"; hasError = true; 
+    }
+
+    if (!password) { 
+      document.getElementById('password-error')!.textContent = "Password is required"; hasError = true; 
+    } else if (!passRegex.test(password)) { 
+      document.getElementById('password-error')!.textContent = "Invalid password format"; hasError = true; 
+    }
+
+    if (!confirmPassword) { 
+      document.getElementById('confirmPassword-error')!.textContent = "Confirm Password is required"; hasError = true; 
+    } else if (password !== confirmPassword) { 
+      document.getElementById('confirmPassword-error')!.textContent = "Passwords do not match"; hasError = true; 
+    }
+
+    if (hasError) return;
+
+    const res = await fetch('http://localhost:3000/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email, password, confirmPassword })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      const errorEl = document.getElementById(`${data.field}-error`);
+      if (errorEl) errorEl.textContent = data.error;
+    } else {
+      window.location.href = '/login';
+    }
+  });
+</script>
