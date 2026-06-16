@@ -10,7 +10,15 @@ import express from 'express';
  */
 export const authMiddleware = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   // TODO: 1. Access the active session object from `req.session`.
+  // @ts-ignore
+  const session = req.session;
+
   // TODO: 2. Check if both `userId` and `username` exist within the session store payload.
   // TODO: 3. If either credential field is missing, intercept the lifecycle and return a 401 Unauthorized status with a JSON error message.
+  if (!session || !session.userId || !session.username) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
   // TODO: 4. If the session state is structurally valid, invoke `next()` to safely forward the request context to the designated router controller.
+  next();
 };

@@ -13,10 +13,19 @@ export const getAllUsers = async (
   req: express.Request,
   res: express.Response,
 ) => {
-  // TODO: 1. Extract current user's userId from the active session.
-  // TODO: 2. Check if the userId exists; if not, return a 401 Unauthorized status with an error message.
-  // TODO: 3. Fetch all registered users from the data layer using `findAllUsers()`.
-  // TODO: 4. Filter the array to exclude the current logged-in user so they do not see themselves in the contacts list.
-  // TODO: 5. Map through the filtered users to omit sensitive data fields like `passwordHash`.
-  // TODO: 6. Return the safe list of contacts in JSON format with a 200 OK status.
+  // 1. Extract current user's userId from the active session.
+    const currentUserId = req.session?.userId;
+  // 2. Fetch all registered users from the data layer using `findAllUsers()`.
+    const allUsers = await findAllUsers();
+  // 3. Filter the array to exclude the current logged-in user so they do not see themselves in the contacts list.
+    const filteredUsers = allUsers.filter(user => user.id !== currentUserId);
+  // 4. Map through the filtered users to omit sensitive data fields like `passwordHash`.
+    const safeUsers = filteredUsers.map(({ id, username, email, status }) => ({
+      id,
+      username,
+      email,
+      status,
+    }));
+  // 5. Return the safe list of contacts in JSON format with a 200 OK status.
+    res.status(200).json(safeUsers);
 };
