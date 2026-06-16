@@ -203,7 +203,7 @@ export const handleTyping = (
 };
 
 /**
- * @function handleSocketDisconnect
+ * @function handleSocketDisconnet
  * @param {Socket} socket - The client socket instance going through connection drop cycles
  * @param {Server} io - The global Socket.io server instance
  * @returns {void}
