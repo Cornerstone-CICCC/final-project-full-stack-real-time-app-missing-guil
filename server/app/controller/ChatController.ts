@@ -1,7 +1,7 @@
 import express from "express";
 
 import { Server, Socket } from "socket.io";
-import { updateUserStatus } from "../model/User.ts";
+import { updateUserStatus, findUserById } from "../model/User.ts";
 
 import { createChat, getChatsbyUserId, getChatbyId } from "../model/Chat.ts";
 
@@ -65,7 +65,55 @@ export const createGroupChat = async (
 
     // 3. Enforce payload structural validation
     if (!name || typeof name !== "string" || !Array.isArray(participantIds)) {
-      res.status(400).json({ error: "Bad Request: Invalid group name or participant list." });
+      res
+        .status(400)
+        .json({
+          error: "Bad Request: Invalid group name or participant list.",
+        });
+      return;
+    }
+
+    if (name.trim() === "") {
+      res
+        .status(400)
+        .json({ error: "Bad Request: Group name cannot be empty." });
+      return;
+    }
+
+    if (participantIds.length === 0) {
+      res
+        .status(400)
+        .json({
+          error:
+            "Bad Request: At least one participant is required to create a group chat.",
+        });
+      return;
+    }
+
+    if (participantIds.includes(userId)) {
+      res
+        .status(400)
+        .json({
+          error:
+            "Bad Request: Creator should not be included in the participant list.",
+        });
+      return;
+    }
+
+    if (new Set(participantIds).size !== participantIds.length) {
+      res
+        .status(400)
+        .json({ error: "Bad Request: Duplicate participant IDs detected." });
+      return;
+    }
+
+    // 3.5 Validate that all participantIds correspond to existing users (optional but recommended for data integrity)
+    if (!participantIds.every((id) => findUserById(id))) {
+      res
+        .status(400)
+        .json({
+          error: "Bad Request: One or more participant IDs are invalid.",
+        });
       return;
     }
 
@@ -77,9 +125,8 @@ export const createGroupChat = async (
     // We pass the clean data to the Model layer here.
     const newChat = createChat(name, true, uniqueParticipants);
 
-    // 6. Dispatch the resulting group object payload 
+    // 6. Dispatch the resulting group object payload
     res.status(201).json(newChat);
-
   } catch (error) {
     console.error("[ChatController] Error in createGroupChat:", error);
     res.status(500).json({ error: "Internal Server Error" });

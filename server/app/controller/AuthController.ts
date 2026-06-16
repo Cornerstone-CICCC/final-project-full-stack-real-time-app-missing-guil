@@ -26,6 +26,22 @@ export const registerUser = async (
     return res.status(400).json({ error: "All fields are required" });
   }
 
+  if (typeof username !== "string" || typeof email !== "string" || typeof password !== "string") {
+    return res.status(400).json({ error: "Invalid input types" });
+  }
+
+  if (username.trim() === "" || email.trim() === "" || password.trim() === "") {
+    return res.status(400).json({ error: "Fields cannot be empty" });
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: "Invalid email format" });
+  }
+
+  // if (password.length < 6) {
+  //   return res.status(400).json({ error: "Password must be at least 6 characters long" });
+  // }
+
   // TODO: 3. Verify if the username or email is already taken using `findUserbyName` and `findUserbyEmail` (return 409 Conflict if a duplicate is found).
   if (findUserbyName(username) || findUserbyEmail(email)) {
     return res.status(409).json({ error: "Username or Email already exists" });
