@@ -54,15 +54,15 @@ export const loginUser = async (
   res: express.Response,
 ) => {
   // TODO: 1. Extract `username` and `password` from `req.body`.
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
   // TODO: 2. Validate that both fields are present and not empty strings (return 400 Bad Request if missing).
-  if (!username || !password) {
+  if (!email || !password) {
     return res.status(400).json({ error: "Username and password are required" });
   }
 
   // TODO: 3. Look up the user record by username using `findUserByName` or using `findUserbyEmail` (return 401 Unauthorized if the user does not exist).
-  const user = findUserbyName(username);
+  const user = findUserbyEmail(email);
   if (!user) {
     return res.status(401).json({ error: "Invalid credentials" });
   }

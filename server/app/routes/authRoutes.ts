@@ -1,5 +1,10 @@
 import express from "express";
-import { registerUser, loginUser, logoutUser } from "../controller/AuthController.ts";
+import {
+  registerUser,
+  loginUser,
+  logoutUser,
+} from "../controller/AuthController.ts";
+import { authMiddleware } from "../middleware/authMiddleware.ts";
 
 const router = express.Router();
 
@@ -16,6 +21,6 @@ router.post("/login", loginUser);
 /**
  * @route {GET} /auth/logout
  */
-router.get("/logout", logoutUser);
+router.post("/logout", authMiddleware, logoutUser);
 
 export default router;
