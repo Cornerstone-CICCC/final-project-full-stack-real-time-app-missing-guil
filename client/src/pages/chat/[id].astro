@@ -12,6 +12,10 @@ import ChatBubble from "../../components/ChatBubble.astro";
 import TypeBox from "../../components/TypeBox.astro";
 import TypingIndicator from "../../components/TypingIndicator.astro";
 
+import Button from "../../components/Button.astro";
+import PlusIcon from "../../assets/icon/outlined/plus.svg?url";
+import AddModal from "../../components/AddModal.astro";
+
 // fake data (replace with DB later)
 type ChatUser = {
   id: string;
@@ -38,11 +42,19 @@ const activeUser = users.find((u) => u.id === id);
 
     <!-- LEFT: Chat List -->
     <div class="w-100 p-4 flex flex-col shadow-lg">
+            <div class="flex flex-row justify-between items-center">
+
 
       <h1 class="text-3xl font-bold mb-4 flex items-center gap-2 text-primary-60">
-        <img src={chatIcon} class="h-8 w-8" />
+        <img src={chatIcon} alt="Chat Icon" class="h-8 w-8" />
         Chat
       </h1>
+
+            <Button id="open-add-modal" variant="primary" class="text-sm mb-4 cursor-pointer">
+        <img src={PlusIcon} alt="Add contact" class="h-5 w-5" />
+        Add Contact
+      </Button>
+      </div>
 
       <SearchField placeholder="Search..." />
 
@@ -129,3 +141,5 @@ const activeUser = users.find((u) => u.id === id);
 
 
 </MainLayout>
+
+<AddModal />

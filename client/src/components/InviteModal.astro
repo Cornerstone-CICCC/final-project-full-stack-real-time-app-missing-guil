@@ -18,7 +18,10 @@ import TextField from "./TextField.astro";
       <p class="mt-1 text-sm text-text-gray">Paste it below to join a room</p>
     </div>
 
-    <form id="invite-form" class="space-y-4" method="post" action="/rooms/join">
+    <form id="invite-form" 
+    class="space-y-4" 
+    action="/rooms/join">
+
       <TextField name="inviteCode" placeholder="Paste invite link or code" required />
       <Button type="submit" variant="primary" class="w-full cursor-pointer">Join Room</Button>
     </form>
