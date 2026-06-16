@@ -27,10 +27,16 @@ export const getUserChats = async (
   req: express.Request,
   res: express.Response,
 ) => {
-  // TODO: 1. Extract the `userId` from the current active session state.
-  // TODO: 2. Validate the identity token (if missing, respond immediately with a 401 Unauthorized status).
-  // TODO: 3. Query the data structures for all conversations mapped to the user by calling `getChatsByUserId(userId)`.
-  // TODO: 4. Respond with the compiled list of direct and group chat structures in JSON format alongside a 200 OK status.
+  try {
+    // 1. Extract the `userId` from the current active session state.
+    const userId = req.session?.userId;
+    // 2. Query the data structures for all conversations mapped to the user by calling `getChatsByUserId(userId)`.
+    const userChats = getChatsbyUserId(userId);
+    // 3. Respond with the compiled list of direct and group chat structures in JSON format alongside a 200 OK status.
+    res.status(200).json(userChats);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to retrieve user chats" });
+  }
 };
 
 /**
