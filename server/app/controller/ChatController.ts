@@ -133,6 +133,42 @@ export const createGroupChat = async (
   }
 };
 
+export const joinGroupChat = async (req: express.Request, res: express.Response) => {
+  try {
+    const { chatId } = req.body;
+    const userId = (req as any).session?.userId;
+
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized: Please log in first." });
+      return;
+    }
+    if (!chatId || typeof chatId !== "string") {
+      res.status(400).json({ error: "Bad Request: Invalid chat ID." });
+      return;
+    }
+    const chat = getChatbyId(chatId);
+    if (!chat) {
+      res.status(404).json({ error: "Not Found: Chat does not exist." });
+      return;
+    }
+    if (!chat.isGroupChat) {
+      res.status(400).json({ error: "Bad Request: Cannot join a direct message chat." });
+      return;
+    } 
+
+    if (chat.participantIds.includes(userId)) {
+      res.status(400).json({ error: "Bad Request: User is already a participant of this chat." });
+      return;
+    }
+
+    chat.participantIds.push(userId);
+    res.status(200).json(chat);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+  
+}; 
+
 // =========================================================================
 // CONVERSATION MANAGEMENT EVENTS (SOCKET.IO)
 // =========================================================================
