@@ -50,12 +50,40 @@ export const createGroupChat = async (
   req: express.Request,
   res: express.Response,
 ) => {
-  // TODO: 1. Extract the group `name` and the initial array of member credentials (`participantIds`) from `req.body`.
-  // TODO: 2. Capture the `userId` of the requesting user from the active session store.
-  // TODO: 3. Enforce payload structural validation: verify group name presence and ensure `participantIds` is an array instance (return 400 Bad Request if invalid).
-  // TODO: 4. Merge the current creator's `userId` with the given `participantIds` list within a Set or unique array to avoid identity duplication.
-  // TODO: 5. Invoke the model constructor `createChat(name, true, uniqueParticipants)` to instantiate the group chat environment.
-  // TODO: 6. Dispatch the resulting group object payload in JSON format with a 201 Created status.
+  try {
+    // 1. Extract the group `name` and member credentials from `req.body`
+    const { name, participantIds } = req.body;
+
+    // 2. Capture the `userId` of the requesting user from the active session
+    const userId = (req as any).session?.userId;
+
+    // Security check: Make sure the user is actually logged in
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized: Please log in first." });
+      return;
+    }
+
+    // 3. Enforce payload structural validation
+    if (!name || typeof name !== "string" || !Array.isArray(participantIds)) {
+      res.status(400).json({ error: "Bad Request: Invalid group name or participant list." });
+      return;
+    }
+
+    // 4. Merge creator's `userId` with `participantIds` and remove duplicates
+    // Using Set ensures that if the creator accidentally included themselves in the participantIds, they aren't added twice.
+    const uniqueParticipants = Array.from(new Set([userId, ...participantIds]));
+
+    // 5. Invoke the model constructor to instantiate the group chat
+    // We pass the clean data to the Model layer here.
+    const newChat = createChat(name, true, uniqueParticipants);
+
+    // 6. Dispatch the resulting group object payload 
+    res.status(201).json(newChat);
+
+  } catch (error) {
+    console.error("[ChatController] Error in createGroupChat:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 };
 
 // =========================================================================
@@ -91,7 +119,7 @@ export const handleSocketConnect = (socket: Socket, io: Server): void => {
   socket.data.userId = userId;
   socket.data.username = username;
 
-  console.log(`[Socket Connected] MVC Layer - User "${username}" linked.`);
+  console.log(`[Socket Connected] User "${username}" linked.`);
 
   // Update user status in memory
   updateUserStatus(username, "online");
