@@ -1,9 +1,97 @@
 ---
+// ROOMS PAGE
 
-import Button from '../../components/Button.astro';
+import MainLayout from "../../layouts/MainLayout.astro";
 
+import Button from "../../components/Button.astro";
+
+import TextField from "../../components/TextField.astro";
+import PlusIcon from "../../components/PlusIcon.astro";
 ---
 
+<MainLayout title="Profile Settings" active="Rooms" container="w-full">
+  <div class="flex flex-col h-screen items-center justify-center home-bg">
+       <div class="rounded-2xl bg-bg/90 p-8 shadow-xl">
+        <div class="text-center">
+      <h1 class="font-display text-4xl font-bold text-text-black">
+        Profile Settings
+      </h1>
+      <p class="mt-1 mb-6 text-sm text-text-gray">
+        Edit your profile information and avatar here. Your changes will be visible to your contacts.
+      </p>
+    </div>
 
-<h1>profile settings HERE</h1>
-<Button variant="primary" href="/home">Go home</Button>
+    <div class="flex flex-row gap-6">
+      <div class="flex items-center gap-4">
+        <!-- Avatar upload -->
+        <div class="flex flex-col items-center gap-3">
+          <div
+            id="avatar-preview"
+            class="h-44 w-44 rounded-full bg-primary-20 flex items-center justify-center overflow-hidden cursor-pointer border-2 border-dashed border-primary"
+            onclick="document.getElementById('avatar-input').click()"
+          >
+            <span id="avatar-initials" class="text-2xl font-bold text-primary"
+              >+</span
+            >
+            <img
+              id="avatar-img"
+              class="hidden h-full w-full object-cover"
+              alt="avatar preview"
+            />
+          </div>
+
+          <input
+            id="avatar-input"
+            type="file"
+            name="avatar"
+            accept="image/*"
+            class="hidden"
+          />
+          <p class="mt-1 max-w-52 text-center text-xs leading-5 text-text-gray">
+            Use initials if no avatar is uploaded.<br />
+            Click the circle to upload a profile picture.
+          </p>
+        </div>
+      </div>
+      <!-- Text Fields -->
+      <div class="flex flex-col gap-4 w-80">
+        <TextField
+          label="Display Name"
+          name="displayName"
+          placeholder="Enter your display name"
+        />
+
+        <TextField
+          label="Username"
+          name="username"
+          placeholder="Enter your username"
+        />
+        <TextField label="Email" name="email" placeholder="Enter your email" />
+
+        <Button variant="primary" class="w-full cursor-pointer"
+          >Save Profile</Button
+        >
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
+ 
+</MainLayout>
+
+<script>
+  const input = document.getElementById("avatar-input") as HTMLInputElement;
+  const img = document.getElementById("avatar-img") as HTMLImageElement;
+  const initials = document.getElementById(
+    "avatar-initials",
+  ) as HTMLSpanElement;
+
+  input?.addEventListener("change", () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    img.src = url;
+    img.classList.remove("hidden");
+    initials.classList.add("hidden");
+  });
+</script>

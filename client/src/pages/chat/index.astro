@@ -7,14 +7,14 @@ import MainLayout from "../../layouts/MainLayout.astro";
 // Components
 import SearchField from "../../components/SearchField.astro";
 import ChatListItem from "../../components/ChatListItem.astro";
-
+import Button from "../../components/Button.astro";
 import ChatWindow from "../../components/ChatWindow.astro";
+import AddModal from "../../components/AddModal.astro";
 
 // Assets
 import chatIcon from "../../assets/icon/green/chat.svg?url";
 
-
-import { redirect } from "astro:middleware";
+import PlusIcon from "../../assets/icon/outlined/plus.svg?url";
 
 // return Astro.redirect("/chat/1");
 
@@ -25,11 +25,19 @@ import { redirect } from "astro:middleware";
 
     <!-- LEFT: Chat List -->
     <div class="w-100 p-4 flex flex-col shadow-lg">
+            <div class="flex flex-row justify-between items-center">
+
 
       <h1 class="text-3xl font-bold mb-4 flex items-center gap-2 text-primary-60">
         <img src={chatIcon} alt="Chat Icon" class="h-8 w-8" />
         Chat
       </h1>
+
+            <Button id="open-add-modal" variant="primary" class="text-sm mb-4 cursor-pointer">
+        <img src={PlusIcon} alt="Add Contact" class="h-5 w-5" />
+        Add Contact
+      </Button>
+      </div>
 
       <!-- Search -->
       <SearchField placeholder="Search..." />
@@ -79,3 +87,11 @@ import { redirect } from "astro:middleware";
 
   </div>
 </MainLayout>
+
+<AddModal />
+
+<script>
+  document.getElementById('open-add-modal')?.addEventListener('click', () => {
+    document.dispatchEvent(new CustomEvent('open-add-modal'));
+  });
+</script>

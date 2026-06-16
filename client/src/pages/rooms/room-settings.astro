@@ -1,1 +1,151 @@
-<h1>Room Settings</h1>
+---
+
+// ROOMS- SETTINGS PAGE
+
+
+import MainLayout from '../../layouts/MainLayout.astro';
+import SearchField from '../../components/SearchField.astro';
+import ChatListItem from '../../components/ChatListItem.astro';
+import ChatWindow from '../../components/ChatWindow.astro';
+
+import Button from '../../components/Button.astro';
+
+import PlusIcon from '../../assets/icon/green/plus.svg?url';
+
+import Avatar from '../../components/Avatar.astro';
+
+import TextField from '../../components/TextField.astro';
+
+const users = [{
+  id: "1",
+  name: "John Doe",
+  avatar: "/assets/images/user1.jpg",
+},
+{
+  id: "2",
+  name: "Jane Smith",
+  avatar: "/assets/images/user2.jpg",
+},
+{
+  id: "3",
+  name: "Bob K.",
+  avatar: "/assets/images/user3.jpg",
+}];
+
+const { id } = Astro.params;
+---
+
+<MainLayout title="Rooms" active="Rooms" container="w-full">
+  <div class="flex h-screen">
+
+    <!-- LEFT -->
+    <aside class="w-100 p-4 flex flex-col shadow-lg">
+
+        <Button variant="subtle" class="text-sm mb-4 cursor-pointer" href="/rooms">
+
+        <img src={PlusIcon} alt="Add Room" class="h-5 w-5" />
+        Back
+        </Button>
+
+      <div class="flex flex-row justify-between items-center">
+
+      <h1 class="text-3xl font-bold mb-4 flex items-center gap-2 text-primary-60">
+        <img src={PlusIcon} alt="Rooms" class="h-8 w-8" />
+        Create Room
+      </h1>
+
+      </div>
+
+      <p class="text-text-black py-4 text-medium">
+        Add members to the room
+      </p>
+
+      <SearchField placeholder="Search..." />
+
+      <div class="mt-4 space-y-2 overflow-y-auto flex-1">
+   <div id="user-list" class="flex-1 overflow-y-auto px-4">
+        {users.map((user) => (
+          <label
+            class="flex items-center gap-3 px-2 py-3 rounded-lg cursor-pointer hover:bg-primary-10 transition-colors"
+          >
+            <Avatar name={user.name} image={user.avatar} />
+            <span class="flex-1 font-medium text-text-black">{user.name}</span>
+            <input
+              type="checkbox"
+              name="participants"
+              value={user.id}
+              class="participant-checkbox h-5 w-5 rounded border-2 border-primary text-primary accent-primary cursor-pointer"
+            />
+          </label>
+        ))}
+      </div>
+
+      </div>
+    </aside>
+
+    <!-- RIGHT -->
+    <div class="flex-1 bg-gray-100 relative">
+
+      <h1 class="text-4xl font-bold text-text-black mb-1">Set Up Room Profile</h1>
+      <p class="text-sm text-text-gray mb-8">Please enter your room info</p>
+
+      <TextField name="roomName" label="Room Name" placeholder="Enter room name..." />
+
+  <div>
+          <label class="block text-sm font-medium text-text-black mb-3">Participants</label>
+          <div id="participants-preview" class="flex flex-wrap gap-1">
+            {users.map((user) => (
+              <div
+                data-participant-id={user.id}
+                class="participant-avatar h-12 w-12 rounded-full overflow-hidden ring-2 ring-bg"
+                style="display: none;"
+              >
+                <Avatar name={user.name} image={user.avatar} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+      <div class="flex items-center gap-4 mt-6">
+        <Button variant="primary" class="px-6">
+          Create
+        </Button>
+        <Button variant="subtle" class="px-6" href="/rooms">
+          Cancel
+        </Button>
+
+
+    </div>
+
+  </div>
+</MainLayout>
+
+<script>
+  // Avatar upload preview
+  const fileInput = document.getElementById('room-avatar-file') as HTMLInputElement;
+  const preview = document.getElementById('room-avatar-preview') as HTMLImageElement;
+  const plusIcon = document.getElementById('room-avatar-plus') as HTMLElement;
+
+  fileInput?.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    preview.src = URL.createObjectURL(file);
+    preview.classList.remove('hidden');
+    plusIcon.classList.add('hidden');
+  });
+
+  // Sync checkboxes → participants preview row
+  const checkboxes = document.querySelectorAll<HTMLInputElement>('.participant-checkbox');
+
+  checkboxes.forEach((cb) => {
+    cb.addEventListener('change', () => {
+      const avatar = document.querySelector<HTMLElement>(
+        `.participant-avatar[data-participant-id="${cb.value}"]`
+      );
+      if (avatar) {
+        avatar.style.display = cb.checked ? '' : 'none';
+      }
+    });
+  });
+</script>
+
