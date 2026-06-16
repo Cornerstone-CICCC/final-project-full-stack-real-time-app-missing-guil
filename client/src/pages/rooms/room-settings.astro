@@ -1,151 +1,219 @@
 ---
-
 // ROOMS- SETTINGS PAGE
 
+import MainLayout from "../../layouts/MainLayout.astro";
+import SearchField from "../../components/SearchField.astro";
+import Button from "../../components/Button.astro";
 
-import MainLayout from '../../layouts/MainLayout.astro';
-import SearchField from '../../components/SearchField.astro';
-import ChatListItem from '../../components/ChatListItem.astro';
-import ChatWindow from '../../components/ChatWindow.astro';
+import PlusIcon from "../../assets/icon/green/plus.svg?url";
+import BackIcon from "../../assets/icon/green/back.svg?url";
 
-import Button from '../../components/Button.astro';
+import Avatar from "../../components/Avatar.astro";
+import TextField from "../../components/TextField.astro";
 
-import PlusIcon from '../../assets/icon/green/plus.svg?url';
+const users = [
+  {
+    id: "1",
+    name: "John Doe",
+    avatar: "/assets/images/user1.jpg",
+  },
+  {
+    id: "2",
+    name: "Jane Smith",
+    avatar: "/assets/images/user2.jpg",
+  },
+  {
+    id: "3",
+    name: "Bob K.",
+    avatar: "/assets/images/user3.jpg",
+  },
+];
 
-import Avatar from '../../components/Avatar.astro';
-
-import TextField from '../../components/TextField.astro';
-
-const users = [{
-  id: "1",
-  name: "John Doe",
-  avatar: "/assets/images/user1.jpg",
-},
-{
-  id: "2",
-  name: "Jane Smith",
-  avatar: "/assets/images/user2.jpg",
-},
-{
-  id: "3",
-  name: "Bob K.",
-  avatar: "/assets/images/user3.jpg",
-}];
-
-const { id } = Astro.params;
+const roomAvatars = [
+  { emoji: "⚽", color: "bg-gray-100" },   // football
+  { emoji: "🥅", color: "bg-green-100" },  // goal
+  { emoji: "🧤", color: "bg-blue-100" },   // goalkeeper gloves
+  { emoji: "🧑‍🦱", color: "bg-yellow-100" }, // player
+  { emoji: "🏆", color: "bg-amber-100" },  // trophy
+//   { emoji: "🥇", color: "bg-yellow-200" }, // winner
+//   { emoji: "🟥", color: "bg-red-100" },    // red card
+//   { emoji: "🟨", color: "bg-yellow-50" },  // yellow card
+//   { emoji: "⛳", color: "bg-green-200" },   // corner / field vibe
+  { emoji: "🔥", color: "bg-orange-100" }, // hot match
+];
 ---
 
 <MainLayout title="Rooms" active="Rooms" container="w-full">
   <div class="flex h-screen">
 
-    <!-- LEFT -->
+    <!-- LEFT PANEL -->
     <aside class="w-100 p-4 flex flex-col shadow-lg">
-
-        <Button variant="subtle" class="text-sm mb-4 cursor-pointer" href="/rooms">
-
-        <img src={PlusIcon} alt="Add Room" class="h-5 w-5" />
+      <a
+        href="/rooms"
+        class="mb-6 inline-flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-primary hover:bg-primary-10 transition-colors w-fit"
+      >
+        <img src={BackIcon} alt="Back" class="h-5 w-5" />
         Back
-        </Button>
+      </a>
 
-      <div class="flex flex-row justify-between items-center">
-
-      <h1 class="text-3xl font-bold mb-4 flex items-center gap-2 text-primary-60">
-        <img src={PlusIcon} alt="Rooms" class="h-8 w-8" />
-        Create Room
-      </h1>
-
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold flex items-center gap-2 text-primary-60 mb-1">
+          <img src={PlusIcon} alt="Rooms" class="h-7 w-7" />
+          Create Room
+        </h1>
+        <p class="text-sm text-text-gray ml-9">Add members to the room</p>
       </div>
 
-      <p class="text-text-black py-4 text-medium">
-        Add members to the room
-      </p>
-
-      <SearchField placeholder="Search..." />
-
-      <div class="mt-4 space-y-2 overflow-y-auto flex-1">
-   <div id="user-list" class="flex-1 overflow-y-auto px-4">
-        {users.map((user) => (
-          <label
-            class="flex items-center gap-3 px-2 py-3 rounded-lg cursor-pointer hover:bg-primary-10 transition-colors"
-          >
-            <Avatar name={user.name} image={user.avatar} />
-            <span class="flex-1 font-medium text-text-black">{user.name}</span>
-            <input
-              type="checkbox"
-              name="participants"
-              value={user.id}
-              class="participant-checkbox h-5 w-5 rounded border-2 border-primary text-primary accent-primary cursor-pointer"
-            />
-          </label>
-        ))}
+      <div class="mb-4">
+        <SearchField placeholder="Search members..." />
       </div>
 
+      <div class="mt-4 space-y-2 overflow-y-auto flex-1 px-4">
+        {
+          users.map((user) => (
+            <label class="flex items-center gap-3 px-2 py-3 rounded-lg cursor-pointer hover:bg-primary-10 transition-colors">
+              <Avatar name={user.name} image={user.avatar} />
+
+              <span class="flex-1 font-medium text-text-black">
+                {user.name}
+              </span>
+
+              <input
+                type="checkbox"
+                name="participants"
+                value={user.id}
+                class="participant-checkbox h-5 w-5 rounded border-2 border-primary accent-primary cursor-pointer"
+              />
+            </label>
+          ))
+        }
       </div>
     </aside>
 
-    <!-- RIGHT -->
-    <div class="flex-1 bg-gray-100 relative">
+    <!-- RIGHT PANEL -->
+    <div class="flex-1 bg-bg p-8 overflow-y-auto">
+      <div class="max-w-2xl mx-auto">
 
-      <h1 class="text-4xl font-bold text-text-black mb-1">Set Up Room Profile</h1>
-      <p class="text-sm text-text-gray mb-8">Please enter your room info</p>
+        <div class="p-8 ">
 
-      <TextField name="roomName" label="Room Name" placeholder="Enter room name..." />
-
-  <div>
-          <label class="block text-sm font-medium text-text-black mb-3">Participants</label>
-          <div id="participants-preview" class="flex flex-wrap gap-1">
-            {users.map((user) => (
-              <div
-                data-participant-id={user.id}
-                class="participant-avatar h-12 w-12 rounded-full overflow-hidden ring-2 ring-bg"
-                style="display: none;"
-              >
-                <Avatar name={user.name} image={user.avatar} />
-              </div>
-            ))}
+          <!-- HEADER -->
+          <div class="mb-8">
+            <h1 class="text-4xl font-bold text-text-black mb-2">
+              Set Up Room Profile
+            </h1>
+            <p class="text-sm text-text-gray">
+              Please enter your room info and select members
+            </p>
           </div>
+
+          <form class="space-y-6">
+
+            <!-- ROOM NAME -->
+            <TextField
+              name="roomName"
+              label="Room Name"
+              placeholder="Enter room name..."
+            />
+
+            <!-- ROOM AVATAR SELECTOR -->
+            <div>
+              <label class="block text-sm font-medium text-text-black mb-3">
+                Choose Room Avatar
+              </label>
+
+              <div class="flex flex-wrap gap-4">
+                {roomAvatars.map((avatar, index) => (
+                  <label class="cursor-pointer">
+                    <input
+                      type="radio"
+                      name="roomAvatar"
+                      value={avatar.emoji}
+                      class="peer sr-only"
+                      checked={index === 0}
+                    />
+
+                    <div
+                      class={`relative h-20 w-20 rounded-full ${avatar.color}
+                      border-4 border-transparent flex items-center justify-center
+                      text-4xl transition-all 
+                      peer-checked:border-primary`}
+                    >
+                      {avatar.emoji}
+
+                      <div
+                        class="absolute bottom-0 right-0 hidden peer-checked:flex
+                        h-6 w-6 rounded-full bg-primary text-white
+                        items-center justify-center text-xs font-bold"
+                      >
+                        ✓
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+
+              <p class="text-xs text-text-gray mt-2">
+                Select one avatar for your room.
+              </p>
+            </div>
+
+            <!-- SELECTED MEMBERS -->
+            <div class="border-t border-gray-200 pt-6">
+              <label class="block text-sm font-medium text-text-black mb-4">
+                Selected Members
+              </label>
+
+              <div id="participants-preview" class="flex flex-wrap gap-3">
+                {
+                  users.map((user) => (
+                    <div
+                      data-participant-id={user.id}
+                      class="participant-avatar flex items-center gap-2"
+                      style="display: none;"
+                    >
+                      <Avatar name={user.name} image={user.avatar} />
+
+                    </div>
+                  ))
+                }
+              </div>
+
+              <p class="text-xs text-text-gray mt-3">
+                Select members from the left panel to add them here.
+              </p>
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div class="border-t border-gray-200 pt-6 flex items-center gap-4">
+              <Button variant="primary" class="px-8">
+                Create Room
+              </Button>
+
+              <Button variant="subtle" class="px-8" href="/rooms">
+                Cancel
+              </Button>
+            </div>
+
+          </form>
         </div>
-
-      <div class="flex items-center gap-4 mt-6">
-        <Button variant="primary" class="px-6">
-          Create
-        </Button>
-        <Button variant="subtle" class="px-6" href="/rooms">
-          Cancel
-        </Button>
-
-
+      </div>
     </div>
-
   </div>
-</MainLayout>
 
-<script>
-  // Avatar upload preview
-  const fileInput = document.getElementById('room-avatar-file') as HTMLInputElement;
-  const preview = document.getElementById('room-avatar-preview') as HTMLImageElement;
-  const plusIcon = document.getElementById('room-avatar-plus') as HTMLElement;
+  <!-- JS: sync checkboxes -->
+  <script>
+    const checkboxes = document.querySelectorAll(".participant-checkbox");
 
-  fileInput?.addEventListener('change', () => {
-    const file = fileInput.files?.[0];
-    if (!file) return;
-    preview.src = URL.createObjectURL(file);
-    preview.classList.remove('hidden');
-    plusIcon.classList.add('hidden');
-  });
+    checkboxes.forEach((cb) => {
+      cb.addEventListener("change", () => {
+        const avatar = document.querySelector(
+          `.participant-avatar[data-participant-id="${cb.value}"]`
+        );
 
-  // Sync checkboxes → participants preview row
-  const checkboxes = document.querySelectorAll<HTMLInputElement>('.participant-checkbox');
-
-  checkboxes.forEach((cb) => {
-    cb.addEventListener('change', () => {
-      const avatar = document.querySelector<HTMLElement>(
-        `.participant-avatar[data-participant-id="${cb.value}"]`
-      );
-      if (avatar) {
-        avatar.style.display = cb.checked ? '' : 'none';
-      }
+        if (avatar) {
+          avatar.style.display = cb.checked ? "" : "none";
+        }
+      });
     });
-  });
-</script>
-
+  </script>
+</MainLayout>
