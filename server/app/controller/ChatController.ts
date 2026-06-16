@@ -179,14 +179,27 @@ export const handleSendMessage = (
  * @returns {void}
  * @description Forwards visual user typing state markers back onto alternative channel room peers for client display synchronization.
  */
+/**
+ * @function handleTyping
+ * @description Forwards visual user typing state markers back onto alternative channel room peers for client display synchronization.
+ */
 export const handleTyping = (
   socket: Socket,
   io: Server,
   payload: { chatId: string; isTyping: boolean },
 ): void => {
-  // TODO: 1. Extract structural properties `chatId` and `isTyping` from the transaction payload.
-  // TODO: 2. Relay typing state broadcast arrays safely to neighboring participants: `socket.to(chatId).emit("user_typing", { chatId, user: socket.data.username, isTyping })`.
-  // ?  EMIT: socket.to(chatId).emit(SOCKET_EVENTS.USER_TYPING, { chatId, user: socket.data.username, isTyping })
+  // 1. Extract structural properties `chatId` and `isTyping` from the transaction payload.
+  const { chatId, isTyping } = payload;
+
+  if (!chatId) return;
+
+  // 2. Relay typing state broadcast safely to neighboring participants.
+  // Using `socket.to(chatId)` ensures the sender does NOT receive their own typing event.
+  socket.to(chatId).emit(SOCKET_EVENTS.USER_TYPING, { 
+    chatId, 
+    username: socket.data.username, 
+    isTyping 
+  });
 };
 
 /**
