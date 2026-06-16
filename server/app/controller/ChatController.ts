@@ -128,10 +128,6 @@ export const handleJoinChat = (
  * @returns {void}
  * @description Tears down the socket mapping loop from active specific channel rooms to isolate communication updates.
  */
-/**
- * @function handleLeaveChat
- * @description Tears down the socket mapping loop from active specific channel rooms to isolate communication updates.
- */
 export const handleLeaveChat = (
   socket: Socket,
   io: Server,
@@ -177,10 +173,6 @@ export const handleSendMessage = (
  * @param {string} payload.chatId - Active chat room selection tracking token
  * @param {boolean} payload.isTyping - Status flag representing composition changes
  * @returns {void}
- * @description Forwards visual user typing state markers back onto alternative channel room peers for client display synchronization.
- */
-/**
- * @function handleTyping
  * @description Forwards visual user typing state markers back onto alternative channel room peers for client display synchronization.
  */
 export const handleTyping = (
