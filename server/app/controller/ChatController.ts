@@ -128,13 +128,23 @@ export const handleJoinChat = (
  * @returns {void}
  * @description Tears down the socket mapping loop from active specific channel rooms to isolate communication updates.
  */
+/**
+ * @function handleLeaveChat
+ * @description Tears down the socket mapping loop from active specific channel rooms to isolate communication updates.
+ */
 export const handleLeaveChat = (
   socket: Socket,
   io: Server,
   payload: { chatId: string },
 ): void => {
-  // TODO: 1. Extract `chatId` from payload parameters.
-  // TODO: 2. Revoke room subscription channels by invoking `socket.leave(chatId)`.
+  // 1. Extract `chatId` from payload parameters.
+  const { chatId } = payload;
+
+  if (!chatId) return;
+
+  // 2. Revoke room subscription channels by invoking `socket.leave(chatId)`.
+  socket.leave(chatId);
+  console.log(`[Socket Left] User ${socket.data.username} left room: ${chatId}`);
 };
 
 /**
