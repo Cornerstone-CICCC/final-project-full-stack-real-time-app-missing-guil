@@ -1,20 +1,33 @@
 ---
 // LOGIN PAGE
-
-
 import AuthLayout from '../layouts/AuthLayout.astro';
 import Button from '../components/Button.astro';
 import TextField from '../components/TextField.astro';
 import CheckBox from '../components/CheckBox.astro';
+
+const res = await fetch('http://localhost:3000/api/auth/me', {
+  headers: { Cookie: Astro.request.headers.get("cookie") || "" }
+});
+
+if (res.ok) {
+  return Astro.redirect('/home');
+}
 ---
 
-<AuthLayout title="Log in">
+<AuthLayout title="Log in" container="max-w-md">
   <h1 class="font-display text-5xl font-bold text-text-black">Log in</h1>
   <p class="mt-1 mb-6 text-sm text-text-gray">Please enter your account details</p>
 
-  <form class="space-y-4" method="post" action="/login">
-    <TextField name="email" type="email" placeholder="you@example.com" required />
-    <TextField name="password" type="password" placeholder="••••••••" required />
+  <form id="loginForm" class="space-y-4" method="post">
+    <div class="space-y-1">
+      <TextField name="email" placeholder="Email" required />
+      <p id="email-error" class="error-msg text-red-500 text-xs empty:hidden"></p>
+    </div>
+
+    <div class="space-y-1">
+      <TextField name="password" type="password" placeholder="••••••••" required />
+      <p id="password-error" class="error-msg text-red-500 text-xs empty:hidden"></p>
+    </div>
 
     <div class="flex items-center justify-between pt-1">
       <CheckBox name="remember">Remember me</CheckBox>
@@ -23,7 +36,7 @@ import CheckBox from '../components/CheckBox.astro';
       </a>
     </div>
 
-    <Button type="submit" variant="primary" class="w-full" href="/home">Log in</Button>
+    <Button id="loginBtn" type="button" variant="primary" class="w-full">Log in</Button>
   </form>
 
   <p class="mt-5 text-center text-sm text-text-gray">
@@ -31,3 +44,51 @@ import CheckBox from '../components/CheckBox.astro';
     <a href="/register" class="font-medium hover:underline text-primary">Register</a>
   </p>
 </AuthLayout>
+
+<script>
+  const btn = document.getElementById('loginBtn');
+  const inputs = document.querySelectorAll('input');
+
+  inputs.forEach((input) => {
+    input.addEventListener('input', () => {
+      (input as HTMLElement).style.borderColor = '';
+      const errorEl = document.getElementById(`${input.getAttribute('name')}-error`);
+      if (errorEl) errorEl.textContent = '';
+    });
+  });
+  
+  btn?.addEventListener('click', async () => {
+    document.querySelectorAll('.error-msg').forEach(el => (el as HTMLElement).textContent = '');
+    document.querySelectorAll('input').forEach(el => (el as HTMLElement).style.borderColor = '');
+
+    const email = (document.querySelector('input[name="email"]') as HTMLInputElement).value;
+    const password = (document.querySelector('input[name="password"]') as HTMLInputElement).value;
+
+    let hasError = false;
+    if (!email) { document.getElementById('email-error')!.textContent = "Email is required"; hasError = true; }
+    if (!password) { document.getElementById('password-error')!.textContent = "Password is required"; hasError = true; }
+    if (hasError) return;
+
+    try {
+      const res = await fetch('http://localhost:3000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password })
+      });
+      
+      const data = await res.json();
+      if (!res.ok) {
+        const errorField = data.field || 'email'; 
+        const inputEl = document.querySelector(`input[name="${errorField}"]`) as HTMLElement;
+        const errorEl = document.getElementById(`${errorField}-error`);
+        if (inputEl) inputEl.style.borderColor = 'red';
+        if (errorEl) errorEl.textContent = data.error;
+      } else {
+        window.location.href = '/home';
+      }
+    } catch (err) { 
+      alert('Server connection failed.'); 
+    }
+  });
+</script>
