@@ -3,7 +3,7 @@ import express from "express";
 import { Server, Socket } from "socket.io";
 import { updateUserStatus, findUserById } from "../model/User.ts";
 
-import { createChat, getChatsbyUserId, getChatbyId, addParticipantToChat } from "../model/Chat.ts";
+import { createChat, getChatsbyUserId, getChatbyId, getMessagesForChat, addMessageToChat, addParticipantToChat } from "../model/Chat.ts";
 
 export const SOCKET_EVENTS = {
   MESSAGE_HISTORY: "message_history", // no sue
@@ -231,11 +231,24 @@ export const handleJoinChat = (
   io: Server,
   payload: { chatId: string },
 ): void => {
-  // TODO: 1. Extract `chatId` from payload and validate target room existence via `getChatById(chatId)`.
-  // TODO: 2. Force current socket execution instance context to enter the room block: `socket.join(chatId)`.
-  // TODO: 3. Retrieve historical messaging datasets using `getMessagesForChat(chatId)`.
-  // TODO: 4. Dispatch history array packet exclusively backwards to the caller using `socket.emit("message_history", messages)`.
-  // ?  EMIT: socket.emit(SOCKET_EVENTS.MESSAGE_HISTORY, messages)
+  //  1. Extract `chatId` from payload and validate target room existence 
+  const { chatId } = payload;
+
+  const chat = getChatbyId(chatId);
+  if (!chat) {
+    console.error(`[Socket Error] Chat room ${chatId} not found.`);
+    return;
+  }
+
+  // 2. Force current socket execution instance context to enter the room block
+  socket.join(chatId);
+  console.log(`[Socket Joined] User ${socket.data.username} joined room: ${chatId}`);
+
+  // 3. Retrieve historical messaging datasets
+  const messages = getMessagesForChat(chatId);
+
+  // 4. Dispatch history array packet exclusively backwards to the caller 
+  socket.emit(SOCKET_EVENTS.MESSAGE_HISTORY, messages);
 };
 
 /**
@@ -271,13 +284,25 @@ export const handleSendMessage = (
   io: Server,
   payload: { chatId: string; text: string },
 ): void => {
-  // TODO: 1. Extract `chatId` and `text` properties from the incoming payload block.
-  // TODO: 2. Capture authenticated sender details securely through context records: `const senderId = socket.data.userId`.
-  // TODO: 3. Invoke data layout mutators to commit text blocks onto memory via `addMessageToChat(chatId, senderId, text)`.
-  // TODO: 4. Disseminate resulting message entities downstream across all room connections with `io.to(chatId).emit("new_message", newMessage)`.
-  // ? EMIT: io.to(chatId).emit(SOCKET_EVENTS.NEW_MESSAGE, newMessage)
-};
+  // 1. Extract `chatId` and `text` from the payload
+  const { chatId, text } = payload;
 
+  // 2. Capture authenticated sender details from the socket context
+  const senderId = socket.data.userId;
+
+  if (!senderId || !text) {
+     console.error(`[Socket Error] Missing senderId or text for message.`);
+     return;
+  }
+
+  // 3. Commit text to memory via Model
+  const newMessage = addMessageToChat(chatId, senderId, text);
+
+  // 4. Disseminate message downstream across all room connections
+  io.to(chatId).emit(SOCKET_EVENTS.NEW_MESSAGE, newMessage);
+  
+  console.log(`[Socket Message] ${socket.data.username} sent a message to ${chatId}`);
+};
 /**
  * @function handleTyping
  * @param {Socket} socket - The client socket instance modifying typing states
