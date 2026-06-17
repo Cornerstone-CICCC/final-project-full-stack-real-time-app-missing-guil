@@ -187,6 +187,11 @@ const currentUserId = "test-user-001"; // TODO: Replace with real Auth ID later
     const newChatId = href?.split("/").pop();
 
     if (newChatId && newChatId !== activeChatId) {
+      // leave previous room before enter new room
+      if (activeChatId && socket) {
+        socket.emit(SOCKET_EVENTS.LEAVE_CHAT, { chatId: activeChatId });
+        console.log(`[Frontend] Left room: ${activeChatId}`);
+      }
       activeChatId = newChatId;
 
       emptyState?.classList.add("hidden");
