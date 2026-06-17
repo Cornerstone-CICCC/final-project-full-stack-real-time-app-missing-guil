@@ -1,5 +1,4 @@
 ---
-// REGISTER PAGE
 import AuthLayout from '../../layouts/AuthLayout.astro';
 import Button from '../../components/Button.astro';
 import TextField from '../../components/TextField.astro';
@@ -31,13 +30,19 @@ import CheckBox from '../../components/CheckBox.astro';
     </div>
 
     <div class="space-y-1">
-      <TextField name="confirmPassword" type="password" placeholder="Confirm Password" required />
+      <div class="relative flex items-center">
+        <TextField name="confirmPassword" type="password" placeholder="Confirm Password" required class="w-full" />
+        <span id="toggleConfirmPassword" class="absolute right-3 cursor-pointer text-xs text-gray-500 select-none">Show</span>
+      </div>
       <p id="confirmPassword-error" class="error-msg text-red-500 text-xs empty:hidden"></p>
     </div>
 
-    <CheckBox name="terms" class="text-sm text-text-gray w-full whitespace-nowrap">
-      I agree with the <a href="/" class="font-medium text-primary hover:underline">terms of service and privacy policy*</a>
-    </CheckBox>
+    <div class="space-y-1">
+      <CheckBox name="terms" class="text-sm text-text-gray w-full whitespace-nowrap">
+        I agree with the <a href="/" class="font-medium text-primary hover:underline">terms of service and privacy policy*</a>
+      </CheckBox>
+      <p id="terms-error" class="error-msg text-red-500 text-xs empty:hidden"></p>
+    </div>
 
     <Button id="registerBtn" type="button" variant="primary" class="w-full">Register</Button>
   </form>
@@ -50,10 +55,14 @@ import CheckBox from '../../components/CheckBox.astro';
 
 <script>
   const btn = document.getElementById('registerBtn');
-  const toggle = document.getElementById('togglePassword');
+  const togglePass = document.getElementById('togglePassword');
+  const toggleConfirm = document.getElementById('toggleConfirmPassword');
+  
   const passInput = document.querySelector('input[name="password"]') as HTMLInputElement;
+  const confirmInput = document.querySelector('input[name="confirmPassword"]') as HTMLInputElement;
+  const termsCheckbox = document.querySelector('input[name="terms"]') as HTMLInputElement;
 
-  document.querySelectorAll('input').forEach((input) => {
+  document.querySelectorAll('input:not([name="terms"])').forEach((input) => {
     input.addEventListener('input', () => {
       (input as HTMLElement).style.borderColor = '';
       const errorEl = document.getElementById(`${input.getAttribute('name')}-error`);
@@ -61,10 +70,23 @@ import CheckBox from '../../components/CheckBox.astro';
     });
   });
 
-  toggle?.addEventListener('click', () => {
+  termsCheckbox?.addEventListener('change', () => {
+    if (termsCheckbox.checked) {
+      const termsError = document.getElementById('terms-error');
+      if (termsError) termsError.textContent = '';
+    }
+  });
+
+  togglePass?.addEventListener('click', () => {
     const isPassword = passInput.type === 'password';
     passInput.type = isPassword ? 'text' : 'password';
-    toggle.textContent = isPassword ? 'Hide' : 'Show';
+    togglePass.textContent = isPassword ? 'Hide' : 'Show';
+  });
+
+  toggleConfirm?.addEventListener('click', () => {
+    const isPassword = confirmInput.type === 'password';
+    confirmInput.type = isPassword ? 'text' : 'password';
+    toggleConfirm.textContent = isPassword ? 'Hide' : 'Show';
   });
 
   btn?.addEventListener('click', async () => {
@@ -74,7 +96,7 @@ import CheckBox from '../../components/CheckBox.astro';
     const username = (document.querySelector('input[name="username"]') as HTMLInputElement).value;
     const email = (document.querySelector('input[name="email"]') as HTMLInputElement).value;
     const password = passInput.value;
-    const confirmPassword = (document.querySelector('input[name="confirmPassword"]') as HTMLInputElement).value;
+    const confirmPassword = confirmInput.value;
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const passRegex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{5,})/;
@@ -104,6 +126,11 @@ import CheckBox from '../../components/CheckBox.astro';
       document.getElementById('confirmPassword-error')!.textContent = "Confirm Password is required"; hasError = true; 
     } else if (password !== confirmPassword) { 
       document.getElementById('confirmPassword-error')!.textContent = "Passwords do not match"; hasError = true; }
+
+    if (!termsCheckbox.checked) {
+      document.getElementById('terms-error')!.textContent = "You must agree to the terms";
+      hasError = true;
+    }
 
     if (hasError) return;
 
