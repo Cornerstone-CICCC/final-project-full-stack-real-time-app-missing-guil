@@ -31,6 +31,11 @@ export const registerUser = async (
       return res.status(400).json({ error: "Username must be 15 characters or less", field: "username" });
     }
 
+    const passRegex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{5,})/;
+    if (!passRegex.test(password)) {
+      return res.status(400).json({ error: "Invalid password format", field: "password" });
+    }
+
     if (
       typeof username !== "string" ||
       typeof email !== "string" ||
@@ -50,10 +55,6 @@ export const registerUser = async (
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ error: "Invalid email format" });
     }
-
-    // if (password.length < 6) {
-    //   return res.status(400).json({ error: "Password must be at least 6 characters long" });
-    // }
 
     // TODO: 3. Verify if the username or email is already taken using `findUserbyName` and `findUserbyEmail` (return 409 Conflict if a duplicate is found).
     if (findUserbyName(username) || findUserbyEmail(email)) {
