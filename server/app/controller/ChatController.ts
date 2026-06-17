@@ -265,8 +265,14 @@ export const handleLeaveChat = (
   io: Server,
   payload: { chatId: string },
 ): void => {
-  // TODO: 1. Extract `chatId` from payload parameters.
-  // TODO: 2. Revoke room subscription channels by invoking `socket.leave(chatId)`.
+  // 1. Extract `chatId` from payload parameters.
+  const { chatId } = payload;
+
+  if (!chatId) return;
+
+  // 2. Revoke room subscription channels by invoking `socket.leave(chatId)`.
+  socket.leave(chatId);
+  console.log(`[Socket Left] User ${socket.data.username} left room: ${chatId}`);
 };
 
 /**
@@ -318,13 +324,22 @@ export const handleTyping = (
   io: Server,
   payload: { chatId: string; isTyping: boolean },
 ): void => {
-  // TODO: 1. Extract structural properties `chatId` and `isTyping` from the transaction payload.
-  // TODO: 2. Relay typing state broadcast arrays safely to neighboring participants: `socket.to(chatId).emit("user_typing", { chatId, user: socket.data.username, isTyping })`.
-  // ?  EMIT: socket.to(chatId).emit(SOCKET_EVENTS.USER_TYPING, { chatId, user: socket.data.username, isTyping })
+  // 1. Extract structural properties `chatId` and `isTyping` from the transaction payload.
+  const { chatId, isTyping } = payload;
+
+  if (!chatId) return;
+
+  // 2. Relay typing state broadcast safely to neighboring participants.
+  // Using `socket.to(chatId)` ensures the sender does NOT receive their own typing event.
+  socket.to(chatId).emit(SOCKET_EVENTS.USER_TYPING, { 
+    chatId, 
+    username: socket.data.username, 
+    isTyping 
+  });
 };
 
 /**
- * @function handleSocketDisconnect
+ * @function handleSocketDisconnet
  * @param {Socket} socket - The client socket instance going through connection drop cycles
  * @param {Server} io - The global Socket.io server instance
  * @returns {void}
