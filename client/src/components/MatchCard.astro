@@ -26,7 +26,7 @@ const {
 } = Astro.props as Props;
 ---
 
-<div class="bg-bg/90 rounded-4xl shadow-md px-8 py-6">
+<div class=" border-b-1 border-primary pb-8 pt-6 px-8">
   <div class="flex items-center justify-between ">
     <div class="flex flex-col items-center gap-2">
       <img
@@ -50,8 +50,8 @@ const {
       <span class="text-2xl font-medium">{teamB}</span>
     </div>
   </div>
-  <div class="mt-4 flex items-center justify-between">
-    <div class="text-xl font-normal">{memberCount} chatting now</div>
+  <div class="mt-4 flex flex-col items-center justify-between gap-4 max-w-sm mx-auto">
+
 
     {
       {

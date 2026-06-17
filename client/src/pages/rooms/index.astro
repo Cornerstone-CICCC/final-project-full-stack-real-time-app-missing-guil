@@ -3,7 +3,7 @@ export const prerender = false;
 
 import MainLayout from "../../layouts/MainLayout.astro";
 import SearchField from "../../components/SearchField.astro";
-import ChatListItem from "../../components/ChatListItem.astro";
+import RoomListItem from "../../components/RoomListItem.astro";
 import RoomIcon from "../../assets/icon/green/rooms.svg?url";
 
 import RoomHeader from "../../components/RoomHeader.astro";
@@ -72,9 +72,9 @@ const rooms: Room[] = [
     avatar: "/assets/images/user2.jpg",
     timestamp: "1:45 PM",
     memberCount: 54,
-    onlineCount: 3,
+    onlineCount: 0,
     members: [
-      { name: "Maria G.",  avatar: "", status: "online"  },
+      { name: "Maria G.",  avatar: "", status: "offline"  },
       { name: "Carlos R.", avatar: "", status: "offline" },
     ],
     messages: [
@@ -85,11 +85,11 @@ const rooms: Room[] = [
   {
     id: "3",
     name: "Germany is the best",
-    status: "online",
+    status: "offline",
     avatar: "/assets/images/user3.jpg",
     timestamp: "12:00 PM",
     memberCount: 88,
-    onlineCount: 7,
+    onlineCount: 0,
     members: [
       { name: "Leo M.",  avatar: "", status: "online"  },
       { name: "Anna K.", avatar: "", status: "online"  },
@@ -103,9 +103,16 @@ const rooms: Room[] = [
 ];
 
 const { id } = Astro.params;
-const initialActiveRoomId = rooms.some((room) => room.id === id)
+
+// Set status based on onlineCount: if no one is online, status is offline
+const roomsWithStatus: Room[] = rooms.map(room => ({
+  ...room,
+  status: room.onlineCount > 0 ? "online" : "offline"
+}));
+
+const initialActiveRoomId = roomsWithStatus.some((room) => room.id === id)
   ? id
-  : rooms[0]?.id;
+  : roomsWithStatus[0]?.id;
 ---
 
 <MainLayout title="Rooms" active="Rooms" container="w-full">
@@ -130,12 +137,14 @@ const initialActiveRoomId = rooms.some((room) => room.id === id)
       <SearchField placeholder="Search..." />
 
       <div class="mt-4 space-y-2 overflow-y-auto flex-1">
-        {rooms.map((room) => (
+        {roomsWithStatus.map((room) => (
           <div class="room-trigger" data-room-id={room.id}>
-            <ChatListItem
+            <RoomListItem
               avatar={room.avatar}
               name={room.name}
               status={room.status}
+              memberCount={room.memberCount}
+              onlineCount={room.onlineCount}
               timestamp={room.timestamp}
               href={`#`}
               active={room.id === initialActiveRoomId}
@@ -149,8 +158,8 @@ const initialActiveRoomId = rooms.some((room) => room.id === id)
     <!-- RIGHT: Chat window -->
     <div class="flex-1 relative flex flex-col overflow-hidden bg-bg">
 
-      {rooms.length > 0 ? (
-        rooms.map((room) => (
+      {roomsWithStatus.length > 0 ? (
+        roomsWithStatus.map((room) => (
           <div
             id={`room-panel-${room.id}`}
             class={`room-panel ${room.id === initialActiveRoomId ? 'flex' : 'hidden'} flex-1 flex-col h-full overflow-hidden`}

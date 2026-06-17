@@ -63,12 +63,14 @@ const upcomingMatches = [
 
 <MainLayout title="Home" active="Home" container="w-full home-bg">
 <div id="live" class="flex flex-col items-center gap-6 py-10">   
-  <h1 class="flex items-center gap-3 text-4xl font-bold bg-bg/90 text-primary-60 px-8 py-4 rounded-4xl">
-   <span class="h-6 w-6 rounded-full bg-red-500 block"></span>
-   <span>Matches Live Now</span>
-  </h1>
-
-    <div class="w-full max-w-3xl gap-4 flex flex-col">
+  
+  <!-- Live Matches -->
+  
+  <div class="w-full max-w-3xl gap-4 flex flex-col bg-bg/90 rounded-4xl shadow-md px-8 py-6">
+      <h1 class="flex items-center gap-3 text-4xl font-bold bg-bg/90 text-primary-60 px-8 py-4 rounded-4xl">
+       <span class="h-6 w-6 rounded-full bg-red-500 block"></span>
+       <span>Matches Live Now</span>
+      </h1>
       <MatchCard
         teamA={liveMatches[0].teamA}
         teamB={liveMatches[0].teamB}
@@ -94,14 +96,16 @@ const upcomingMatches = [
     </div>
   </div>
 
-  
+<hr class="border-t border-gray-300 my-4" />
+
 
 <!-- Upcoming Matches -->
 
 <div id="upcoming" class="flex flex-col items-center gap-6 py-10">    
-  <h1 class="text-4xl font-bold bg-bg/90 text-primary-60  rounded-4xl shadow-md px-8 py-6">Upcoming Matches</h1>
-
-    <div class="w-full max-w-3xl gap-4 flex flex-col">
+  
+  <div class="w-full max-w-3xl gap-4 flex flex-col bg-bg/90 rounded-4xl shadow-md px-8 py-6">
+      <h1 class="flex items-center gap-3 text-4xl font-bold bg-bg/90 text-primary-60 px-8 py-4 rounded-4xl">
+        Upcoming Matches</h1>
       <MatchCard
           teamA={upcomingMatches[0].teamA}
         teamB={upcomingMatches[0].teamB}
