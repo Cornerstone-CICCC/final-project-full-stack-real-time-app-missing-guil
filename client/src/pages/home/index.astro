@@ -6,57 +6,122 @@ import MainLayout from "../../layouts/MainLayout.astro";
 import MatchCard from "../../components/MatchCard.astro";
 import Button from "../../components/Button.astro";
 
+const liveMatches = [
+  {
+    id: "live1",
+    teamA: "Argentina",
+    teamB: "France",
+    score: "3 - 3",
+    memberCount: 1420,
+    teamAFlag: "https://flagcdn.com/w160/ar.png",
+    teamBFlag: "https://flagcdn.com/w160/fr.png",
+    matchTime: "90'",
+  },
+  {
+    id: "live2",
+    teamA: "Brazil",
+    teamB: "Germany",
+    score: "1 - 0",
+    memberCount: 863,
+    teamAFlag: "https://flagcdn.com/w160/br.png",
+    teamBFlag: "https://flagcdn.com/w160/de.png",
+    matchTime: "67'",
+  },
+];
+
+const upcomingMatches = [
+  {
+    teamA: "Spain",
+    teamB: "Portugal",
+    score: "",
+    memberCount: 0,
+    teamAFlag: "https://flagcdn.com/w160/es.png",
+    teamBFlag: "https://flagcdn.com/w160/pt.png",
+    matchTime: "Jun 17 · 18:00",
+  },
+  {
+    teamA: "England",
+    teamB: "Italy",
+    score: "",
+    memberCount: 0,
+    teamAFlag: "https://flagcdn.com/w160/gb-eng.png",
+    teamBFlag: "https://flagcdn.com/w160/it.png",
+    matchTime: "Jun 18 · 21:00",
+  },
+  {
+    teamA: "Netherlands",
+    teamB: "Croatia",
+    score: "",
+    memberCount: 0,
+    teamAFlag: "https://flagcdn.com/w160/nl.png",
+    teamBFlag: "https://flagcdn.com/w160/hr.png",
+    matchTime: "Jun 20 · 15:00",
+  },
+];
+
 ---
 
 <MainLayout title="Home" active="Home" container="w-full home-bg">
-<div id="live" class="flex flex-col items-center gap-6 py-10">    <h1 class="text-4xl font-bold">Live Now</h1>
+<div id="live" class="flex flex-col items-center gap-6 py-10">   
+  <h1 class="flex items-center gap-3 text-4xl font-bold bg-bg/90 text-primary-60 px-8 py-4 rounded-4xl">
+   <span class="h-6 w-6 rounded-full bg-red-500 block"></span>
+   <span>Matches Live Now</span>
+  </h1>
 
-    <div class="w-full max-w-3xl gap-8 flex flex-col">
+    <div class="w-full max-w-3xl gap-4 flex flex-col">
       <MatchCard
-        teamA="Team A"
-        teamB="Team B"
-        score="2-1"
-        memberCount={15}
-        matchTime="2024-07-01T18:00:00Z"
-        teamAFlag="/assets/images/teamA.png"
-        teamBFlag="/assets/images/teamB.png"
-        href="/rooms/live1"
+        teamA={liveMatches[0].teamA}
+        teamB={liveMatches[0].teamB}
+        score={liveMatches[0].score}
+        memberCount={liveMatches[0].memberCount}
+        matchTime={liveMatches[0].matchTime}
+        teamAFlag={liveMatches[0].teamAFlag}
+        teamBFlag={liveMatches[0].teamBFlag}
+        href="/rooms/"
         status="live"
       />
       <MatchCard
-        teamA="Team C"
-        teamB="Team D"
-        score="1-0"
-        memberCount={20}
-        matchTime="2024-07-02T20:00:00Z"
-        teamAFlag="/assets/images/teamC.png"
-        teamBFlag="/assets/images/teamD.png"
-        href="/rooms/live2"
+        teamA={liveMatches[1].teamA}
+        teamB={liveMatches[1].teamB}
+        score={liveMatches[1].score}
+        memberCount={liveMatches[1].memberCount}
+        matchTime={liveMatches[1].matchTime}
+        teamAFlag={liveMatches[1].teamAFlag}
+        teamBFlag={liveMatches[1].teamBFlag}
+        href="/rooms/"
         status="live"
       />
     </div>
   </div>
-<div id="upcoming" class="flex flex-col items-center gap-6 py-10">    <h1 class="text-4xl font-bold">Upcoming Matches</h1>
 
-    <div class="w-full max-w-3xl gap-8 flex flex-col">
+  
+
+<!-- Upcoming Matches -->
+
+<div id="upcoming" class="flex flex-col items-center gap-6 py-10">    
+  <h1 class="text-4xl font-bold bg-bg/90 text-primary-60  rounded-4xl shadow-md px-8 py-6">Upcoming Matches</h1>
+
+    <div class="w-full max-w-3xl gap-4 flex flex-col">
       <MatchCard
-        teamA="Team A"
-        teamB="Team B"
-        score="VS"
-        memberCount={15}
-        matchTime="2024-07-01T18:00:00Z"
-        teamAFlag="/assets/images/teamA.png"
-        teamBFlag="/assets/images/teamB.png"
-        status="upcoming"
+          teamA={upcomingMatches[0].teamA}
+        teamB={upcomingMatches[0].teamB}
+        score={upcomingMatches[0].score}
+        memberCount={upcomingMatches[0].memberCount}
+        matchTime={upcomingMatches[0].matchTime}
+        teamAFlag={upcomingMatches[0].teamAFlag}
+        teamBFlag={upcomingMatches[0].teamBFlag}
+        href="/rooms/live1"
+        status="live"
       />
       <MatchCard
-        teamA="Team C"
-        teamB="Team D"
-        score="VS"
-        memberCount={20}
-        matchTime="2024-07-02T20:00:00Z"
-        teamAFlag="/assets/images/teamC.png"
-        teamBFlag="/assets/images/teamD.png"
+        teamA={upcomingMatches[1].teamA}
+        teamB={upcomingMatches[1].teamB}
+        score={upcomingMatches[1].score}
+        memberCount={upcomingMatches[1].memberCount}
+        matchTime={upcomingMatches[1].matchTime}
+        teamAFlag={upcomingMatches[1].teamAFlag}
+        teamBFlag={upcomingMatches[1].teamBFlag}
+        href="/rooms/live1"
         status="upcoming"
       />
     </div>

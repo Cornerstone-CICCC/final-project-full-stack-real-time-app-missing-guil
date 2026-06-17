@@ -103,7 +103,9 @@ const rooms: Room[] = [
 ];
 
 const { id } = Astro.params;
-const activeRoom = rooms.find((r) => r.id === id);
+const initialActiveRoomId = rooms.some((room) => room.id === id)
+  ? id
+  : rooms[0]?.id;
 ---
 
 <MainLayout title="Rooms" active="Rooms" container="w-full">
@@ -136,7 +138,7 @@ const activeRoom = rooms.find((r) => r.id === id);
               status={room.status}
               timestamp={room.timestamp}
               href={`#`}
-              active={room.id === id}
+              active={room.id === initialActiveRoomId}
               unread={room.unread}
             />
           </div>
@@ -147,21 +149,23 @@ const activeRoom = rooms.find((r) => r.id === id);
     <!-- RIGHT: Chat window -->
     <div class="flex-1 relative flex flex-col overflow-hidden bg-bg">
 
-      {activeRoom ? (
-        <>
-          <div id={`room-panel-${activeRoom.id}`} class="room-panel hidden flex-1 flex-col h-full overflow-hidden">
+      {rooms.length > 0 ? (
+        rooms.map((room) => (
+          <div
+            id={`room-panel-${room.id}`}
+            class={`room-panel ${room.id === initialActiveRoomId ? 'flex' : 'hidden'} flex-1 flex-col h-full overflow-hidden`}
+          >
             <RoomHeader
-              name={activeRoom.name}
-              avatar={activeRoom.avatar}
-              memberCount={activeRoom.memberCount}
-              onlineCount={activeRoom.onlineCount}
-              members={activeRoom.members}
+              name={room.name}
+              avatar={room.avatar}
+              memberCount={room.memberCount}
+              onlineCount={room.onlineCount}
+              members={room.members}
             />
 
             <div class="home-bg absolute inset-0 opacity-40 pointer-events-none" />
 
-            <div id={`messages-list-${activeRoom.id}`} class="relative flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-1">
-              <!-- Date separator -->
+            <div id={`messages-list-${room.id}`} class="relative flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-1">
               <div class="flex items-center gap-3 my-3">
                 <hr class="flex-1 border-gray-300/60" />
                 <span class="text-xs font-medium text-gray-500 bg-white/70 px-3 py-0.5 rounded-full backdrop-blur-sm">
@@ -170,7 +174,7 @@ const activeRoom = rooms.find((r) => r.id === id);
                 <hr class="flex-1 border-gray-300/60" />
               </div>
 
-              {activeRoom.messages.map((msg: Message) => (
+              {room.messages.map((msg: Message) => (
                 <ChatBubble
                   message={msg.text}
                   timestamp={msg.timestamp}
@@ -181,14 +185,14 @@ const activeRoom = rooms.find((r) => r.id === id);
               ))}
             </div>
 
-            <TypingIndicator id={`typing-${activeRoom.id}`} />
+            <TypingIndicator id={`typing-${room.id}`} />
             <TypeBox />
           </div>
-        </>
+        ))
       ) : (
         <>
           <div class="home-bg absolute inset-0 opacity-30" />
-          <p class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-500 text-lg text-center z-10">
+          <p id="empty-state" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-500 text-lg text-center z-10">
             Select a room to start messaging
           </p>
         </>
@@ -202,7 +206,9 @@ const activeRoom = rooms.find((r) => r.id === id);
 <script>
   // ── Room switching ──────────────────────────────────────────────────────
   const emptyState = document.getElementById('empty-state');
-  let activeId: string | null = null;
+  let activeId: string | null = document
+    .querySelector<HTMLElement>('.room-panel.flex')
+    ?.id.replace('room-panel-', '') ?? null;
 
   function openRoom(id: string) {
     // Hide previous panel
