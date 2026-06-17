@@ -4,6 +4,14 @@ import AuthLayout from '../layouts/AuthLayout.astro';
 import Button from '../components/Button.astro';
 import TextField from '../components/TextField.astro';
 import CheckBox from '../components/CheckBox.astro';
+
+const res = await fetch('http://localhost:3000/api/auth/me', {
+  headers: { Cookie: Astro.request.headers.get("cookie") || "" }
+});
+
+if (res.ok) {
+  return Astro.redirect('/home');
+}
 ---
 
 <AuthLayout title="Log in" container="max-w-md">
@@ -65,6 +73,7 @@ import CheckBox from '../components/CheckBox.astro';
       const res = await fetch('http://localhost:3000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email, password })
       });
       

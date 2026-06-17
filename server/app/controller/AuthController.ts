@@ -151,8 +151,24 @@ export const logoutUser = async (
     req.session = null;
 
     // TODO: 4. Send back a success JSON message indicating the logout process was completed with a 200 OK status.
-    return res.status(200).json({ message: "Logout successful" });
+    // return res.status(200).json({ message: "Logout successful" });
+    return res.redirect("http://localhost:4321/");
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
   }
+};
+
+/**
+ * @function checkAuth
+ * @param {express.Request} req - The Express request object containing the user session
+ * @param {express.Response} res - The Express response object used to send authentication status
+ * @returns {void} Sends a JSON response indicating whether the user is authenticated
+ * @description Verifies the existence of an active user session and returns the authentication status.
+ */
+export const checkAuth = (req: express.Request, res: express.Response) => {
+  // @ts-ignore
+  if (req.session && req.session.userId) {
+    return res.status(200).json({ authenticated: true });
+  }
+  return res.status(401).json({ authenticated: false });
 };
