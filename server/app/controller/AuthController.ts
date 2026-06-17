@@ -27,6 +27,10 @@ export const registerUser = async (
       return res.status(400).json({ error: "All fields are required" });
     }
 
+    if (username.length > 15) {
+      return res.status(400).json({ error: "Username must be 15 characters or less", field: "username" });
+    }
+
     if (
       typeof username !== "string" ||
       typeof email !== "string" ||

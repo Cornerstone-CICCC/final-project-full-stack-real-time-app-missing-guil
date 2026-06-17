@@ -12,7 +12,7 @@ import CheckBox from '../../components/CheckBox.astro';
 
   <form id="registerForm" class="space-y-4" method="post">
     <div class="space-y-1">
-      <TextField name="username" placeholder="Username" required />
+      <TextField name="username" placeholder="Username" maxlength="15" required />
       <p id="username-error" class="error-msg text-red-500 text-xs empty:hidden"></p>
     </div>
 
@@ -53,7 +53,6 @@ import CheckBox from '../../components/CheckBox.astro';
   const toggle = document.getElementById('togglePassword');
   const passInput = document.querySelector('input[name="password"]') as HTMLInputElement;
 
-  // 사용자가 입력하기 시작하면 에러 메시지 초기화
   document.querySelectorAll('input').forEach((input) => {
     input.addEventListener('input', () => {
       (input as HTMLElement).style.borderColor = '';
@@ -82,7 +81,14 @@ import CheckBox from '../../components/CheckBox.astro';
 
     let hasError = false;
 
-    if (!username) { document.getElementById('username-error')!.textContent = "Username is required"; hasError = true; }
+    if (!username) { 
+      document.getElementById('username-error')!.textContent = "Username is required"; 
+      hasError = true; 
+    } else if (username.length > 15) { 
+      document.getElementById('username-error')!.textContent = "Username must be 15 characters or less"; 
+      (document.querySelector('input[name="username"]') as HTMLElement).style.borderColor = 'red';
+      hasError = true; 
+    }
     
     if (!email) { 
       document.getElementById('email-error')!.textContent = "Email is required"; hasError = true; 
