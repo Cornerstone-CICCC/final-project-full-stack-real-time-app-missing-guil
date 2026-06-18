@@ -1,6 +1,6 @@
 import express from "express";
-
-import { findAllUsers, findUserbyName } from "../model/User.ts";
+import { findAllUsers, findUserbyName, findUserById, updateUserData } from "../model/User.ts";
+import { hashPassword, comparePassword } from "../utils/Crypto.ts";
 
 /**
  * @function getAllUsers
@@ -50,5 +50,71 @@ export const getUser = async (req: express.Request, res: express.Response) => {
     res.status(200).json(safeUserData);
   } catch (error) {
     res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+/**
+ * @function updateUser
+ * @param {express.Request} req - The Express request object containing update fields
+ * @param {express.Response} res - The Express response object
+ * @returns {Promise<void>} Sends a success message or an error status
+ * @description Updates the user profile fields like username, email, or password after validation.
+ */
+export const updateUser = async (
+  req: express.Request,
+  res: express.Response,
+) => {
+  try {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { username, email, currentPassword, newPassword } = req.body;
+    const user = findUserById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // 1. Validation for username
+    if (username && username.length > 15) {
+      return res.status(400).json({ error: "Username must be 15 characters or less" });
+    }
+
+    // 2. Validation for email format
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: "Invalid email format" });
+    }
+
+    // 3. Password change logic with validation
+    let passwordHash = user.passwordHash;
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({ error: "Current password is required to set a new one" });
+      }
+
+      const isMatch = await comparePassword(currentPassword, user.passwordHash);
+      if (!isMatch) {
+        return res.status(401).json({ error: "Current password incorrect" });
+      }
+
+      const passRegex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{5,})/;
+      if (!passRegex.test(newPassword)) {
+        return res.status(400).json({ error: "New password does not meet requirements" });
+      }
+      passwordHash = await hashPassword(newPassword);
+    }
+
+    // 4. Update the user data
+    updateUserData(userId, {
+      username: username || user.username,
+      email: email || user.email,
+      passwordHash: passwordHash,
+    });
+
+    return res.status(200).json({ message: "Profile updated successfully" });
+  } catch (error) {
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 };

@@ -2,7 +2,8 @@ import express from "express";
 
 import {
   getAllUsers,
-  getUser
+  getUser,
+  updateUser
 } from "../controller/UserController.ts";
 
 
@@ -16,5 +17,10 @@ const router = express.Router();
 router.get("/", authMiddleware, getAllUsers);
 
 router.get("/:name", authMiddleware, getUser);
+
+/**
+ * @route {PATCH} /users/profile - Update the current user's profile
+ */
+router.patch("/profile", authMiddleware, updateUser);
 
 export default router;
