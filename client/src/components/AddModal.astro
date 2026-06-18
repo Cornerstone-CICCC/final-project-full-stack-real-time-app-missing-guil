@@ -28,6 +28,7 @@ import TextField from "./TextField.astro";
 
 <script>
   const modal = document.getElementById('add-modal');
+  const addForm = document.getElementById('add-form') as HTMLFormElement;
 
   const open = () => {
     modal?.classList.remove('hidden');
@@ -50,4 +51,49 @@ import TextField from "./TextField.astro";
 
   // Listen for the open trigger dispatched by the Add Room button
   document.addEventListener('open-add-modal', open);
+
+  
+  // == Handle Form Submit & Call createGroupChat API ==
+  
+  addForm?.addEventListener('submit', async (e) => {
+    // Prevent the default browser redirect
+    e.preventDefault();
+
+    // Extract the entered username from the TextField
+    const formData = new FormData(addForm);
+    const inviteCode = formData.get('inviteCode') as string;
+
+    if (!inviteCode) return;
+
+    try {
+      // Call the backend REST API to create a new chat room
+      // Note: We format the payload to match the createGroupChat controller expectations
+      const res = await fetch("http://localhost:3000/api/chats/group", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: `Chat with ${inviteCode}`,
+          participantIds: [inviteCode]
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        console.log("[Frontend] Successfully created new chat:", data);
+        addForm.reset();
+        close();
+        
+        // Refresh the page to reload the sidebar with the new chat
+        window.location.reload();
+      } else {
+        alert("Error creating chat: " + data.error);
+      }
+    } catch (error) {
+      console.error("[Frontend Error] Creating chat failed:", error);
+      alert("Failed to connect to the server.");
+    }
+  });
 </script>
