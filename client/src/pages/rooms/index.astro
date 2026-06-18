@@ -13,6 +13,7 @@ import TypingIndicator from "../../components/TypingIndicator.astro";
 import Button from "../../components/Button.astro";
 import PlusIcon from "../../assets/icon/outlined/plus.svg?url";
 import InviteModal from "../../components/InviteModal.astro";
+import BackIcon from "../../assets/icon/green/back.svg?url";
 
 
 //　FETCH AUTHENTICATED USER SESSION
@@ -32,10 +33,12 @@ if (authRes.ok) {
 ---
 
 <MainLayout title="Rooms" active="Rooms" container="w-full">
-  <div class="flex h-screen" data-my-user-id={currentUserId} id="room-container">
+  <div class="flex h-screen flex-col md:flex-row bg-bg" data-my-user-id={currentUserId} id="room-container">
 
-    <aside class="w-100 p-4 flex flex-col shadow-lg">
-
+<aside
+  id="room-sidebar"
+  class="w-full lg:w-100 p-4 flex flex-col shadow-none lg:shadow-lg"
+>
       <div class="flex flex-row justify-between items-center">
         <h1 class="text-3xl font-bold mb-4 flex items-center gap-2 text-primary-60">
           <img src={RoomIcon} alt="Rooms" class="h-8 w-8" />
@@ -55,11 +58,24 @@ if (authRes.ok) {
       </div>
     </aside>
 
-    <div class="flex-1 relative flex flex-col overflow-hidden bg-bg">
+<div
+  id="room-panel"
+  class="hidden lg:flex flex-1 relative flex-col overflow-hidden bg-bg"
+>
+      <div class="md:hidden px-4 pt-4">
+<a
+  id="back-to-rooms"
+  href="#"
+  class="mb-6 inline-flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-primary hover:bg-primary-10 transition-colors w-fit"
+>
+  <img src={BackIcon} alt="Back" class="h-5 w-5" />
+  Back
+</a>
+      </div>
 
       <div id="empty-room-state" class="absolute inset-0 flex items-center justify-center z-10">
         <div class="home-bg absolute inset-0 opacity-30 pointer-events-none"></div>
-        <p class="text-gray-500 text-lg text-center z-10 bg-bg/60 rounded-full px-4 py-2">
+        <p class="text-gray-500 text-lg text-center z-10">
           Select a room to start messaging
         </p>
       </div>
@@ -106,6 +122,9 @@ if (authRes.ok) {
   const emptyState = document.getElementById("empty-room-state");
   const activeState = document.getElementById("active-room-state");
   const roomHeaderWrapper = document.getElementById("room-header-wrapper");
+  const roomSidebar = document.getElementById("room-sidebar");
+  const roomPanel = document.getElementById("room-panel");
+  const backToRoomsButton = document.getElementById("back-to-rooms");
   
   const messagesList = document.getElementById("messages-list");
   const typingIndicatorWrapper = document.getElementById("typing-indicator-wrapper");
@@ -144,6 +163,26 @@ if (authRes.ok) {
     messagesList.scrollTop = messagesList.scrollHeight;
   }
 
+  function showRoomPanel() {
+    if (roomSidebar) roomSidebar.classList.add("hidden", "md:flex");
+    if (roomPanel) roomPanel.style.display = "flex";
+    if (emptyState) emptyState.classList.add("hidden");
+    if (activeState) {
+      activeState.classList.remove("hidden");
+      activeState.classList.add("flex");
+    }
+  }
+
+  function showRoomList() {
+    if (roomSidebar) roomSidebar.classList.remove("hidden");
+    if (roomPanel) roomPanel.style.display = "none";
+    if (activeState) {
+      activeState.classList.add("hidden");
+      activeState.classList.remove("flex");
+    }
+    if (emptyState) emptyState.classList.remove("hidden");
+  }
+
   // =========================================================================
   // API INTEGRATION: FETCH ROOMS
   // =========================================================================
@@ -169,7 +208,7 @@ if (authRes.ok) {
         rooms.forEach((room: any) => {
           const a = document.createElement("a");
           a.href = `/room/${room.id}`;
-          a.className = "room-trigger block p-4 rounded-lg transition-colors hover:bg-primary-10 bg-white flex flex-row items-center gap-4 cursor-pointer mb-2";
+          a.className = "flex items-center gap-3 px-2 py-3 rounded-lg cursor-pointer hover:bg-primary-10 transition-colors";
           
           a.innerHTML = `
             <div class="relative w-12 h-12 rounded-full bg-primary-20 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0">
@@ -264,9 +303,7 @@ if (authRes.ok) {
         `;
       }
 
-      emptyState?.classList.add("hidden");
-      activeState?.classList.remove("hidden");
-      activeState?.classList.add("flex");
+      showRoomPanel();
 
       // Join the new room channel
       socket?.emit(SOCKET_EVENTS.JOIN_CHAT, { chatId: activeRoomId });
@@ -297,5 +334,9 @@ if (authRes.ok) {
   // =========================================================================
   document.getElementById('open-invite-modal')?.addEventListener('click', () => {
     document.dispatchEvent(new CustomEvent('open-invite-modal'));
+  });
+
+  backToRoomsButton?.addEventListener("click", () => {
+    showRoomList();
   });
 </script>

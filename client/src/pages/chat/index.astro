@@ -12,6 +12,7 @@ import TypingIndicator from "../../components/TypingIndicator.astro";
 import Button from "../../components/Button.astro";
 import PlusIcon from "../../assets/icon/outlined/plus.svg?url";
 import AddModal from "../../components/AddModal.astro";
+import BackIcon from "../../assets/icon/green/back.svg?url";
 
 const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace with real Auth ID later
 ---
@@ -22,7 +23,10 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
     data-my-user-id={currentUserId}
     id="chat-container"
   >
-    <div class="w-100 p-4 flex flex-col shadow-lg">
+    <div
+      id="chat-sidebar"
+      class="w-full md:w-96 p-4 flex flex-col shadow-lg bg-bg"
+    >
       <div class="flex flex-row justify-between items-center">
         <h1
           class="text-3xl font-bold mb-4 flex items-center gap-2 text-primary-60"
@@ -49,22 +53,37 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
       </div>
     </div>
 
-    <div class="flex-1 relative flex flex-col">
+    <div id="chat-content" class="hidden md:flex flex-1 relative flex-col">
       <div
         id="empty-chat-state"
         class="absolute inset-0 flex items-center justify-center z-10"
       >
         <div class="home-bg absolute inset-0 opacity-30 pointer-events-none">
         </div>
-        <p class="text-gray-500 text-lg text-center z-10 bg-bg/60 rounded-full px-4 py-2">
+        <p
+          class="text-gray-500 text-lg text-center z-10 bg-bg/60 rounded-full px-4 py-2"
+        >
           Select a room to start messaging
         </p>
       </div>
 
-      <div
-        id="active-chat-state"
-        class="hidden flex-col h-full z-20"
-      >
+      <div id="active-chat-state" class="hidden flex-col h-full z-20">
+        <div
+          class="flex flex-row justify-between items-center border-b border-gray-200 p-1 md:hidden fixed w-full z-10 bg-bg"
+        >
+          <a
+            href="/chat"
+            class="inline-flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-primary hover:bg-primary-10 transition-colors w-fit"
+          >
+            <img src={BackIcon} alt="Back" class="h-5 w-5" />
+            Back
+          </a>
+        </div>
+
+        <div
+          class="flex items-center border-b bg-bg border-gray-200 p-2 md:hidden"
+        >
+
         <ChatHeader
           name="Active Chat"
           status="online"
@@ -106,6 +125,8 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
   const messagesList = document.getElementById("messages-list");
   const chatContainer = document.getElementById("chat-container");
   const chatHeaderWrapper = document.getElementById("chat-header-wrapper");
+
+  
 
   const typingIndicatorWrapper = document.getElementById(
     "typing-indicator-wrapper",
@@ -174,7 +195,7 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
           const chatItemLink = document.createElement("a");
           chatItemLink.setAttribute("href", `/chat/${chat.id}`);
           chatItemLink.className =
-            "block p-4 rounded-lg transition-colors hover:bg-primary-10 bg-white flex flex-row items-center gap-4 cursor-pointer mb-2";
+            "room-trigger block p-4 rounded-lg transition-colors hover:bg-primary-10 bg-bg flex flex-row items-center gap-4 cursor-pointer mb-2";
 
           chatItemLink.innerHTML = `
             <div class="relative w-10 h-10 rounded-full bg-primary-20 flex items-center justify-center text-primary font-bold">
@@ -343,7 +364,7 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
         const chatItemLink = document.createElement("a");
         chatItemLink.setAttribute("href", `/chat/${newChat.id}`);
         chatItemLink.className =
-          "block p-3 rounded-xl transition-all hover:bg-gray-50 bg-white shadow-sm border border-gray-100 flex flex-row items-center gap-3 cursor-pointer mb-2 animate-fade-in"; // Puedes añadir animación aquí
+          "room-trigger block p-4 rounded-lg transition-colors hover:bg-primary-10 bg-bg flex flex-row items-center gap-4 cursor-pointer mb-2"; // Puedes añadir animación aquí
 
         chatItemLink.innerHTML = `
         <div class="relative w-10 h-10 rounded-full bg-primary-20 flex items-center justify-center text-primary font-bold">
