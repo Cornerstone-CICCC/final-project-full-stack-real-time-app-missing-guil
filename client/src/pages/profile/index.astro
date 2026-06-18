@@ -9,7 +9,7 @@ import TextField from "../../components/TextField.astro";
 ---
 
 <MainLayout title="Profile Settings" active="Profile" container="w-full">
-  <div class="flex flex-col h-screen items-center justify-center login-bg">
+  <div class="flex min-h-screen flex-col items-center justify-start px-4 pt-8 pb-8 sm:h-screen sm:px-0 sm:pt-0 sm:pb-0 sm:justify-center login-bg">
     <div class="rounded-2xl bg-bg/90 p-8 shadow-xl">
       <div class="text-center">
         <h1 class="font-display text-4xl font-bold text-text-black">
@@ -20,8 +20,8 @@ import TextField from "../../components/TextField.astro";
         </p>
       </div>
 
-      <div class="flex flex-row gap-6">
-        <div class="flex items-center gap-4 sm:flex-col">
+      <div class="flex flex-col gap-6 sm:flex-row items-center">
+        <div class="flex items-center gap-4">
           <div class="flex flex-col items-center gap-3">
             <div
               id="profile-avatar"

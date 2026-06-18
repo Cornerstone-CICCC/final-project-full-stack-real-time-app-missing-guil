@@ -77,20 +77,19 @@ const upcomingMatches = [
     <div
       class="w-full max-w-3xl gap-4 flex flex-col bg-bg/90 rounded-4xl shadow-md px-8 py-6"
     >
-   <h1
-  class="flex items-center gap-3 text-2xl md:text-4xl font-bold text-primary-60"
->
-  <span class="relative flex h-3 w-3">
-    <span
-      class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500"
-    ></span>
-    <span
-      class="relative inline-flex h-3 w-3 rounded-full bg-red-500"
-    ></span>
-  </span>
+      <h1
+        class="flex items-center justify-center gap-3 text-2xl md:text-4xl font-bold text-primary-60"
+      >
+        <span class="relative flex h-3 w-3">
+          <span
+            class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500"
+          ></span>
+          <span class="relative inline-flex h-3 w-3 rounded-full bg-red-500"
+          ></span>
+        </span>
 
-  Live Matches
-</h1>
+        Live Matches
+      </h1>
       <MatchCard
         teamA={liveMatches[0].teamA}
         teamB={liveMatches[0].teamB}
@@ -122,82 +121,81 @@ const upcomingMatches = [
 
   <hr class="border-t border-gray-300 my-4" />
 
-<!-- Upcoming Matches -->
+  <!-- Upcoming Matches -->
 
-<div id="upcoming" class="flex flex-col items-center py-10">
-  <div
-    class="w-full max-w-3xl flex flex-col gap-6 bg-bg/90 rounded-4xl shadow-md px-4 md:px-8 py-6"
-  >
-    <h1
-      class="flex items-center gap-3 text-2xl md:text-4xl font-bold text-primary-60"
+  <div id="upcoming" class="flex flex-col items-center py-10">
+    <div
+      class="w-full max-w-3xl flex flex-col gap-6 bg-bg/90 rounded-4xl shadow-md px-4 md:px-8 py-6"
     >
-      📅 Upcoming Matches
-    </h1>
-
-    <!-- Tomorrow -->
-    <div class="flex items-center gap-3">
-      <div class="h-px flex-1 bg-gray-300"></div>
-      <span
-        class="px-4 py-1 rounded-full bg-primary-10 text-primary-60 text-sm font-semibold"
+      <h1
+        class="flex items-center justify-center gap-3 text-2xl md:text-4xl font-bold text-primary-60"
       >
-        Tomorrow · June 18
-      </span>
-      <div class="h-px flex-1 bg-gray-300"></div>
+        📅 Upcoming Matches
+      </h1>
+
+      <!-- Tomorrow -->
+      <div class="flex items-center gap-3">
+        <div class="h-px flex-1 bg-gray-300"></div>
+        <span
+          class="px-4 py-1 rounded-full bg-primary-10 text-primary-60 text-sm font-semibold"
+        >
+          Tomorrow · June 18
+        </span>
+        <div class="h-px flex-1 bg-gray-300"></div>
+      </div>
+
+      <MatchCard
+        teamA={upcomingMatches[0].teamA}
+        teamB={upcomingMatches[0].teamB}
+        score={upcomingMatches[0].score}
+        memberCount={upcomingMatches[0].memberCount}
+        matchTime={upcomingMatches[0].matchTime}
+        teamAFlag={upcomingMatches[0].teamAFlag}
+        teamBFlag={upcomingMatches[0].teamBFlag}
+        group={upcomingMatches[0].group}
+        stage={upcomingMatches[0].Stage}
+        href=""
+        status="upcoming"
+      />
+
+      <MatchCard
+        teamA={upcomingMatches[1].teamA}
+        teamB={upcomingMatches[1].teamB}
+        score={upcomingMatches[1].score}
+        memberCount={upcomingMatches[1].memberCount}
+        matchTime={upcomingMatches[1].matchTime}
+        teamAFlag={upcomingMatches[1].teamAFlag}
+        teamBFlag={upcomingMatches[1].teamBFlag}
+        group={upcomingMatches[1].group}
+        stage={upcomingMatches[1].Stage}
+        href=""
+        status="upcoming"
+      />
+
+      <!-- Saturday -->
+      <div class="flex items-center gap-3 pt-4">
+        <div class="h-px flex-1 bg-gray-300"></div>
+        <span
+          class="px-4 py-1 rounded-full bg-primary-10 text-primary-60 text-sm font-semibold"
+        >
+          Saturday · June 20
+        </span>
+        <div class="h-px flex-1 bg-gray-300"></div>
+      </div>
+
+      <MatchCard
+        teamA={upcomingMatches[2].teamA}
+        teamB={upcomingMatches[2].teamB}
+        score={upcomingMatches[2].score}
+        memberCount={upcomingMatches[2].memberCount}
+        matchTime={upcomingMatches[2].matchTime}
+        teamAFlag={upcomingMatches[2].teamAFlag}
+        teamBFlag={upcomingMatches[2].teamBFlag}
+        group={upcomingMatches[2].group}
+        stage={upcomingMatches[2].Stage}
+        href=""
+        status="upcoming"
+      />
     </div>
-
-    <MatchCard
-      teamA={upcomingMatches[0].teamA}
-      teamB={upcomingMatches[0].teamB}
-      score={upcomingMatches[0].score}
-      memberCount={upcomingMatches[0].memberCount}
-      matchTime={upcomingMatches[0].matchTime}
-      teamAFlag={upcomingMatches[0].teamAFlag}
-      teamBFlag={upcomingMatches[0].teamBFlag}
-      group={upcomingMatches[0].group}
-      stage={upcomingMatches[0].Stage}
-      href=""
-      status="upcoming"
-    />
-
-    <MatchCard
-      teamA={upcomingMatches[1].teamA}
-      teamB={upcomingMatches[1].teamB}
-      score={upcomingMatches[1].score}
-      memberCount={upcomingMatches[1].memberCount}
-      matchTime={upcomingMatches[1].matchTime}
-      teamAFlag={upcomingMatches[1].teamAFlag}
-      teamBFlag={upcomingMatches[1].teamBFlag}
-      group={upcomingMatches[1].group}
-      stage={upcomingMatches[1].Stage}
-      href=""
-      status="upcoming"
-    />
-
-    <!-- Saturday -->
-    <div class="flex items-center gap-3 pt-4">
-      <div class="h-px flex-1 bg-gray-300"></div>
-      <span
-        class="px-4 py-1 rounded-full bg-primary-10 text-primary-60 text-sm font-semibold"
-      >
-        Saturday · June 20
-      </span>
-      <div class="h-px flex-1 bg-gray-300"></div>
-    </div>
-
-    <MatchCard
-      teamA={upcomingMatches[2].teamA}
-      teamB={upcomingMatches[2].teamB}
-      score={upcomingMatches[2].score}
-      memberCount={upcomingMatches[2].memberCount}
-      matchTime={upcomingMatches[2].matchTime}
-      teamAFlag={upcomingMatches[2].teamAFlag}
-      teamBFlag={upcomingMatches[2].teamBFlag}
-      group={upcomingMatches[2].group}
-      stage={upcomingMatches[2].Stage}
-      href=""
-      status="upcoming"
-    />
   </div>
-</div>
-
 </MainLayout>

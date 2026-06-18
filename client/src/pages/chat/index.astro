@@ -49,21 +49,21 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
       </div>
     </div>
 
-    <div class="flex-1 bg-gray-100 relative flex flex-col">
+    <div class="flex-1 relative flex flex-col">
       <div
         id="empty-chat-state"
         class="absolute inset-0 flex items-center justify-center z-10"
       >
         <div class="home-bg absolute inset-0 opacity-30 pointer-events-none">
         </div>
-        <p class="text-gray-500 text-lg text-center z-10">
+        <p class="text-gray-500 text-lg text-center z-10 bg-bg/60 rounded-full px-4 py-2">
           Select a room to start messaging
         </p>
       </div>
 
       <div
         id="active-chat-state"
-        class="hidden flex-col h-full z-20 bg-gray-100"
+        class="hidden flex-col h-full z-20"
       >
         <ChatHeader
           name="Active Chat"
