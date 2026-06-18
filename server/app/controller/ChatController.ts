@@ -59,7 +59,7 @@ export const createChats = async (
 ) => {
   try {
     // 1. Extract the group `name` and member credentials from `req.body`
-    const { name, isGroupChat, participantIds } = req.body;
+    const { isGroupChat, participantIds } = req.body;
 
     // 2. Capture the `userId` of the requesting user from the active session
     const userId = (req as any).session?.userId;
@@ -71,7 +71,8 @@ export const createChats = async (
     }
 
     // > Group chat
-    if (isGroupChat !== true) {
+    if (isGroupChat === true) {
+      const { name } = req.body;
       // 3. Enforce payload structural validation
       if (!name || typeof name !== "string" || !Array.isArray(participantIds)) {
         res.status(400).json({
@@ -133,6 +134,7 @@ export const createChats = async (
     }
     // > Direct message
     else {
+      console.log("Creating a direct message chat with payload:", req.body);
       // For direct messages, we expect exactly one participantId which is the other user
       if (!Array.isArray(participantIds) || participantIds.length !== 1) {
         res.status(400).json({
@@ -176,7 +178,7 @@ export const createChats = async (
       res.status(201).json(newChat);
     }
   } catch (error) {
-    console.error("[ChatController] Error in createGroupChat:", error);
+    // console.error("[ChatController] Error in createGroupChat:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
