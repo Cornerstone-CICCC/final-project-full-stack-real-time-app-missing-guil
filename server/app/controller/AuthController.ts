@@ -96,7 +96,7 @@ export const loginUser = async (
     if (!email || !password) {
       return res
         .status(400)
-        .json({ error: "Username and password are required" });
+        .json({ error: "Email and password are required" });
     }
 
     // TODO: 3. Look up the user record by username using `findUserByName` or using `findUserbyEmail` (return 401 Unauthorized if the user does not exist).
