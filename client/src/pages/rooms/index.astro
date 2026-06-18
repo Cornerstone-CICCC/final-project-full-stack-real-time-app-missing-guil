@@ -1,211 +1,94 @@
 ---
+// pages/room/index.astro
 export const prerender = false;
 
 import MainLayout from "../../layouts/MainLayout.astro";
 import SearchField from "../../components/SearchField.astro";
-import RoomListItem from "../../components/RoomListItem.astro";
 import RoomIcon from "../../assets/icon/green/rooms.svg?url";
 
 import RoomHeader from "../../components/RoomHeader.astro";
-import ChatBubble from "../../components/ChatBubble.astro";
 import TypeBox from "../../components/TypeBox.astro";
 import TypingIndicator from "../../components/TypingIndicator.astro";
 
 import Button from "../../components/Button.astro";
 import PlusIcon from "../../assets/icon/outlined/plus.svg?url";
-
 import InviteModal from "../../components/InviteModal.astro";
 
-// fake data (replace with DB later)
-type Message = {
-  text: string;
-  timestamp: string;
-  isOwn: boolean;
-  read?: boolean;
-  reaction?: string;
-};
 
-type Member = {
-  name: string;
-  avatar: string;
-  status: "online" | "offline";
-};
+//　FETCH AUTHENTICATED USER SESSION
 
-type Room = {
-  id: string;
-  name: string;
-  status: "online" | "offline";
-  avatar: string;
-  timestamp: string;
-  unread?: number;
-  memberCount: number;
-  onlineCount: number;
-  members: Member[];
-  messages: Message[];
-};
+const cookie = Astro.request.headers.get("cookie") || "";
+const authRes = await fetch("http://localhost:3000/api/auth/me", {
+  headers: { Cookie: cookie }
+});
 
-const rooms: Room[] = [
-  {
-    id: "1",
-    name: "Australia VS Turkey",
-    status: "online",
-    avatar: "/assets/images/user1.jpg",
-    timestamp: "2:30 PM",
-    unread: 3,
-    memberCount: 123,
-    onlineCount: 12,
-    members: [
-      { name: "John Doe",   avatar: "", status: "online"  },
-      { name: "Jane Smith", avatar: "", status: "online"  },
-      { name: "Bob K.",     avatar: "", status: "offline" },
-    ],
-    messages: [
-      { text: "OMG 🤫 do you remember what you did last night at the work night out?", timestamp: "18:12", isOwn: false, reaction: "❤️" },
-      { text: "no haha",                    timestamp: "18:16", isOwn: true, read: true },
-      { text: "i don't remember anything 😅", timestamp: "18:16", isOwn: true, read: true },
-    ],
-  },
-  {
-    id: "2",
-    name: "Brazil Fans",
-    status: "offline",
-    avatar: "/assets/images/user2.jpg",
-    timestamp: "1:45 PM",
-    memberCount: 54,
-    onlineCount: 0,
-    members: [
-      { name: "Maria G.",  avatar: "", status: "offline"  },
-      { name: "Carlos R.", avatar: "", status: "offline" },
-    ],
-    messages: [
-      { text: "Vamos Brasil! 🇧🇷", timestamp: "13:00", isOwn: false },
-      { text: "Let's go!",          timestamp: "13:01", isOwn: true, read: true },
-    ],
-  },
-  {
-    id: "3",
-    name: "Germany is the best",
-    status: "offline",
-    avatar: "/assets/images/user3.jpg",
-    timestamp: "12:00 PM",
-    memberCount: 88,
-    onlineCount: 0,
-    members: [
-      { name: "Leo M.",  avatar: "", status: "online"  },
-      { name: "Anna K.", avatar: "", status: "online"  },
-      { name: "Hans B.", avatar: "", status: "offline" },
-    ],
-    messages: [
-      { text: "Germany scored! ⚽", timestamp: "11:55", isOwn: false },
-      { text: "Amazing goal 🔥",    timestamp: "11:56", isOwn: true, read: true },
-    ],
-  },
-];
+let currentUserId = "test-user-001"; 
 
-const { id } = Astro.params;
+if (authRes.ok) {
+  const authData = await authRes.json();
+  currentUserId = authData.id || authData.user?.id || authData.userId || currentUserId;
+}
 
-// Set status based on onlineCount: if no one is online, status is offline
-const roomsWithStatus: Room[] = rooms.map(room => ({
-  ...room,
-  status: room.onlineCount > 0 ? "online" : "offline"
-}));
-
-const initialActiveRoomId = roomsWithStatus.some((room) => room.id === id)
-  ? id
-  : roomsWithStatus[0]?.id;
 ---
 
 <MainLayout title="Rooms" active="Rooms" container="w-full">
-  <div class="flex h-screen">
+  <div class="flex h-screen" data-my-user-id={currentUserId} id="room-container">
 
-    <!-- LEFT: Room list -->
     <aside class="w-100 p-4 flex flex-col shadow-lg">
 
       <div class="flex flex-row justify-between items-center">
+        <h1 class="text-3xl font-bold mb-4 flex items-center gap-2 text-primary-60">
+          <img src={RoomIcon} alt="Rooms" class="h-8 w-8" />
+          Rooms
+        </h1>
 
-      <h1 class="text-3xl font-bold mb-4 flex items-center gap-2 text-primary-60">
-        <img src={RoomIcon} alt="Rooms" class="h-8 w-8" />
-        Rooms
-      </h1>
-
-      <Button id="open-invite-modal" variant="primary" class="text-sm mb-4 cursor-pointer">
-        <img src={PlusIcon} alt="Add Room" class="h-5 w-5" />
-        Add Room
-      </Button>
+        <Button id="open-invite-modal" variant="primary" class="text-sm mb-4 cursor-pointer">
+          <img src={PlusIcon} alt="Add Room" class="h-5 w-5" />
+          Add Room
+        </Button>
       </div>
 
       <SearchField placeholder="Search..." />
 
-      <div class="mt-4 space-y-2 overflow-y-auto flex-1">
-        {roomsWithStatus.map((room) => (
-          <div class="room-trigger" data-room-id={room.id}>
-            <RoomListItem
-              avatar={room.avatar}
-              name={room.name}
-              status={room.status}
-              memberCount={room.memberCount}
-              onlineCount={room.onlineCount}
-              timestamp={room.timestamp}
-              href={`#`}
-              active={room.id === initialActiveRoomId}
-              unread={room.unread}
-            />
-          </div>
-        ))}
+      <div id="room-sidebar-list" class="mt-4 space-y-2 overflow-y-auto flex-1">
+        <p id="room-list-status" class="text-xs text-gray-400 text-center py-4">Loading rooms...</p>
       </div>
     </aside>
 
-    <!-- RIGHT: Chat window -->
     <div class="flex-1 relative flex flex-col overflow-hidden bg-bg">
 
-      {roomsWithStatus.length > 0 ? (
-        roomsWithStatus.map((room) => (
-          <div
-            id={`room-panel-${room.id}`}
-            class={`room-panel ${room.id === initialActiveRoomId ? 'flex' : 'hidden'} flex-1 flex-col h-full overflow-hidden`}
-          >
-            <RoomHeader
-              name={room.name}
-              avatar={room.avatar}
-              memberCount={room.memberCount}
-              onlineCount={room.onlineCount}
-              members={room.members}
-            />
+      <div id="empty-room-state" class="absolute inset-0 flex items-center justify-center z-10">
+        <div class="home-bg absolute inset-0 opacity-30 pointer-events-none"></div>
+        <p class="text-gray-500 text-lg text-center z-10">
+          Select a room to start messaging
+        </p>
+      </div>
 
-            <div class="home-bg absolute inset-0 opacity-40 pointer-events-none" />
+      <div id="active-room-state" class="hidden flex-col h-full z-20 bg-bg">
+        <div id="room-header-wrapper">
+          <RoomHeader
+            name="Active Room"
+            avatar=""
+            memberCount={0}
+            onlineCount={0}
+            members={[]}
+          />
+        </div>
 
-            <div id={`messages-list-${room.id}`} class="relative flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-1">
-              <div class="flex items-center gap-3 my-3">
-                <hr class="flex-1 border-gray-300/60" />
-                <span class="text-xs font-medium text-gray-500 bg-white/70 px-3 py-0.5 rounded-full backdrop-blur-sm">
-                  Today
-                </span>
-                <hr class="flex-1 border-gray-300/60" />
-              </div>
+        <div class="home-bg absolute inset-0 opacity-40 pointer-events-none"></div>
 
-              {room.messages.map((msg: Message) => (
-                <ChatBubble
-                  message={msg.text}
-                  timestamp={msg.timestamp}
-                  isOwn={msg.isOwn}
-                  reaction={msg.reaction}
-                  read={msg.read}
-                />
-              ))}
-            </div>
-
-            <TypingIndicator id={`typing-${room.id}`} />
-            <TypeBox />
+        <div id="messages-list" class="relative flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-1">
           </div>
-        ))
-      ) : (
-        <>
-          <div class="home-bg absolute inset-0 opacity-30" />
-          <p id="empty-state" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-500 text-lg text-center z-10">
-            Select a room to start messaging
-          </p>
-        </>
-      )}
+
+        <div id="typing-indicator-wrapper" class="hidden">
+          <TypingIndicator message="Someone is typing ..." />
+        </div>
+        
+        <div id="typebox-container">
+          <TypeBox />
+        </div>
+      </div>
+
     </div>
 
   </div>
@@ -213,54 +96,110 @@ const initialActiveRoomId = roomsWithStatus.some((room) => room.id === id)
 </MainLayout>
 
 <script>
-  // ── Room switching ──────────────────────────────────────────────────────
-  const emptyState = document.getElementById('empty-state');
-  let activeId: string | null = document
-    .querySelector<HTMLElement>('.room-panel.flex')
-    ?.id.replace('room-panel-', '') ?? null;
+  // =========================================================================
+  //　　 FETCH ROOMS API & SPA LOGIC
+  // =========================================================================
+  const sidebarList = document.getElementById("room-sidebar-list");
+  const roomListStatus = document.getElementById("room-list-status");
+  const emptyState = document.getElementById("empty-room-state");
+  const activeState = document.getElementById("active-room-state");
+  const roomHeaderWrapper = document.getElementById("room-header-wrapper");
 
-  function openRoom(id: string) {
-    // Hide previous panel
-    if (activeId) {
-      const prev = document.getElementById(`room-panel-${activeId}`);
-      prev?.classList.replace('flex', 'hidden');
+  let activeRoomId: string | null = null;
+
+  async function fetchUserRooms() {
+    try {
+      const res = await fetch("http://localhost:3000/api/chats", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include"
+      });
+      
+      const rooms = await res.json();
+      
+      if (!res.ok) throw new Error(rooms.error || "Failed to fetch rooms");
+      
+      if (sidebarList) {
+        if (roomListStatus) roomListStatus.remove();
+        
+        if (rooms.length === 0) {
+          sidebarList.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">No active rooms found.</p>`;
+          return;
+        }
+
+        // Dynamically build Room UI elements
+        rooms.forEach((room: any) => {
+          const a = document.createElement("a");
+          a.href = `/room/${room.id}`;
+          a.className = "room-trigger block p-3 rounded-xl transition-all hover:bg-gray-50 bg-white shadow-sm border border-gray-100 flex flex-row items-center gap-3 cursor-pointer mb-2";
+          
+          a.innerHTML = `
+            <div class="relative w-12 h-12 rounded-full bg-primary-20 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0">
+              ${room.name ? room.name.charAt(0).toUpperCase() : "R"}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex flex-row justify-between items-baseline mb-0.5">
+                <h3 class="text-sm font-semibold text-text-black truncate">${room.name}</h3>
+                <span class="text-[10px] text-text-gray">Recent</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-text-gray flex items-center gap-1">
+                   👥 ${room.participantIds ? room.participantIds.length : 2} Members
+                </span>
+              </div>
+            </div>
+          `;
+          sidebarList.appendChild(a);
+        });
+      }
+    } catch (error) {
+      console.error("[Frontend Error] Fetching rooms:", error);
+      if (sidebarList) sidebarList.innerHTML = `<p class="text-xs text-red-500 text-center py-4">Error loading rooms.</p>`;
     }
-
-    // Hide empty state
-    emptyState?.classList.add('hidden');
-
-    // Show new panel
-    const panel = document.getElementById(`room-panel-${id}`);
-    if (panel) {
-      panel.classList.remove('hidden');
-      panel.classList.add('flex');
-      // Scroll to bottom
-      const list = document.getElementById(`messages-list-${id}`);
-      if (list) list.scrollTop = list.scrollHeight;
-    }
-
-    activeId = id;
-
-    // Highlight active list item
-    document.querySelectorAll<HTMLElement>('.room-trigger').forEach((el) => {
-      const isActive = el.dataset.roomId === id;
-      el.querySelector('a')?.classList.toggle('bg-primary-10', isActive);
-    });
   }
 
-  // Attach click listeners to each list item wrapper
-  document.querySelectorAll<HTMLElement>('.room-trigger').forEach((el) => {
-    el.addEventListener('click', (e) => {
-      e.preventDefault();
-      const id = el.dataset.roomId;
-      if (id) openRoom(id);
-    });
+  fetchUserRooms();
+
+  // SPA Navigation Interceptor
+  sidebarList?.addEventListener("click", (e) => {
+    const link = (e.target as HTMLElement).closest("a.room-trigger");
+    if (!link) return;
+    e.preventDefault();
+
+    const href = link.getAttribute("href");
+    const newRoomId = href?.split("/").pop();
+
+    if (newRoomId && newRoomId !== activeRoomId) {
+      activeRoomId = newRoomId;
+
+      // Update Header Text dynamically based on clicked item
+      const roomTitleEl = link.querySelector("h3");
+      const currentRoomName = roomTitleEl ? roomTitleEl.textContent : "Active Room";
+      
+      if (roomHeaderWrapper) {
+        roomHeaderWrapper.innerHTML = `
+          <div class="bg-white border-b border-gray-200 px-6 py-4 flex flex-row justify-between items-center shadow-sm z-30 relative">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-full bg-primary-20 flex items-center justify-center text-primary font-bold text-xl">${currentRoomName?.charAt(0).toUpperCase()}</div>
+              <div class="flex flex-col">
+                <h2 class="text-lg font-bold text-text-black leading-tight">${currentRoomName}</h2>
+                <div class="flex items-center gap-2 mt-0.5">
+                  <span class="flex items-center gap-1 text-xs text-text-gray">👥 Active</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      emptyState?.classList.add("hidden");
+      activeState?.classList.remove("hidden");
+      activeState?.classList.add("flex");
+    }
   });
 
-  // ── Invite modal ────────────────────────────────────────────────────────
+  // Invite modal event binding
   document.getElementById('open-invite-modal')?.addEventListener('click', () => {
     document.dispatchEvent(new CustomEvent('open-invite-modal'));
   });
 </script>
-
-
