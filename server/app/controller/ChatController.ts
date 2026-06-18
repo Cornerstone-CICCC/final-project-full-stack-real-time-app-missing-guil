@@ -3,7 +3,14 @@ import express from "express";
 import { Server, Socket } from "socket.io";
 import { updateUserStatus, findUserById } from "../model/User.ts";
 
-import { createChat, getChatsbyUserId, getChatbyId, addParticipantToChat } from "../model/Chat.ts";
+import {
+  createChat,
+  getChatsbyUserId,
+  getChatbyId,
+  getMessagesForChat,
+  addMessageToChat,
+  addParticipantToChat,
+} from "../model/Chat.ts";
 
 export const SOCKET_EVENTS = {
   MESSAGE_HISTORY: "message_history", // no sue
@@ -46,13 +53,13 @@ export const getUserChats = async (
  * @returns {Promise<void>} Sends a JSON response with the newly generated group chat details
  * @description Compiles selected participant identifiers alongside the creator, creates a distinct room structure, and hooks up history records.
  */
-export const createGroupChat = async (
+export const createChats = async (
   req: express.Request,
   res: express.Response,
 ) => {
   try {
     // 1. Extract the group `name` and member credentials from `req.body`
-    const { name, participantIds } = req.body;
+    const { isGroupChat, participantIds } = req.body;
 
     // 2. Capture the `userId` of the requesting user from the active session
     const userId = (req as any).session?.userId;
@@ -63,77 +70,123 @@ export const createGroupChat = async (
       return;
     }
 
-    // 3. Enforce payload structural validation
-    if (!name || typeof name !== "string" || !Array.isArray(participantIds)) {
-      res
-        .status(400)
-        .json({
+    // > Group chat
+    if (isGroupChat === true) {
+      const { name } = req.body;
+      // 3. Enforce payload structural validation
+      if (!name || typeof name !== "string" || !Array.isArray(participantIds)) {
+        res.status(400).json({
           error: "Bad Request: Invalid group name or participant list.",
         });
-      return;
-    }
+        return;
+      }
 
-    if (name.trim() === "") {
-      res
-        .status(400)
-        .json({ error: "Bad Request: Group name cannot be empty." });
-      return;
-    }
+      if (name.trim() === "") {
+        res
+          .status(400)
+          .json({ error: "Bad Request: Group name cannot be empty." });
+        return;
+      }
 
-    if (participantIds.length === 0) {
-      res
-        .status(400)
-        .json({
+      if (participantIds.length === 0) {
+        res.status(400).json({
           error:
             "Bad Request: At least one participant is required to create a group chat.",
         });
-      return;
-    }
+        return;
+      }
 
-    if (participantIds.includes(userId)) {
-      res
-        .status(400)
-        .json({
+      if (participantIds.includes(userId)) {
+        res.status(400).json({
           error:
             "Bad Request: Creator should not be included in the participant list.",
         });
-      return;
-    }
+        return;
+      }
 
-    if (new Set(participantIds).size !== participantIds.length) {
-      res
-        .status(400)
-        .json({ error: "Bad Request: Duplicate participant IDs detected." });
-      return;
-    }
+      if (new Set(participantIds).size !== participantIds.length) {
+        res
+          .status(400)
+          .json({ error: "Bad Request: Duplicate participant IDs detected." });
+        return;
+      }
 
-    // 3.5 Validate that all participantIds correspond to existing users (optional but recommended for data integrity)
-    if (!participantIds.every((id) => findUserById(id))) {
-      res
-        .status(400)
-        .json({
+      // 3.5 Validate that all participantIds correspond to existing users (optional but recommended for data integrity)
+      if (!participantIds.every((id) => findUserById(id))) {
+        res.status(400).json({
           error: "Bad Request: One or more participant IDs are invalid.",
         });
-      return;
+        return;
+      }
+
+      // 4. Merge creator's `userId` with `participantIds` and remove duplicates
+      // Using Set ensures that if the creator accidentally included themselves in the participantIds, they aren't added twice.
+      const uniqueParticipants = Array.from(
+        new Set([userId, ...participantIds]),
+      );
+
+      // 5. Invoke the model constructor to instantiate the group chat
+      // We pass the clean data to the Model layer here.
+      const newChat = createChat(name, isGroupChat, uniqueParticipants);
+
+      // 6. Dispatch the resulting group object payload
+      res.status(201).json(newChat);
     }
+    // > Direct message
+    else {
+      console.log("Creating a direct message chat with payload:", req.body);
+      // For direct messages, we expect exactly one participantId which is the other user
+      if (!Array.isArray(participantIds) || participantIds.length !== 1) {
+        res.status(400).json({
+          error:
+            "Bad Request: Direct messages must have exactly one participant.",
+        });
+        return;
+      }
 
-    // 4. Merge creator's `userId` with `participantIds` and remove duplicates
-    // Using Set ensures that if the creator accidentally included themselves in the participantIds, they aren't added twice.
-    const uniqueParticipants = Array.from(new Set([userId, ...participantIds]));
+      const otherUserId = participantIds[0];
 
-    // 5. Invoke the model constructor to instantiate the group chat
-    // We pass the clean data to the Model layer here.
-    const newChat = createChat(name, true, uniqueParticipants);
+      if (otherUserId === userId) {
+        res.status(400).json({
+          error: "Bad Request: Cannot create a direct message with yourself.",
+        });
+        return;
+      }
 
-    // 6. Dispatch the resulting group object payload
-    res.status(201).json(newChat);
+      if (!findUserById(otherUserId)) {
+        res.status(400).json({
+          error:
+            "Bad Request: The specified user for direct message does not exist.",
+        });
+        return;
+      }
+
+      // Check if a direct message chat already exists between these two users
+      const existingChat = getChatsbyUserId(userId).find(
+        (chat) =>
+          !chat.isGroupChat &&
+          chat.participantIds.includes(otherUserId) &&
+          chat.participantIds.includes(userId),
+      );
+      if (existingChat) {
+        res.status(200).json(existingChat);
+        return;
+      }
+
+      // Create a new direct message chat
+      const newChat = createChat(null, false, [userId, otherUserId]);
+      res.status(201).json(newChat);
+    }
   } catch (error) {
-    console.error("[ChatController] Error in createGroupChat:", error);
+    // console.error("[ChatController] Error in createGroupChat:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
-export const joinGroupChat = async (req: express.Request, res: express.Response) => {
+export const joinGroupChat = async (
+  req: express.Request,
+  res: express.Response,
+) => {
   try {
     const { chatId } = req.body;
     const userId = (req as any).session?.userId;
@@ -152,12 +205,16 @@ export const joinGroupChat = async (req: express.Request, res: express.Response)
       return;
     }
     if (!chat.isGroupChat) {
-      res.status(400).json({ error: "Bad Request: Cannot join a direct message chat." });
+      res
+        .status(400)
+        .json({ error: "Bad Request: Cannot join a direct message chat." });
       return;
-    } 
+    }
 
     if (chat.participantIds.includes(userId)) {
-      res.status(400).json({ error: "Bad Request: User is already a participant of this chat." });
+      res.status(400).json({
+        error: "Bad Request: User is already a participant of this chat.",
+      });
       return;
     }
 
@@ -168,8 +225,7 @@ export const joinGroupChat = async (req: express.Request, res: express.Response)
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
   }
-  
-}; 
+};
 
 // =========================================================================
 // CONVERSATION MANAGEMENT EVENTS (SOCKET.IO)
@@ -231,11 +287,26 @@ export const handleJoinChat = (
   io: Server,
   payload: { chatId: string },
 ): void => {
-  // TODO: 1. Extract `chatId` from payload and validate target room existence via `getChatById(chatId)`.
-  // TODO: 2. Force current socket execution instance context to enter the room block: `socket.join(chatId)`.
-  // TODO: 3. Retrieve historical messaging datasets using `getMessagesForChat(chatId)`.
-  // TODO: 4. Dispatch history array packet exclusively backwards to the caller using `socket.emit("message_history", messages)`.
-  // ?  EMIT: socket.emit(SOCKET_EVENTS.MESSAGE_HISTORY, messages)
+  //  1. Extract `chatId` from payload and validate target room existence
+  const { chatId } = payload;
+
+  const chat = getChatbyId(chatId);
+  if (!chat) {
+    console.error(`[Socket Error] Chat room ${chatId} not found.`);
+    return;
+  }
+
+  // 2. Force current socket execution instance context to enter the room block
+  socket.join(chatId);
+  console.log(
+    `[Socket Joined] User ${socket.data.username} joined room: ${chatId}`,
+  );
+
+  // 3. Retrieve historical messaging datasets
+  const messages = getMessagesForChat(chatId);
+
+  // 4. Dispatch history array packet exclusively backwards to the caller
+  socket.emit(SOCKET_EVENTS.MESSAGE_HISTORY, messages);
 };
 
 /**
@@ -252,8 +323,16 @@ export const handleLeaveChat = (
   io: Server,
   payload: { chatId: string },
 ): void => {
-  // TODO: 1. Extract `chatId` from payload parameters.
-  // TODO: 2. Revoke room subscription channels by invoking `socket.leave(chatId)`.
+  // 1. Extract `chatId` from payload parameters.
+  const { chatId } = payload;
+
+  if (!chatId) return;
+
+  // 2. Revoke room subscription channels by invoking `socket.leave(chatId)`.
+  socket.leave(chatId);
+  console.log(
+    `[Socket Left] User ${socket.data.username} left room: ${chatId}`,
+  );
 };
 
 /**
@@ -271,13 +350,27 @@ export const handleSendMessage = (
   io: Server,
   payload: { chatId: string; text: string },
 ): void => {
-  // TODO: 1. Extract `chatId` and `text` properties from the incoming payload block.
-  // TODO: 2. Capture authenticated sender details securely through context records: `const senderId = socket.data.userId`.
-  // TODO: 3. Invoke data layout mutators to commit text blocks onto memory via `addMessageToChat(chatId, senderId, text)`.
-  // TODO: 4. Disseminate resulting message entities downstream across all room connections with `io.to(chatId).emit("new_message", newMessage)`.
-  // ? EMIT: io.to(chatId).emit(SOCKET_EVENTS.NEW_MESSAGE, newMessage)
-};
+  // 1. Extract `chatId` and `text` from the payload
+  const { chatId, text } = payload;
 
+  // 2. Capture authenticated sender details from the socket context
+  const senderId = socket.data.userId;
+
+  if (!senderId || !text) {
+    console.error(`[Socket Error] Missing senderId or text for message.`);
+    return;
+  }
+
+  // 3. Commit text to memory via Model
+  const newMessage = addMessageToChat(chatId, senderId, text);
+
+  // 4. Disseminate message downstream across all room connections
+  io.to(chatId).emit(SOCKET_EVENTS.NEW_MESSAGE, newMessage);
+
+  console.log(
+    `[Socket Message] ${socket.data.username} sent a message to ${chatId}`,
+  );
+};
 /**
  * @function handleTyping
  * @param {Socket} socket - The client socket instance modifying typing states
@@ -293,13 +386,22 @@ export const handleTyping = (
   io: Server,
   payload: { chatId: string; isTyping: boolean },
 ): void => {
-  // TODO: 1. Extract structural properties `chatId` and `isTyping` from the transaction payload.
-  // TODO: 2. Relay typing state broadcast arrays safely to neighboring participants: `socket.to(chatId).emit("user_typing", { chatId, user: socket.data.username, isTyping })`.
-  // ?  EMIT: socket.to(chatId).emit(SOCKET_EVENTS.USER_TYPING, { chatId, user: socket.data.username, isTyping })
+  // 1. Extract structural properties `chatId` and `isTyping` from the transaction payload.
+  const { chatId, isTyping } = payload;
+
+  if (!chatId) return;
+
+  // 2. Relay typing state broadcast safely to neighboring participants.
+  // Using `socket.to(chatId)` ensures the sender does NOT receive their own typing event.
+  socket.to(chatId).emit(SOCKET_EVENTS.USER_TYPING, {
+    chatId,
+    username: socket.data.username,
+    isTyping,
+  });
 };
 
 /**
- * @function handleSocketDisconnect
+ * @function handleSocketDisconnet
  * @param {Socket} socket - The client socket instance going through connection drop cycles
  * @param {Server} io - The global Socket.io server instance
  * @returns {void}
