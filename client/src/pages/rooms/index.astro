@@ -169,7 +169,7 @@ if (authRes.ok) {
         rooms.forEach((room: any) => {
           const a = document.createElement("a");
           a.href = `/room/${room.id}`;
-          a.className = "room-trigger block p-3 rounded-xl transition-all hover:bg-gray-50 bg-white shadow-sm border border-gray-100 flex flex-row items-center gap-3 cursor-pointer mb-2";
+          a.className = "room-trigger block p-4 rounded-lg transition-colors hover:bg-primary-10 bg-white flex flex-row items-center gap-4 cursor-pointer mb-2";
           
           a.innerHTML = `
             <div class="relative w-12 h-12 rounded-full bg-primary-20 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0">

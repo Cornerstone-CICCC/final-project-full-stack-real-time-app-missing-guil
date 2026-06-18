@@ -17,6 +17,7 @@ const liveMatches = [
     teamBFlag: "https://flagcdn.com/w160/fr.png",
     matchTime: "90'",
     group: "C",
+    Stage: "First Stage",
   },
   {
     id: "live2",
@@ -28,6 +29,7 @@ const liveMatches = [
     teamBFlag: "https://flagcdn.com/w160/de.png",
     matchTime: "67'",
     group: "D",
+    Stage: "First Stage",
   },
 ];
 
@@ -41,6 +43,7 @@ const upcomingMatches = [
     teamBFlag: "https://flagcdn.com/w160/pt.png",
     matchTime: "Jun 17 · 18:00",
     group: "B",
+    Stage: "First Stage",
   },
   {
     teamA: "England",
@@ -51,6 +54,7 @@ const upcomingMatches = [
     teamBFlag: "https://flagcdn.com/w160/it.png",
     matchTime: "Jun 18 · 21:00",
     group: "A",
+    Stage: "First Stage",
   },
   {
     teamA: "Netherlands",
@@ -61,21 +65,32 @@ const upcomingMatches = [
     teamBFlag: "https://flagcdn.com/w160/hr.png",
     matchTime: "Jun 20 · 15:00",
     group: "C",
+    Stage: "First Stage",
   },
 ];
-
 ---
 
 <MainLayout title="Home" active="Home" container="w-full home-bg">
-<div id="live" class="flex flex-col items-center gap-6 py-10">   
-  
-  <!-- Live Matches -->
-  
-  <div class="w-full max-w-3xl gap-4 flex flex-col bg-bg/90 rounded-4xl shadow-md px-8 py-6">
-      <h1 class="flex items-center gap-3 text-4xl font-bold bg-bg/90 text-primary-60 px-8 py-4 rounded-4xl">
-       <span class="h-6 w-6 rounded-full bg-red-500 block"></span>
-       <span>Matches Live Now</span>
-      </h1>
+  <div id="live" class="flex flex-col items-center gap-6 py-10">
+    <!-- Live Matches -->
+
+    <div
+      class="w-full max-w-3xl gap-4 flex flex-col bg-bg/90 rounded-4xl shadow-md px-8 py-6"
+    >
+   <h1
+  class="flex items-center gap-3 text-2xl md:text-4xl font-bold text-primary-60"
+>
+  <span class="relative flex h-3 w-3">
+    <span
+      class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500"
+    ></span>
+    <span
+      class="relative inline-flex h-3 w-3 rounded-full bg-red-500"
+    ></span>
+  </span>
+
+  Live Matches
+</h1>
       <MatchCard
         teamA={liveMatches[0].teamA}
         teamB={liveMatches[0].teamB}
@@ -85,6 +100,7 @@ const upcomingMatches = [
         teamAFlag={liveMatches[0].teamAFlag}
         teamBFlag={liveMatches[0].teamBFlag}
         group={liveMatches[0].group}
+        stage={liveMatches[0].Stage}
         href="/rooms/"
         status="live"
       />
@@ -97,58 +113,91 @@ const upcomingMatches = [
         teamAFlag={liveMatches[1].teamAFlag}
         teamBFlag={liveMatches[1].teamBFlag}
         group={liveMatches[1].group}
+        stage={liveMatches[1].Stage}
         href="/rooms/"
         status="live"
       />
     </div>
   </div>
 
-<hr class="border-t border-gray-300 my-4" />
-
+  <hr class="border-t border-gray-300 my-4" />
 
 <!-- Upcoming Matches -->
 
-<div id="upcoming" class="flex flex-col items-center gap-6 py-10">    
-  
-  <div class="w-full max-w-3xl gap-4 flex flex-col bg-bg/90 rounded-4xl shadow-md px-8 py-6">
-      <h1 class="flex items-center gap-3 text-4xl font-bold bg-bg/90 text-primary-60 px-8 py-4 rounded-4xl">
-        Upcoming Matches</h1>
-      <MatchCard
-          teamA={upcomingMatches[0].teamA}
-        teamB={upcomingMatches[0].teamB}
-        score={upcomingMatches[0].score}
-        memberCount={upcomingMatches[0].memberCount}
-        matchTime={upcomingMatches[0].matchTime}
-        teamAFlag={upcomingMatches[0].teamAFlag}
-        teamBFlag={upcomingMatches[0].teamBFlag}
-        group={upcomingMatches[0].group}
-        href=""
-        status="upcoming"
-      />
-      <MatchCard
-        teamA={upcomingMatches[1].teamA}
-        teamB={upcomingMatches[1].teamB}
-        score={upcomingMatches[1].score}
-        memberCount={upcomingMatches[1].memberCount}
-        matchTime={upcomingMatches[1].matchTime}
-        teamAFlag={upcomingMatches[1].teamAFlag}
-        teamBFlag={upcomingMatches[1].teamBFlag}
-        group={upcomingMatches[1].group}
-        href=""
-        status="upcoming"
-      />
-      <MatchCard
-        teamA={upcomingMatches[2].teamA}
-        teamB={upcomingMatches[2].teamB}
-        score={upcomingMatches[2].score}
-        memberCount={upcomingMatches[2].memberCount}
-        matchTime={upcomingMatches[2].matchTime}
-        teamAFlag={upcomingMatches[2].teamAFlag}
-        teamBFlag={upcomingMatches[2].teamBFlag}
-        group={upcomingMatches[2].group}
-        href=""
-        status="upcoming"
-      />
+<div id="upcoming" class="flex flex-col items-center py-10">
+  <div
+    class="w-full max-w-3xl flex flex-col gap-6 bg-bg/90 rounded-4xl shadow-md px-4 md:px-8 py-6"
+  >
+    <h1
+      class="flex items-center gap-3 text-2xl md:text-4xl font-bold text-primary-60"
+    >
+      📅 Upcoming Matches
+    </h1>
+
+    <!-- Tomorrow -->
+    <div class="flex items-center gap-3">
+      <div class="h-px flex-1 bg-gray-300"></div>
+      <span
+        class="px-4 py-1 rounded-full bg-primary-10 text-primary-60 text-sm font-semibold"
+      >
+        Tomorrow · June 18
+      </span>
+      <div class="h-px flex-1 bg-gray-300"></div>
     </div>
+
+    <MatchCard
+      teamA={upcomingMatches[0].teamA}
+      teamB={upcomingMatches[0].teamB}
+      score={upcomingMatches[0].score}
+      memberCount={upcomingMatches[0].memberCount}
+      matchTime={upcomingMatches[0].matchTime}
+      teamAFlag={upcomingMatches[0].teamAFlag}
+      teamBFlag={upcomingMatches[0].teamBFlag}
+      group={upcomingMatches[0].group}
+      stage={upcomingMatches[0].Stage}
+      href=""
+      status="upcoming"
+    />
+
+    <MatchCard
+      teamA={upcomingMatches[1].teamA}
+      teamB={upcomingMatches[1].teamB}
+      score={upcomingMatches[1].score}
+      memberCount={upcomingMatches[1].memberCount}
+      matchTime={upcomingMatches[1].matchTime}
+      teamAFlag={upcomingMatches[1].teamAFlag}
+      teamBFlag={upcomingMatches[1].teamBFlag}
+      group={upcomingMatches[1].group}
+      stage={upcomingMatches[1].Stage}
+      href=""
+      status="upcoming"
+    />
+
+    <!-- Saturday -->
+    <div class="flex items-center gap-3 pt-4">
+      <div class="h-px flex-1 bg-gray-300"></div>
+      <span
+        class="px-4 py-1 rounded-full bg-primary-10 text-primary-60 text-sm font-semibold"
+      >
+        Saturday · June 20
+      </span>
+      <div class="h-px flex-1 bg-gray-300"></div>
+    </div>
+
+    <MatchCard
+      teamA={upcomingMatches[2].teamA}
+      teamB={upcomingMatches[2].teamB}
+      score={upcomingMatches[2].score}
+      memberCount={upcomingMatches[2].memberCount}
+      matchTime={upcomingMatches[2].matchTime}
+      teamAFlag={upcomingMatches[2].teamAFlag}
+      teamBFlag={upcomingMatches[2].teamBFlag}
+      group={upcomingMatches[2].group}
+      stage={upcomingMatches[2].Stage}
+      href=""
+      status="upcoming"
+    />
   </div>
+</div>
+
 </MainLayout>
