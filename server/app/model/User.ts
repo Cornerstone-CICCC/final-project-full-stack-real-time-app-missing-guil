@@ -43,7 +43,17 @@ export const findUserbyName = (username: string): User | undefined => {
  */
 export const findUserbyEmail = (email: string): User | undefined => {
   return users.find((user) => user.email === email);
-}
+};
+
+/**
+ * @function findUserById
+ * @param {string} userId - The unique ID of the user to search for
+ * @returns {User | undefined} The user object if found, otherwise undefined
+ * @description Searches the in-memory array for a user matching the provided unique user ID
+ */
+export const findUserById = (userId: string): User | undefined => {
+  return users.find((user) => user.id === userId);
+};
 
 /**
  * @function updateUserStatus
@@ -52,8 +62,11 @@ export const findUserbyEmail = (email: string): User | undefined => {
  * @returns {User | undefined} The updated user object if found, otherwise undefined
  * @description Updates the online/offline status of a user in memory. Useful for auth routes and socket connection life cycles.
  */
-export const updateUserStatus = (userId: string, status: "online" | "offline"): User | undefined => {
-  const user = users.find((u) => u.id === userId);  
+export const updateUserStatus = (
+  userId: string,
+  status: "online" | "offline",
+): User | undefined => {
+  const user = users.find((u) => u.id === userId);
   if (user) {
     user.status = status;
     return user;

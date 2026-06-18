@@ -18,12 +18,63 @@ export const registerUser = async (
   req: express.Request,
   res: express.Response,
 ) => {
-  // TODO: 1. Extract `username`, `email`, and `password` fields from `req.body`.
-  // TODO: 2. Validate that none of the three required fields are missing or empty (return 400 Bad Request if validation fails).
-  // TODO: 3. Verify if the username or email is already taken using `findUserbyName` and `findUserbyEmail` (return 409 Conflict if a duplicate is found).
-  // TODO: 4. Hash the raw password asynchronously using `hashPassword(password)`.
-  // TODO: 5. Persist the new user credentials by calling `createUser({ username, email, passwordHash })`.
-  // TODO: 6. Return the newly created user object, omitting the `passwordHash` field, alongside a 201 Created status.
+  try {
+    // TODO: 1. Extract `username`, `email`, and `password` fields from `req.body`.
+    const { username, email, password } = req.body;
+
+    // TODO: 2. Validate that none of the three required fields are missing or empty (return 400 Bad Request if validation fails).
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
+    if (username.length > 15) {
+      return res.status(400).json({ error: "Username must be 15 characters or less", field: "username" });
+    }
+
+    const passRegex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{5,})/;
+    if (!passRegex.test(password)) {
+      return res.status(400).json({ error: "Invalid password format", field: "password" });
+    }
+
+    if (
+      typeof username !== "string" ||
+      typeof email !== "string" ||
+      typeof password !== "string"
+    ) {
+      return res.status(400).json({ error: "Invalid input types" });
+    }
+
+    if (
+      username.trim() === "" ||
+      email.trim() === "" ||
+      password.trim() === ""
+    ) {
+      return res.status(400).json({ error: "Fields cannot be empty" });
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: "Invalid email format" });
+    }
+
+    // TODO: 3. Verify if the username or email is already taken using `findUserbyName` and `findUserbyEmail` (return 409 Conflict if a duplicate is found).
+    if (findUserbyName(username) || findUserbyEmail(email)) {
+      return res
+        .status(409)
+        .json({ error: "Username or Email already exists" });
+    }
+
+    // TODO: 4. Hash the raw password asynchronously using `hashPassword(password)`.
+    const passwordHash = await hashPassword(password);
+
+    // TODO: 5. Persist the new user credentials by calling `createUser({ username, email, passwordHash })`.
+    const newUser = createuser({ username, email, passwordHash });
+
+    // TODO: 6. Return the newly created user object, omitting the `passwordHash` field, alongside a 201 Created status.
+    const { passwordHash: _, ...userWithoutHash } = newUser;
+    return res.status(201).json(userWithoutHash);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 };
 
 /**
@@ -37,13 +88,51 @@ export const loginUser = async (
   req: express.Request,
   res: express.Response,
 ) => {
-  // TODO: 1. Extract `username` and `password` from `req.body`.
-  // TODO: 2. Validate that both fields are present and not empty strings (return 400 Bad Request if missing).
-  // TODO: 3. Look up the user record by username using `findUserByName` or using `findUserbyEmail` (return 401 Unauthorized if the user does not exist).
-  // TODO: 4. Compare the provided password with the stored hash using `comparePassword(password, user.passwordHash)` (return 401 Unauthorized if verification fails).
-  // TODO: 5. Transition the user's presence state to online by executing `updateUserStatus(username, "online")`.
-  // TODO: 6. Populate the session store `req.session` with identifying data including `userId` and `username`.
-  // TODO: 7. Dispatch a success response in JSON format with a 200 OK status.
+  try {
+    // TODO: 1. Extract `username` and `password` from `req.body`.
+    const { email, password, remember } = req.body;
+
+    // TODO: 2. Validate that both fields are present and not empty strings (return 400 Bad Request if missing).
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ error: "Email and password are required" });
+    }
+
+    // TODO: 3. Look up the user record by username using `findUserByName` or using `findUserbyEmail` (return 401 Unauthorized if the user does not exist).
+    const user = findUserbyEmail(email);
+    if (!user) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    // TODO: 4. Compare the provided password with the stored hash using `comparePassword(password, user.passwordHash)` (return 401 Unauthorized if verification fails).
+    const isMatch = await comparePassword(password, user.passwordHash);
+    if (!isMatch) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    // TODO: 5. Transition the user's presence state to online by executing `updateUserStatus(username, "online")`.
+    updateUserStatus(user.id, "online");
+
+    if (remember) {
+      // @ts-ignore
+      if (req.session && req.session.cookie) {
+        // @ts-ignore
+        req.session.cookie.maxAge = 7 * 24 * 60 * 60 * 1000;
+      }
+    }
+
+    // TODO: 6. Populate the session store `req.session` with identifying data including `userId` and `username`.
+    // @ts-ignore
+    req.session.userId = user.id;
+    // @ts-ignore
+    req.session.username = user.username;
+
+    // TODO: 7. Dispatch a success response in JSON format with a 200 OK status.
+    return res.status(200).json({ message: "Login successful" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 };
 
 /**
@@ -57,8 +146,42 @@ export const logoutUser = async (
   req: express.Request,
   res: express.Response,
 ) => {
-  // TODO: 1. Retrieve the `username` saved inside the active session store.
-  // TODO: 2. If the username is present, change their memory presence status to offline using `updateUserStatus(username, "offline")`.
-  // TODO: 3. Destroy the active session state by setting `req.session = null`.
-  // TODO: 4. Send back a success JSON message indicating the logout process was completed with a 200 OK status.
+  try {
+    // TODO: 1. Retrieve the `username` saved inside the active session store.
+    // @ts-ignore
+    const username = req.session?.username;
+
+    // TODO: 2. If the username is present, change their memory presence status to offline using `updateUserStatus(username, "offline")`.
+    if (username) {
+      const user = findUserbyName(username);
+      if (user) {
+        updateUserStatus(user.id, "offline");
+      }
+    }
+
+    // TODO: 3. Destroy the active session state by setting `req.session = null`.
+    // @ts-ignore
+    req.session = null;
+
+    // TODO: 4. Send back a success JSON message indicating the logout process was completed with a 200 OK status.
+    // return res.status(200).json({ message: "Logout successful" });
+    return res.redirect("http://localhost:4321/");
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+/**
+ * @function checkAuth
+ * @param {express.Request} req - The Express request object containing the user session
+ * @param {express.Response} res - The Express response object used to send authentication status
+ * @returns {void} Sends a JSON response indicating whether the user is authenticated
+ * @description Verifies the existence of an active user session and returns the authentication status.
+ */
+export const checkAuth = (req: express.Request, res: express.Response) => {
+  // @ts-ignore
+  if (req.session && req.session.userId) {
+    return res.status(200).json({ authenticated: true });
+  }
+  return res.status(401).json({ authenticated: false });
 };

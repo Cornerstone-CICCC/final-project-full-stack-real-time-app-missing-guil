@@ -1,29 +1,37 @@
 ---
 // LOGIN PAGE
-
-
 import AuthLayout from '../layouts/AuthLayout.astro';
 import Button from '../components/Button.astro';
 import TextField from '../components/TextField.astro';
 import CheckBox from '../components/CheckBox.astro';
+
+const res = await fetch('http://localhost:3000/api/auth/me', {
+  headers: { Cookie: Astro.request.headers.get("cookie") || "" }
+});
+
+if (res.ok) {
+  return Astro.redirect('/home');
+}
 ---
 
-<AuthLayout title="Log in">
+<AuthLayout title="Log in" container="max-w-md">
   <h1 class="font-display text-5xl font-bold text-text-black">Log in</h1>
-  <p class="mt-1 mb-6 text-sm text-text-gray">Please enter your account details</p>
+  <p id="status-msg" class="mt-1 mb-6 text-sm text-text-gray">Please enter your account details</p>
 
-  <form class="space-y-4" method="post" action="/login">
-    <TextField name="email" type="email" placeholder="you@example.com" required />
-    <TextField name="password" type="password" placeholder="••••••••" required />
+  <form id="loginForm" class="space-y-4" method="post">
+    <div class="space-y-1">
+      <TextField name="email" placeholder="Email" />
+    </div>
+
+    <div class="space-y-1">
+      <TextField name="password" type="password" placeholder="••••••••" />
+    </div>
 
     <div class="flex items-center justify-between pt-1">
       <CheckBox name="remember">Remember me</CheckBox>
-      <a href="/forgot-password" class="text-sm font-medium hover:underline text-primary">
-        Forgot password?
-      </a>
     </div>
 
-    <Button type="submit" variant="primary" class="w-full" href="/home">Log in</Button>
+    <Button id="loginBtn" type="button" variant="primary" class="w-full">Log in</Button>
   </form>
 
   <p class="mt-5 text-center text-sm text-text-gray">
@@ -31,3 +39,73 @@ import CheckBox from '../components/CheckBox.astro';
     <a href="/register" class="font-medium hover:underline text-primary">Register</a>
   </p>
 </AuthLayout>
+
+<script>
+  const btn = document.getElementById('loginBtn');
+  const statusMsg = document.getElementById('status-msg');
+  const emailInput = document.querySelector('input[name="email"]') as HTMLInputElement;
+  const rememberCheckbox = document.querySelector('input[name="remember"]') as HTMLInputElement;
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const savedEmail = localStorage.getItem('savedEmail');
+    if (savedEmail) {
+      emailInput.value = savedEmail;
+      rememberCheckbox.checked = true;
+    }
+  });
+
+  rememberCheckbox.addEventListener('change', () => {
+    if (!rememberCheckbox.checked) {
+      emailInput.value = '';
+      localStorage.removeItem('savedEmail');
+    }
+  });
+
+  document.querySelectorAll('input').forEach((input) => {
+    input.addEventListener('input', () => {
+      if (statusMsg) {
+        statusMsg.textContent = "Please enter your account details";
+        statusMsg.style.color = "";
+      }
+    });
+  });
+  
+  btn?.addEventListener('click', async () => {
+    const email = emailInput.value;
+    const password = (document.querySelector('input[name="password"]') as HTMLInputElement).value;
+    const remember = rememberCheckbox.checked;
+
+    if (!email || !password) {
+      if (statusMsg) {
+        statusMsg.textContent = "Invalid credentials";
+        statusMsg.style.color = "red";
+      }
+      return;
+    }
+
+    try {
+      const res = await fetch('http://localhost:3000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password, remember })
+      });
+      
+      if (!res.ok) {
+        if (statusMsg) {
+          statusMsg.textContent = "Invalid credentials";
+          statusMsg.style.color = "red";
+        }
+      } else {
+        if (remember) {
+          localStorage.setItem('savedEmail', email);
+        } else {
+          localStorage.removeItem('savedEmail');
+        }
+        window.location.href = '/home';
+      }
+    } catch (err) { 
+      alert('Server connection failed.'); 
+    }
+  });
+</script>

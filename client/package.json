@@ -12,6 +12,7 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/node": "^10.1.4",
     "@tailwindcss/vite": "^4.3.0",
     "astro": "^6.4.6",
     "socket.io-client": "^4.8.3",
@@ -19,5 +20,10 @@
   },
   "devDependencies": {
     "@types/node": "^25.9.3"
-  }
+  },
+  "description": "```sh npm create astro@latest -- --template minimal ```",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
