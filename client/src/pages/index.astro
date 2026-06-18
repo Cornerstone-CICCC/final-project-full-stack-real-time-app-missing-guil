@@ -1,22 +1,24 @@
 ---
 // LOGIN PAGE
-import AuthLayout from '../layouts/AuthLayout.astro';
-import Button from '../components/Button.astro';
-import TextField from '../components/TextField.astro';
-import CheckBox from '../components/CheckBox.astro';
+import AuthLayout from "../layouts/AuthLayout.astro";
+import Button from "../components/Button.astro";
+import TextField from "../components/TextField.astro";
+import CheckBox from "../components/CheckBox.astro";
 
-const res = await fetch('http://localhost:3000/api/auth/me', {
-  headers: { Cookie: Astro.request.headers.get("cookie") || "" }
+const res = await fetch("http://localhost:3000/api/auth/me", {
+  headers: { Cookie: Astro.request.headers.get("cookie") || "" },
 });
 
 if (res.ok) {
-  return Astro.redirect('/home');
+  return Astro.redirect("/home");
 }
 ---
 
 <AuthLayout title="Log in" container="max-w-md">
   <h1 class="font-display text-5xl font-bold text-text-black">Log in</h1>
-  <p id="status-msg" class="mt-1 mb-6 text-sm text-text-gray">Please enter your account details</p>
+  <p id="status-msg" class="mt-1 mb-6 text-sm text-text-gray">
+    Please enter your account details
+  </p>
 
   <form id="loginForm" class="space-y-4" method="post">
     <div class="space-y-1">
@@ -31,32 +33,42 @@ if (res.ok) {
       <CheckBox name="remember">Remember me</CheckBox>
     </div>
 
-    <Button id="loginBtn" type="button" variant="primary" class="w-full">Log in</Button>
+    <Button id="loginBtn" type="button" variant="primary" class="w-full"
+      >Log in</Button
+    >
   </form>
 
   <p class="mt-5 text-center text-sm text-text-gray">
     Don't have an account?
-    <a href="/register" class="font-medium hover:underline text-primary">Register</a>
+    <a href="/register" class="font-medium hover:underline text-primary"
+      >Register</a
+    >
   </p>
 </AuthLayout>
 
 <script>
-  const btn = document.getElementById('loginBtn');
-  const statusMsg = document.getElementById('status-msg');
+  const btn = document.getElementById("loginBtn");
+  const statusMsg = document.getElementById("status-msg");
 
-  document.querySelectorAll('input').forEach((input) => {
-    input.addEventListener('input', () => {
+  document.querySelectorAll("input").forEach((input) => {
+    input.addEventListener("input", () => {
       if (statusMsg) {
         statusMsg.textContent = "Please enter your account details";
         statusMsg.style.color = "";
       }
     });
   });
-  
-  btn?.addEventListener('click', async () => {
-    const email = (document.querySelector('input[name="email"]') as HTMLInputElement).value;
-    const password = (document.querySelector('input[name="password"]') as HTMLInputElement).value;
-    const remember = (document.querySelector('input[name="remember"]') as HTMLInputElement).checked;
+
+  btn?.addEventListener("click", async () => {
+    const email = (
+      document.querySelector('input[name="email"]') as HTMLInputElement
+    ).value;
+    const password = (
+      document.querySelector('input[name="password"]') as HTMLInputElement
+    ).value;
+    const remember = (
+      document.querySelector('input[name="remember"]') as HTMLInputElement
+    ).checked;
 
     if (!email || !password) {
       if (statusMsg) {
@@ -67,23 +79,23 @@ if (res.ok) {
     }
 
     try {
-      const res = await fetch('http://localhost:3000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, password, remember })
+      const res = await fetch("http://localhost:3000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password, remember }),
       });
-      
+
       if (!res.ok) {
         if (statusMsg) {
           statusMsg.textContent = "Invalid credentials";
           statusMsg.style.color = "red";
         }
       } else {
-        window.location.href = '/home';
+        window.location.href = "/home";
       }
-    } catch (err) { 
-      alert('Server connection failed.'); 
+    } catch (err) {
+      alert("Server connection failed.");
     }
   });
 </script>
