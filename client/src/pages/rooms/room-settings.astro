@@ -1,5 +1,5 @@
 ---
-// ROOMS- SETTINGS PAGE
+export const prerender = false;
 
 import MainLayout from "../../layouts/MainLayout.astro";
 import SearchField from "../../components/SearchField.astro";
@@ -11,45 +11,48 @@ import BackIcon from "../../assets/icon/green/back.svg?url";
 import Avatar from "../../components/Avatar.astro";
 import TextField from "../../components/TextField.astro";
 
-const users = [
-  {
-    id: "1",
-    name: "John Doe",
-    avatar: "/assets/images/user1.jpg",
-  },
-  {
-    id: "2",
-    name: "Jane Smith",
-    avatar: "/assets/images/user2.jpg",
-  },
-  {
-    id: "3",
-    name: "Bob K.",
-    avatar: "/assets/images/user3.jpg",
-  },
-];
+
+// FETCH AUTHENTICATED USER & ALL USERS FROM BACKEND API
+
+const cookie = Astro.request.headers.get("cookie") || "";
+
+// 1. Check if user is logged in
+const authRes = await fetch("http://localhost:3000/api/auth/me", {
+  headers: { Cookie: cookie }
+});
+if (!authRes.ok) return Astro.redirect("/");
+const currentUser = await authRes.json();
+
+// 2. Fetch all registered users for the selection list
+let allUsers: any[] = [];
+try {
+  const usersRes = await fetch("http://localhost:3000/api/users", {
+    headers: { Cookie: cookie }
+  });
+  if (usersRes.ok) {
+    const data = await usersRes.json();
+    allUsers = data.filter((u: any) => u.id !== currentUser.id && u._id !== currentUser._id);
+  }
+} catch (error) {
+  console.error("Failed to fetch users");
+}
 
 const roomAvatars = [
-  { emoji: "⚽", color: "bg-gray-100" },   // football
-  { emoji: "🥅", color: "bg-green-100" },  // goal
-  { emoji: "🧤", color: "bg-blue-100" },   // goalkeeper gloves
-  { emoji: "🧑‍🦱", color: "bg-yellow-100" }, // player
-  { emoji: "🏆", color: "bg-amber-100" },  // trophy
-//   { emoji: "🥇", color: "bg-yellow-200" }, // winner
-//   { emoji: "🟥", color: "bg-red-100" },    // red card
-//   { emoji: "🟨", color: "bg-yellow-50" },  // yellow card
-//   { emoji: "⛳", color: "bg-green-200" },   // corner / field vibe
-  { emoji: "🔥", color: "bg-orange-100" }, // hot match
+  { emoji: "⚽", color: "bg-gray-100" },
+  { emoji: "🥅", color: "bg-green-100" },
+  { emoji: "🧤", color: "bg-blue-100" },
+  { emoji: "🧑‍🦱", color: "bg-yellow-100" },
+  { emoji: "🏆", color: "bg-amber-100" },
+  { emoji: "🔥", color: "bg-orange-100" },
 ];
 ---
 
-<MainLayout title="Rooms" active="Rooms" container="w-full">
+<MainLayout title="Create Room" active="Rooms" container="w-full">
   <div class="flex h-screen">
 
-    <!-- LEFT PANEL -->
     <aside class="w-100 p-4 flex flex-col shadow-lg">
       <a
-        href="/rooms"
+        href="/room"
         class="mb-6 inline-flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-primary hover:bg-primary-10 transition-colors w-fit"
       >
         <img src={BackIcon} alt="Back" class="h-5 w-5" />
@@ -69,34 +72,33 @@ const roomAvatars = [
       </div>
 
       <div class="mt-4 space-y-2 overflow-y-auto flex-1 px-4">
-        {
-          users.map((user) => (
+        {allUsers.length === 0 ? (
+          <p class="text-sm text-gray-500 text-center mt-4">No other users found.</p>
+        ) : (
+          allUsers.map((user) => (
             <label class="flex items-center gap-3 px-2 py-3 rounded-lg cursor-pointer hover:bg-primary-10 transition-colors">
-              <Avatar name={user.name} image={user.avatar} />
+              <Avatar name={user.username || user.name || "U"} image="" />
 
               <span class="flex-1 font-medium text-text-black">
-                {user.name}
+                {user.username || user.name || "Unknown User"}
               </span>
 
               <input
                 type="checkbox"
                 name="participants"
-                value={user.id}
+                value={user.id || user._id}
                 class="participant-checkbox h-5 w-5 rounded border-2 border-primary accent-primary cursor-pointer"
               />
             </label>
           ))
-        }
+        )}
       </div>
     </aside>
 
-    <!-- RIGHT PANEL -->
     <div class="flex-1 bg-bg p-8 overflow-y-auto">
       <div class="max-w-2xl mx-auto">
+        <div class="p-8">
 
-        <div class="p-8 ">
-
-          <!-- HEADER -->
           <div class="mb-8">
             <h1 class="text-4xl font-bold text-text-black mb-2">
               Set Up Room Profile
@@ -106,16 +108,15 @@ const roomAvatars = [
             </p>
           </div>
 
-          <form class="space-y-6">
+          <form id="create-room-form" class="space-y-6">
 
-            <!-- ROOM NAME -->
             <TextField
               name="roomName"
               label="Room Name"
               placeholder="Enter room name..."
+              required
             />
 
-            <!-- ROOM AVATAR SELECTOR -->
             <div>
               <label class="block text-sm font-medium text-text-black mb-3">
                 Choose Room Avatar
@@ -135,61 +136,24 @@ const roomAvatars = [
                     <div
                       class={`relative h-20 w-20 rounded-full ${avatar.color}
                       border-4 border-transparent flex items-center justify-center
-                      text-4xl transition-all 
-                      peer-checked:border-primary`}
+                      text-4xl transition-all peer-checked:border-primary`}
                     >
                       {avatar.emoji}
-
-                      <div
-                        class="absolute bottom-0 right-0 hidden peer-checked:flex
-                        h-6 w-6 rounded-full bg-primary text-white
-                        items-center justify-center text-xs font-bold"
-                      >
+                      <div class="absolute bottom-0 right-0 hidden peer-checked:flex h-6 w-6 rounded-full bg-primary text-white items-center justify-center text-xs font-bold">
                         ✓
                       </div>
                     </div>
                   </label>
                 ))}
               </div>
-
-              <p class="text-xs text-text-gray mt-2">
-                Select one avatar for your room.
-              </p>
             </div>
 
-            <!-- SELECTED MEMBERS -->
-            <div class="border-t border-gray-200 pt-6">
-              <label class="block text-sm font-medium text-text-black mb-4">
-                Selected Members
-              </label>
-
-              <div id="participants-preview" class="flex flex-wrap gap-3">
-                {
-                  users.map((user) => (
-                    <div
-                      data-participant-id={user.id}
-                      class="participant-avatar flex items-center gap-2"
-                      style="display: none;"
-                    >
-                      <Avatar name={user.name} image={user.avatar} />
-
-                    </div>
-                  ))
-                }
-              </div>
-
-              <p class="text-xs text-text-gray mt-3">
-                Select members from the left panel to add them here.
-              </p>
-            </div>
-
-            <!-- ACTION BUTTONS -->
             <div class="border-t border-gray-200 pt-6 flex items-center gap-4">
-              <Button variant="primary" class="px-8">
+              <Button type="submit" variant="primary" class="px-8 cursor-pointer">
                 Create Room
               </Button>
 
-              <Button variant="subtle" class="px-8" href="/rooms">
+              <Button type="button" variant="subtle" class="px-8 cursor-pointer" href="/room">
                 Cancel
               </Button>
             </div>
@@ -200,20 +164,49 @@ const roomAvatars = [
     </div>
   </div>
 
-  <!-- JS: sync checkboxes -->
   <script>
-    const checkboxes = document.querySelectorAll(".participant-checkbox");
+    const createForm = document.getElementById("create-room-form") as HTMLFormElement;
 
-    checkboxes.forEach((cb) => {
-      cb.addEventListener("change", () => {
-        const avatar = document.querySelector(
-          `.participant-avatar[data-participant-id="${cb.value}"]`
-        );
+    createForm?.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-        if (avatar) {
-          avatar.style.display = cb.checked ? "" : "none";
+      // Gather input data
+      const formData = new FormData(createForm);
+      const roomName = formData.get("roomName") as string;
+      
+      // Get all checked user IDs from the sidebar
+      const checkedBoxes = document.querySelectorAll('.participant-checkbox:checked');
+      const participantIds = Array.from(checkedBoxes).map((cb) => (cb as HTMLInputElement).value);
+
+      if (!roomName) {
+        alert("Please enter a room name.");
+        return;
+      }
+
+      try {
+        // Send POST request to backend API
+        const res = await fetch("http://localhost:3000/api/chats/group", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            name: roomName,
+            participantIds: participantIds // Backend expects this array
+          }),
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          // Success! Redirect to the main rooms page
+          window.location.href = "/room";
+        } else {
+          alert("Error creating room: " + data.error);
         }
-      });
+      } catch (error) {
+        console.error("Submission failed", error);
+        alert("Server connection failed.");
+      }
     });
   </script>
 </MainLayout>

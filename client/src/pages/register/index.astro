@@ -7,7 +7,9 @@ import CheckBox from '../../components/CheckBox.astro';
 
 <AuthLayout title="Register" container="max-w-md">
   <h1 class="font-display text-5xl font-bold text-text-black">Register</h1>
-  <p class="mt-1 mb-6 text-sm text-text-gray">Please enter your account details</p>
+  <p class="mt-1 mb-6 text-sm text-text-gray">
+    Please enter your account details
+  </p>
 
   <form id="registerForm" class="space-y-4" method="post">
     <div class="space-y-1">
@@ -15,9 +17,22 @@ import CheckBox from '../../components/CheckBox.astro';
       <p id="username-error" class="error-msg text-red-500 text-xs empty:hidden"></p>
     </div>
 
-    <div class="space-y-1">
-      <TextField name="email" type="email" placeholder="you@example.com" required />
-      <p id="email-error" class="error-msg text-red-500 text-xs empty:hidden"></p>
+    <div class="flex items-start gap-2 w-full text-sm text-text-gray">
+      <input
+        type="checkbox"
+        id="terms"
+        name="terms"
+        class="h-4 w-4 rounded border-2 border-gray-300 text-primary focus:ring-primary cursor-pointer mt-0.5 shrink-0"
+        required
+      />
+      <label for="terms" class="flex flex-wrap items-center gap-1">
+        <span>I agree with the</span>
+        <a
+          href="/"
+          class="font-medium text-primary hover:underline"
+          >terms of service and privacy policy*</a
+        >
+      </label>
     </div>
 
     <div class="space-y-1">

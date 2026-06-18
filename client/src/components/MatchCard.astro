@@ -8,6 +8,7 @@ interface Props {
   memberCount?: number;
   teamAFlag: string;
   teamBFlag: string;
+  matchTime: string;
   href?: string;
   status?: "live" | "upcoming";
 }
@@ -19,35 +20,38 @@ const {
   memberCount = 0,
   teamAFlag,
   teamBFlag,
+  matchTime,
   href = "/rooms/:id",
   status = "upcoming",
 } = Astro.props as Props;
 ---
 
-<div class="bg-bg/90 rounded-4xl shadow-md p-6">
-  <div class="flex items-center justify-between gap-4">
+<div class=" border-b-1 border-primary pb-8 pt-6 px-8">
+  <div class="flex items-center justify-between ">
     <div class="flex flex-col items-center gap-2">
       <img
         src={teamAFlag}
         alt={`${teamA} flag`}
-        class="w-70 h-45 bg-amber-50"
-      />
-      <span class="font-medium">{teamA}</span>
+
+        />
+      <span class="text-2xl font-medium">{teamA}</span>
     </div>
-    <span class="text-6xl font-bold text-primary-60 px-4 py-2"
-      >{score || "VS"}</span
-    >
+    <div class="flex flex-col items-center gap-2">
+      <span class="text-6xl font-bold text-primary-60 px-4 py-2"
+        >{score || "VS"}</span
+      >
+      <span class="text-sm font-medium rounded-4xl bg-red-300/60 px-4 py-2 text-red-600">{matchTime}</span>
+    </div>
     <div class="flex flex-col items-center gap-2">
       <img
         src={teamBFlag}
         alt={`${teamB} flag`}
-        class="w-70 h-45 bg-amber-50"
-      />
-      <span class="font-medium">{teamB}</span>
+  />
+      <span class="text-2xl font-medium">{teamB}</span>
     </div>
   </div>
-  <div class="mt-4 flex items-center justify-between">
-    <div class="text-xl font-normal">{memberCount} chatting now</div>
+  <div class="mt-4 flex flex-col items-center justify-between gap-4 max-w-sm mx-auto">
+
 
     {
       {
