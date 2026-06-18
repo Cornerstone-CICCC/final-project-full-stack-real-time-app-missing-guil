@@ -90,7 +90,7 @@ export const loginUser = async (
 ) => {
   try {
     // TODO: 1. Extract `username` and `password` from `req.body`.
-    const { email, password } = req.body;
+    const { email, password, remember } = req.body;
 
     // TODO: 2. Validate that both fields are present and not empty strings (return 400 Bad Request if missing).
     if (!email || !password) {
@@ -113,6 +113,14 @@ export const loginUser = async (
 
     // TODO: 5. Transition the user's presence state to online by executing `updateUserStatus(username, "online")`.
     updateUserStatus(user.id, "online");
+
+    if (remember) {
+      // @ts-ignore
+      if (req.session && req.session.cookie) {
+        // @ts-ignore
+        req.session.cookie.maxAge = 7 * 24 * 60 * 60 * 1000;
+      }
+    }
 
     // TODO: 6. Populate the session store `req.session` with identifying data including `userId` and `username`.
     // @ts-ignore
