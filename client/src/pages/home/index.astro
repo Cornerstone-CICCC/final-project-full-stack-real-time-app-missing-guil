@@ -16,6 +16,7 @@ const liveMatches = [
     teamAFlag: "https://flagcdn.com/w160/ar.png",
     teamBFlag: "https://flagcdn.com/w160/fr.png",
     matchTime: "90'",
+    group: "C",
   },
   {
     id: "live2",
@@ -26,6 +27,7 @@ const liveMatches = [
     teamAFlag: "https://flagcdn.com/w160/br.png",
     teamBFlag: "https://flagcdn.com/w160/de.png",
     matchTime: "67'",
+    group: "D",
   },
 ];
 
@@ -38,6 +40,7 @@ const upcomingMatches = [
     teamAFlag: "https://flagcdn.com/w160/es.png",
     teamBFlag: "https://flagcdn.com/w160/pt.png",
     matchTime: "Jun 17 · 18:00",
+    group: "B",
   },
   {
     teamA: "England",
@@ -47,6 +50,7 @@ const upcomingMatches = [
     teamAFlag: "https://flagcdn.com/w160/gb-eng.png",
     teamBFlag: "https://flagcdn.com/w160/it.png",
     matchTime: "Jun 18 · 21:00",
+    group: "A",
   },
   {
     teamA: "Netherlands",
@@ -56,6 +60,7 @@ const upcomingMatches = [
     teamAFlag: "https://flagcdn.com/w160/nl.png",
     teamBFlag: "https://flagcdn.com/w160/hr.png",
     matchTime: "Jun 20 · 15:00",
+    group: "C",
   },
 ];
 
@@ -79,6 +84,7 @@ const upcomingMatches = [
         matchTime={liveMatches[0].matchTime}
         teamAFlag={liveMatches[0].teamAFlag}
         teamBFlag={liveMatches[0].teamBFlag}
+        group={liveMatches[0].group}
         href="/rooms/"
         status="live"
       />
@@ -90,6 +96,7 @@ const upcomingMatches = [
         matchTime={liveMatches[1].matchTime}
         teamAFlag={liveMatches[1].teamAFlag}
         teamBFlag={liveMatches[1].teamBFlag}
+        group={liveMatches[1].group}
         href="/rooms/"
         status="live"
       />
@@ -114,8 +121,9 @@ const upcomingMatches = [
         matchTime={upcomingMatches[0].matchTime}
         teamAFlag={upcomingMatches[0].teamAFlag}
         teamBFlag={upcomingMatches[0].teamBFlag}
-        href="/rooms/live1"
-        status="live"
+        group={upcomingMatches[0].group}
+        href=""
+        status="upcoming"
       />
       <MatchCard
         teamA={upcomingMatches[1].teamA}
@@ -125,7 +133,20 @@ const upcomingMatches = [
         matchTime={upcomingMatches[1].matchTime}
         teamAFlag={upcomingMatches[1].teamAFlag}
         teamBFlag={upcomingMatches[1].teamBFlag}
-        href="/rooms/live1"
+        group={upcomingMatches[1].group}
+        href=""
+        status="upcoming"
+      />
+      <MatchCard
+        teamA={upcomingMatches[2].teamA}
+        teamB={upcomingMatches[2].teamB}
+        score={upcomingMatches[2].score}
+        memberCount={upcomingMatches[2].memberCount}
+        matchTime={upcomingMatches[2].matchTime}
+        teamAFlag={upcomingMatches[2].teamAFlag}
+        teamBFlag={upcomingMatches[2].teamBFlag}
+        group={upcomingMatches[2].group}
+        href=""
         status="upcoming"
       />
     </div>

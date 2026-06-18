@@ -9,6 +9,7 @@ interface Props {
   teamAFlag: string;
   teamBFlag: string;
   matchTime: string;
+  group?: string;
   href?: string;
   status?: "live" | "upcoming";
 }
@@ -21,38 +22,58 @@ const {
   teamAFlag,
   teamBFlag,
   matchTime,
+  group,
   href = "/rooms/:id",
   status = "upcoming",
 } = Astro.props as Props;
 ---
 
-<div class=" border-b-1 border-primary pb-8 pt-6 px-8">
-  <div class="flex items-center justify-between ">
-    <div class="flex flex-col items-center gap-2">
+<div class="border-b border-b-primary/50 px-4 py-6 sm:px-6 md:px-8">
+  <div class="flex items-center justify-between gap-2 sm:gap-1">
+    <!-- Team A -->
+    <div class="flex flex-col items-center gap-2 flex-1">
       <img
         src={teamAFlag}
         alt={`${teamA} flag`}
+        class="w-12 sm:w-16 md:w-24 h-auto rounded-lg object-cover shadow-md"
+      />
+      <span class="text-sm sm:text-lg md:text-2xl font-medium text-center">
+        {teamA}
+      </span>
+    </div>
 
-        />
-      <span class="text-2xl font-medium">{teamA}</span>
-    </div>
-    <div class="flex flex-col items-center gap-2">
-      <span class="text-6xl font-bold text-primary-60 px-4 py-2"
-        >{score || "VS"}</span
+    <!-- Score -->
+    <div class="flex flex-col items-center gap-2 shrink-0">
+      <span
+        class="text-xs sm:text-sm font-medium text-text-gray uppercase tracking-wide">Group - {group}</span> 
+      
+      <span
+        class="text-3xl sm:text-4xl md:text-6xl font-bold text-primary-60 px-2 py-1"
       >
-      <span class="text-sm font-medium rounded-4xl bg-red-300/60 px-4 py-2 text-red-600">{matchTime}</span>
+        {score || "VS"}
+      </span>
+
+      <span
+        class="text-xs sm:text-sm font-medium rounded-full bg-red-300/60 px-3 py-1 text-red-600"
+      >
+        {matchTime}
+      </span>
     </div>
-    <div class="flex flex-col items-center gap-2">
+
+    <!-- Team B -->
+    <div class="flex flex-col items-center gap-2 flex-1">
       <img
         src={teamBFlag}
         alt={`${teamB} flag`}
-  />
-      <span class="text-2xl font-medium">{teamB}</span>
+        class="w-12 sm:w-16 md:w-24 h-auto rounded-lg object-cover shadow-md"
+      />
+      <span class="text-sm sm:text-lg md:text-2xl font-medium text-center">
+        {teamB}
+      </span>
     </div>
   </div>
-  <div class="mt-4 flex flex-col items-center justify-between gap-4 max-w-sm mx-auto">
 
-
+  <div class="mt-6 flex justify-center">
     {
       {
         live: (
