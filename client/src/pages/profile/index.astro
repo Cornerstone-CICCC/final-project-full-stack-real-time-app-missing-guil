@@ -1,0 +1,115 @@
+---
+// PROFILE PAGE
+
+import MainLayout from "../../layouts/MainLayout.astro";
+
+import Button from "../../components/Button.astro";
+
+import TextField from "../../components/TextField.astro";
+---
+
+<MainLayout title="Profile Settings" active="Profile" container="w-full">
+  <div class="flex flex-col h-screen items-center justify-center login-bg">
+    <div class="rounded-2xl bg-bg/90 p-8 shadow-xl">
+      <div class="text-center">
+        <h1 class="font-display text-4xl font-bold text-text-black">
+          Profile Settings
+        </h1>
+        <p class="mt-1 mb-6 text-sm text-text-gray">
+          Edit your profile information.
+        </p>
+      </div>
+
+      <div class="flex flex-row gap-6">
+        <div class="flex items-center gap-4">
+          <div class="flex flex-col items-center gap-3">
+            <div
+              id="profile-avatar"
+              class="h-44 w-44 rounded-full bg-yellow-500 flex items-center justify-center overflow-hidden cursor-pointer transition-colors"
+              role="button"
+              tabindex="0"
+              aria-label="Randomize profile color"
+            >
+              <span id="profile-avatar-initial" class="text-6xl font-bold text-text-black leading-none">U</span>
+            </div>
+
+            <p
+              class="mt-1 max-w-52 text-center text-xs leading-5 text-text-gray"
+            >
+                Click the avatar to randomize your profile color.
+            </p>
+          </div>
+        </div>
+        <!-- Text Fields -->
+
+        <div class="flex flex-col gap-4 w-80">
+          <TextField
+            label="Username"
+            name="username"
+            placeholder="Enter your username"
+          />
+          <TextField
+            label="Email"
+            name="email"
+            placeholder="Enter your email"
+          />
+          <TextField
+            label="Current Password"
+            name="currentPassword"
+            type="password"
+            placeholder="Enter your current password"
+          />
+          <TextField
+            label="New Password"
+            name="newPassword"
+            type="password"
+            placeholder="Enter your new password"
+          />
+
+          <Button variant="primary" class="w-full cursor-pointer"
+            >Save Profile</Button
+          >
+        </div>
+      </div>
+    </div>
+  </div>
+</MainLayout>
+
+<script>
+  const bgColors = [
+    "bg-red-500",
+    "bg-green-500",
+    "bg-blue-500",
+    "bg-yellow-500",
+    "bg-purple-500",
+    "bg-pink-500",
+    "bg-indigo-500",
+  ];
+
+  const avatar = document.getElementById("profile-avatar");
+  const initial = document.getElementById("profile-avatar-initial");
+
+  const applyRandomColor = () => {
+    if (!avatar || !initial) return;
+
+    avatar.classList.remove(...bgColors, "bg-primary-20");
+
+    const colorClass = bgColors[Math.floor(Math.random() * bgColors.length)];
+    avatar.classList.add(colorClass);
+
+    initial.classList.remove("text-primary", "text-white", "text-black");
+    initial.classList.add(colorClass === "bg-yellow-500" ? "text-black" : "text-white");
+  };
+
+  avatar?.addEventListener("click", applyRandomColor);
+  avatar?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      applyRandomColor();
+    }
+  });
+
+  if (initial) {
+    initial.classList.remove("text-primary");
+  }
+</script>

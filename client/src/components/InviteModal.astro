@@ -1,0 +1,64 @@
+---
+import Button from "./Button.astro";
+import TextField from "./TextField.astro";
+---
+
+<!-- Backdrop -->
+<div
+  id="invite-modal"
+  class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm"
+  aria-hidden="true"
+>
+  <div
+    id="invite-modal-panel"
+    class="bg-bg rounded-2xl shadow-2xl p-8 w-full max-w-sm mx-4 flex flex-col gap-5"
+  >
+    <div class="text-center">
+      <h2 class="text-2xl font-bold text-text-black">Have an invite link already?</h2>
+      <p class="mt-1 text-sm text-text-gray">Paste it below to join a room</p>
+    </div>
+
+    <form id="invite-form" 
+    class="space-y-4" 
+    action="/rooms/join">
+
+      <TextField name="inviteCode" placeholder="Paste invite link or code" required />
+      <Button type="submit" variant="primary" class="w-full cursor-pointer">Join Room</Button>
+    </form>
+
+    <div class="flex items-center gap-3">
+      <hr class="flex-1 border-text-gray-50" />
+      <span class="text-xs text-text-gray">or</span>
+      <hr class="flex-1 border-text-gray-50" />
+    </div>
+
+    <Button variant="neutral" class="w-full cursor-pointer" href="/rooms/room-settings">Create a Room</Button>
+
+  </div>
+</div>
+
+<script>
+  const modal = document.getElementById('invite-modal');
+
+  const open = () => {
+    modal?.classList.remove('hidden');
+    modal?.classList.add('flex');
+    modal?.setAttribute('aria-hidden', 'false');
+  };
+
+  const close = () => {
+    modal?.classList.add('hidden');
+    modal?.classList.remove('flex');
+    modal?.setAttribute('aria-hidden', 'true');
+  };
+
+  document.getElementById('close-invite-modal')?.addEventListener('click', close);
+
+  // Close when clicking the dark backdrop
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) close();
+  });
+
+  // Listen for the open trigger dispatched by the Add Room button
+  document.addEventListener('open-invite-modal', open);
+</script>

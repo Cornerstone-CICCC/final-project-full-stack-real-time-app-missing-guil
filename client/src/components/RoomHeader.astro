@@ -1,0 +1,69 @@
+---
+import "../styles/global.css";
+import Avatar from "./Avatar.astro";
+import logoutIcon from "../assets/icon/outlined/logout.svg?url";
+
+import Button from "./Button.astro";
+
+interface Member {
+  name: string;
+  avatar: string;
+  status: "online" | "offline";
+}
+
+interface Props {
+  name: string;
+  avatar: string;
+  memberCount: number;
+  onlineCount: number;
+  members?: Member[];
+}
+
+const {
+  name,
+  avatar,
+  memberCount,
+  onlineCount,
+  members = [],
+} = Astro.props as Props;
+
+const onlineMembers = members.filter((m) => m.status === "online");
+const previewMembers = onlineMembers.slice(0, 3);
+const overflow = onlineCount - previewMembers.length;
+---
+
+<div class="relative z-10 flex items-center gap-4 px-5 py-3 bg-bg  shadow-sm">
+
+  <!-- LEFT: Group avatar + name + total members -->
+  <div class="flex items-center gap-3 flex-1 min-w-0">
+
+ <Avatar image={avatar} name={name} />
+
+    <div class="min-w-0">
+      <p class="font-bold text-text-black truncate">{name}</p>
+      <div class="min-w-0 flex flex-row items-center gap-2 text-sm text-text-gray">
+        <p class="text-xs text-text-gray">{memberCount} members</p>
+        <!-- Online count -->
+          <span
+      class="h-2 w-2 rounded-full bg-green"></span>
+        <span class="text-xs text-green whitespace-nowrap">
+          {onlineCount} members online
+        </span>
+  </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: stacked avatars + online count + exit -->
+  <div class="flex items-center gap-4 flex-shrink-0">
+
+
+
+    <!-- Exit room -->
+    <Button variant="primary" class="text-sm">
+      <img src={logoutIcon} alt="Logout" class="h-5 w-5" />
+      Leave Room
+    </Button>
+  </div>
+
+</div>

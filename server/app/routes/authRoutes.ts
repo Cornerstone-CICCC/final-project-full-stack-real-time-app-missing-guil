@@ -3,6 +3,7 @@ import {
   registerUser,
   loginUser,
   logoutUser,
+  checkAuth,
 } from "../controller/AuthController.ts";
 import { authMiddleware } from "../middleware/authMiddleware.ts";
 
@@ -19,8 +20,13 @@ router.post("/register", registerUser);
 router.post("/login", loginUser);
 
 /**
- * @route {GET} /auth/logout
+ * @route {GET} /auth/me
  */
-router.post("/logout", authMiddleware, logoutUser);
+router.get("/me", checkAuth);
+
+/**
+ * @route {POST} /auth/logout
+ */
+router.get("/logout", authMiddleware, logoutUser);
 
 export default router;

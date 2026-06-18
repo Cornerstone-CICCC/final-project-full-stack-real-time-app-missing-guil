@@ -1,99 +1,155 @@
-<html>
-<body>
-  <div class="card">
-    <h1>Register</h1>
-    <p>Please enter your account info</p>
-    
-    <input type="text" name="username" placeholder="Username" />
-    <p id="username-error" class="error-msg"></p>
+---
+import AuthLayout from '../../layouts/AuthLayout.astro';
+import Button from '../../components/Button.astro';
+import TextField from '../../components/TextField.astro';
+import CheckBox from '../../components/CheckBox.astro';
+---
 
-    <input type="email" name="email" placeholder="Email Address" />
-    <p id="email-error" class="error-msg"></p>
+<AuthLayout title="Register" container="max-w-md">
+  <h1 class="font-display text-5xl font-bold text-text-black">Register</h1>
+  <p class="mt-1 mb-6 text-sm text-text-gray">Please enter your account details</p>
 
-    <div class="password-wrapper">
-      <input type="password" name="password" id="password" placeholder="Password" />
-      <span id="togglePassword">Show</span>
+  <form id="registerForm" class="space-y-4" method="post">
+    <div class="space-y-1">
+      <TextField name="username" placeholder="Username" maxlength="15" required />
+      <p id="username-error" class="error-msg text-red-500 text-xs empty:hidden"></p>
     </div>
-    <p class="help-text">At least 5 chars, 1 uppercase, 1 number, 1 special char</p>
-    <p id="password-error" class="error-msg"></p>
 
-    <input type="password" name="confirmPassword" placeholder="Confirm Password" />
-    <p id="confirmPassword-error" class="error-msg"></p>
+    <div class="space-y-1">
+      <TextField name="email" type="email" placeholder="you@example.com" required />
+      <p id="email-error" class="error-msg text-red-500 text-xs empty:hidden"></p>
+    </div>
 
-    <button id="registerBtn">Register</button>
-  </div>
+    <div class="space-y-1">
+      <div class="relative flex items-center">
+        <TextField name="password" type="password" placeholder="Password" required class="w-full" />
+        <span id="togglePassword" class="absolute right-3 cursor-pointer text-xs text-gray-500 select-none">Show</span>
+      </div>
+      <p class="text-gray-400 text-[10px] mt-1">At least 5 chars, 1 uppercase, 1 number, 1 special char</p>
+      <p id="password-error" class="error-msg text-red-500 text-xs empty:hidden"></p>
+    </div>
 
-  <script>
-    const btn = document.getElementById('registerBtn');
-    const toggle = document.getElementById('togglePassword');
-    const pass = document.getElementById('password') as HTMLInputElement;
+    <div class="space-y-1">
+      <div class="relative flex items-center">
+        <TextField name="confirmPassword" type="password" placeholder="Confirm Password" required class="w-full" />
+        <span id="toggleConfirmPassword" class="absolute right-3 cursor-pointer text-xs text-gray-500 select-none">Show</span>
+      </div>
+      <p id="confirmPassword-error" class="error-msg text-red-500 text-xs empty:hidden"></p>
+    </div>
 
-    // Show/Hide 기능
-    toggle?.addEventListener('click', () => {
-      pass.type = pass.type === 'password' ? 'text' : 'password';
-      toggle.textContent = pass.type === 'password' ? 'Show' : 'Hide';
+    <div class="space-y-1">
+      <CheckBox name="terms" class="text-sm text-text-gray w-full whitespace-nowrap">
+        I agree with the <a href="/" class="font-medium text-primary hover:underline">terms of service and privacy policy*</a>
+      </CheckBox>
+      <p id="terms-error" class="error-msg text-red-500 text-xs empty:hidden"></p>
+    </div>
+
+    <Button id="registerBtn" type="button" variant="primary" class="w-full">Register</Button>
+  </form>
+
+  <p class="mt-5 text-center text-sm text-text-gray">
+    Already have an account?
+    <a href="/" class="font-medium text-primary hover:underline">Log in</a>
+  </p>
+</AuthLayout>
+
+<script>
+  const btn = document.getElementById('registerBtn');
+  const togglePass = document.getElementById('togglePassword');
+  const toggleConfirm = document.getElementById('toggleConfirmPassword');
+  
+  const passInput = document.querySelector('input[name="password"]') as HTMLInputElement;
+  const confirmInput = document.querySelector('input[name="confirmPassword"]') as HTMLInputElement;
+  const termsCheckbox = document.querySelector('input[name="terms"]') as HTMLInputElement;
+
+  document.querySelectorAll('input:not([name="terms"])').forEach((input) => {
+    input.addEventListener('input', () => {
+      (input as HTMLElement).style.borderColor = '';
+      const errorEl = document.getElementById(`${input.getAttribute('name')}-error`);
+      if (errorEl) errorEl.textContent = '';
+    });
+  });
+
+  termsCheckbox?.addEventListener('change', () => {
+    if (termsCheckbox.checked) {
+      const termsError = document.getElementById('terms-error');
+      if (termsError) termsError.textContent = '';
+    }
+  });
+
+  togglePass?.addEventListener('click', () => {
+    const isPassword = passInput.type === 'password';
+    passInput.type = isPassword ? 'text' : 'password';
+    togglePass.textContent = isPassword ? 'Hide' : 'Show';
+  });
+
+  toggleConfirm?.addEventListener('click', () => {
+    const isPassword = confirmInput.type === 'password';
+    confirmInput.type = isPassword ? 'text' : 'password';
+    toggleConfirm.textContent = isPassword ? 'Hide' : 'Show';
+  });
+
+  btn?.addEventListener('click', async () => {
+    document.querySelectorAll('.error-msg').forEach(el => (el as HTMLElement).textContent = '');
+    document.querySelectorAll('input').forEach(el => (el as HTMLElement).style.borderColor = '');
+    
+    const username = (document.querySelector('input[name="username"]') as HTMLInputElement).value;
+    const email = (document.querySelector('input[name="email"]') as HTMLInputElement).value;
+    const password = passInput.value;
+    const confirmPassword = confirmInput.value;
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const passRegex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{5,})/;
+
+    let hasError = false;
+
+    if (!username) { 
+      document.getElementById('username-error')!.textContent = "Username is required"; 
+      hasError = true; 
+    } else if (username.length > 15) { 
+      document.getElementById('username-error')!.textContent = "Username must be 15 characters or less"; 
+      (document.querySelector('input[name="username"]') as HTMLElement).style.borderColor = 'red';
+      hasError = true; 
+    }
+    
+    if (!email) { 
+      document.getElementById('email-error')!.textContent = "Email is required"; hasError = true; 
+    } else if (!emailRegex.test(email)) { 
+      document.getElementById('email-error')!.textContent = "Invalid email format"; hasError = true; }
+
+    if (!password) { 
+      document.getElementById('password-error')!.textContent = "Password is required"; hasError = true; 
+    } else if (!passRegex.test(password)) { 
+      document.getElementById('password-error')!.textContent = "Invalid password format"; hasError = true; }
+
+    if (!confirmPassword) { 
+      document.getElementById('confirmPassword-error')!.textContent = "Confirm Password is required"; hasError = true; 
+    } else if (password !== confirmPassword) { 
+      document.getElementById('confirmPassword-error')!.textContent = "Passwords do not match"; hasError = true; }
+
+    if (!termsCheckbox.checked) {
+      document.getElementById('terms-error')!.textContent = "You must agree to the terms";
+      hasError = true;
+    }
+
+    if (hasError) return;
+
+    const res = await fetch('http://localhost:3000/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email, password })
     });
 
-    btn?.addEventListener('click', async () => {
-      document.querySelectorAll('.error-msg').forEach(el => (el as HTMLElement).textContent = '');
-      
-      const username = (document.querySelector('input[name="username"]') as HTMLInputElement).value;
-      const email = (document.querySelector('input[name="email"]') as HTMLInputElement).value;
-      const password = pass.value;
-      const confirmPassword = (document.querySelector('input[name="confirmPassword"]') as HTMLInputElement).value;
-
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      const passRegex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{5,})/;
-
-      let hasError = false;
-
-      if (!username) { document.getElementById('username-error')!.textContent = "Username is required"; hasError = true; }
-      
-      if (!email) { 
-        document.getElementById('email-error')!.textContent = "Email is required"; hasError = true; 
-      } else if (!emailRegex.test(email)) { 
-        document.getElementById('email-error')!.textContent = "Invalid email format"; hasError = true; 
+    const data = await res.json();
+    if (!res.ok) {
+      const errorEl = document.getElementById(`${data.field}-error`);
+      if (errorEl) {
+         errorEl.textContent = data.error;
+         const inputEl = document.querySelector(`input[name="${data.field}"]`) as HTMLElement;
+         if (inputEl) inputEl.style.borderColor = 'red';
       }
-
-      if (!password) { 
-        document.getElementById('password-error')!.textContent = "Password is required"; hasError = true; 
-      } else if (!passRegex.test(password)) { 
-        document.getElementById('password-error')!.textContent = "Invalid password format"; hasError = true; 
-      }
-
-      if (!confirmPassword) { 
-        document.getElementById('confirmPassword-error')!.textContent = "Confirm Password is required"; hasError = true; 
-      } else if (password !== confirmPassword) { 
-        document.getElementById('confirmPassword-error')!.textContent = "Passwords do not match"; hasError = true; 
-      }
-
-      if (hasError) return;
-
-      const res = await fetch('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password, confirmPassword })
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        const errorEl = document.getElementById(`${data.field}-error`);
-        if (errorEl) errorEl.textContent = data.error;
-      } else {
-        window.location.href = '/login';
-      }
-    });
-  </script>
-
-  <style>
-    body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f4f4f9; font-family: sans-serif; }
-    .card { width: 400px; padding: 2.5rem; background: white; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-    input { width: 100%; padding: 12px; margin-top: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-    .password-wrapper { position: relative; }
-    #togglePassword { position: absolute; right: 10px; top: 22px; cursor: pointer; font-size: 0.8rem; color: #666; user-select: none; }
-    .error-msg { color: red; font-size: 0.75rem; height: 12px; margin: 5px 0; }
-    button { width: 100%; padding: 14px; margin-top: 15px; background: #1a3c17; color: white; border: none; border-radius: 6px; cursor: pointer; }
-    .help-text { color: #888; font-size: 0.7rem; margin: 5px 0; }
-  </style>
-</body>
-</html>
+    } else {
+      window.location.href = '/';
+    }
+  });
+</script>

@@ -26,8 +26,8 @@
 </div>
 
 <script>
-  import { initializeSocket, SOCKET_EVENTS } from "../../lib/socket.ts";
-  import type { ChatMessage, UserPresencePayload, UserTypingPayload } from "../../types";
+  import { initializeSocket, SOCKET_EVENTS } from "../lib/socket.ts";
+  import type { ChatMessage, UserPresencePayload, UserTypingPayload } from "../types";
 
   // 1. DOM BINDINGS
   const messagesList = document.getElementById("messages-list");

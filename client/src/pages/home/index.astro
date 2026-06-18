@@ -1,0 +1,64 @@
+---
+// Layout
+import MainLayout from "../../layouts/MainLayout.astro";
+
+// Components
+import MatchCard from "../../components/MatchCard.astro";
+import Button from "../../components/Button.astro";
+
+---
+
+<MainLayout title="Home" active="Home" container="w-full home-bg">
+<div id="live" class="flex flex-col items-center gap-6 py-10">    <h1 class="text-4xl font-bold">Live Now</h1>
+
+    <div class="w-full max-w-3xl gap-8 flex flex-col">
+      <MatchCard
+        teamA="Team A"
+        teamB="Team B"
+        score="2-1"
+        memberCount={15}
+        matchTime="2024-07-01T18:00:00Z"
+        teamAFlag="/assets/images/teamA.png"
+        teamBFlag="/assets/images/teamB.png"
+        href="/rooms/live1"
+        status="live"
+      />
+      <MatchCard
+        teamA="Team C"
+        teamB="Team D"
+        score="1-0"
+        memberCount={20}
+        matchTime="2024-07-02T20:00:00Z"
+        teamAFlag="/assets/images/teamC.png"
+        teamBFlag="/assets/images/teamD.png"
+        href="/rooms/live2"
+        status="live"
+      />
+    </div>
+  </div>
+<div id="upcoming" class="flex flex-col items-center gap-6 py-10">    <h1 class="text-4xl font-bold">Upcoming Matches</h1>
+
+    <div class="w-full max-w-3xl gap-8 flex flex-col">
+      <MatchCard
+        teamA="Team A"
+        teamB="Team B"
+        score="VS"
+        memberCount={15}
+        matchTime="2024-07-01T18:00:00Z"
+        teamAFlag="/assets/images/teamA.png"
+        teamBFlag="/assets/images/teamB.png"
+        status="upcoming"
+      />
+      <MatchCard
+        teamA="Team C"
+        teamB="Team D"
+        score="VS"
+        memberCount={20}
+        matchTime="2024-07-02T20:00:00Z"
+        teamAFlag="/assets/images/teamC.png"
+        teamBFlag="/assets/images/teamD.png"
+        status="upcoming"
+      />
+    </div>
+  </div>
+</MainLayout>

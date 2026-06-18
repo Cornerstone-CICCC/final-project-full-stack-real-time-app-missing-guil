@@ -1,0 +1,145 @@
+---
+export const prerender = false;
+
+import MainLayout from "../../layouts/MainLayout.astro";
+import SearchField from "../../components/SearchField.astro";
+import ChatListItem from "../../components/ChatListItem.astro";
+import chatIcon from "../../assets/icon/green/chat.svg?url";
+
+import ChatHeader from "../../components/ChatHeader.astro";
+import ChatBubble from "../../components/ChatBubble.astro";
+
+import TypeBox from "../../components/TypeBox.astro";
+import TypingIndicator from "../../components/TypingIndicator.astro";
+
+import Button from "../../components/Button.astro";
+import PlusIcon from "../../assets/icon/outlined/plus.svg?url";
+import AddModal from "../../components/AddModal.astro";
+
+// fake data (replace with DB later)
+type ChatUser = {
+  id: string;
+  name: string;
+  status: "online" | "offline";
+  avatar: string;
+  timestamp: string;
+  unread?: number;
+};
+
+const users: ChatUser[] = [
+  { id: "1", name: "John Doe", status: "online", avatar: "", timestamp: "2:30 PM", unread: 3 },
+  { id: "2", name: "Jane Smith", status: "offline", avatar: "", timestamp: "1:45 PM", unread: 0 },
+  { id: "3", name: "Bob Johnson", status: "online", avatar: "", timestamp: "12:00 PM", unread: 0 },
+];
+
+const { id } = Astro.params;
+
+const activeUser = users.find((u) => u.id === id);
+---
+
+<MainLayout title="Chat" active="Chat" container="w-full">
+  <div class="flex h-screen">
+
+    <!-- LEFT: Chat List -->
+    <div class="w-100 p-4 flex flex-col shadow-lg">
+            <div class="flex flex-row justify-between items-center">
+
+
+      <h1 class="text-3xl font-bold mb-4 flex items-center gap-2 text-primary-60">
+        <img src={chatIcon} alt="Chat Icon" class="h-8 w-8" />
+        Chat
+      </h1>
+
+            <Button id="open-add-modal" variant="primary" class="text-sm mb-4 cursor-pointer">
+        <img src={PlusIcon} alt="Add contact" class="h-5 w-5" />
+        Add Contact
+      </Button>
+      </div>
+
+      <SearchField placeholder="Search..." />
+
+      <div class="mt-4 space-y-2 overflow-y-auto flex-1">
+
+        {users.map((user) => (
+          <ChatListItem
+            avatar={user.avatar}
+            name={user.name}
+            status={user.status}
+            timestamp={user.timestamp}
+            href={`/chat/${user.id}`}
+            active={user.id === id}
+            unread={user.unread}
+          />
+        ))}
+
+      </div>
+    </div>
+
+    <!-- RIGHT: Chat Window -->
+<div class="flex-1 bg-gray-100 relative flex flex-col">
+
+  {activeUser ? (
+    <>
+      <!-- Chat Header -->
+      <ChatHeader
+        name={activeUser.name}
+        status={activeUser.status}
+        avatar={activeUser.avatar}
+        lastTimestamp={activeUser.timestamp}
+      />
+
+          <div class="home-bg absolute inset-0 opacity-40 pointer-events-none" />
+
+          <div
+            id="messages-list"
+            class="relative flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-1"
+          >
+            <div class="flex items-center gap-3 my-3">
+              <hr class="flex-1 border-gray-300/60" />
+              <span class="text-xs font-medium text-gray-500 bg-white/70 px-3 py-0.5 rounded-full backdrop-blur-sm">
+                Today
+              </span>
+              <hr class="flex-1 border-gray-300/60" />
+            </div>
+
+            <ChatBubble
+              message="OMG 🤫 do you remember what you did last night at the work night out?"
+              timestamp="18:12"
+              isOwn={false}
+              reaction="❤️"
+            />
+            <ChatBubble
+              message="no haha"
+              timestamp="18:16"
+              isOwn={true}
+              read={true}
+            />
+            <ChatBubble
+              message="i don't remember anything 😅"
+              timestamp="18:16"
+              isOwn={true}
+              read={true}
+            />
+          </div>
+
+          <TypingIndicator message="David is typing ..." />
+
+          <TypeBox />
+
+        </>
+      ) : (
+        <>
+          <div class="home-bg absolute inset-0 opacity-30" />
+          <p class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-500 text-lg text-center z-10">
+            Select a room to start messaging
+          </p>
+        </>
+      )}
+    </div>
+
+  </div>
+
+
+</MainLayout>
+
+<AddModal />
