@@ -3,7 +3,6 @@ import Button from "./Button.astro";
 import TextField from "./TextField.astro";
 ---
 
-<!-- Backdrop -->
 <div
   id="add-modal"
   class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm"
@@ -11,89 +10,113 @@ import TextField from "./TextField.astro";
 >
   <div
     id="add-modal-panel"
-    class="bg-bg rounded-2xl shadow-2xl p-8 w-full max-w-sm mx-4 flex flex-col gap-5"
+    class="bg-bg rounded-2xl shadow-2xl p-8 w-full max-w-sm mx-4 flex flex-col gap-5 relative"
   >
+    <button
+      id="close-add-modal"
+      class="absolute top-4 right-4 text-text-gray hover:text-text-black text-xl font-bold cursor-pointer"
+      aria-label="Close modal"
+    >
+      &times;
+    </button>
 
     <div class="text-center">
       <h2 class="text-2xl font-bold text-text-black">Add New Contact</h2>
-      <p class="mt-1 text-sm text-text-gray">Paste your friend's username below</p>
+      <p class="mt-1 text-sm text-text-gray">
+        Paste your friend's username below
+      </p>
     </div>
 
-    <form id="add-form" class="space-y-4" action="/chat">
-      <TextField name="inviteCode" placeholder="Paste Username*" required />
-      <Button type="submit" variant="primary" class="w-full cursor-pointer">Add a new contact</Button>
+    <form id="add-form" class="space-y-4">
+      <TextField name="username" placeholder="Paste Username*" required />
+      <Button type="submit" variant="primary" class="w-full cursor-pointer"
+        >Add a new contact</Button
+      >
     </form>
   </div>
 </div>
 
 <script>
-  const modal = document.getElementById('add-modal');
-  const addForm = document.getElementById('add-form') as HTMLFormElement;
+  const modal = document.getElementById("add-modal");
+  const addForm = document.getElementById("add-form") as HTMLFormElement;
 
   const open = () => {
-    modal?.classList.remove('hidden');
-    modal?.classList.add('flex');
-    modal?.setAttribute('aria-hidden', 'false');
+    modal?.classList.remove("hidden");
+    modal?.classList.add("flex");
+    modal?.setAttribute("aria-hidden", "false");
   };
 
   const close = () => {
-    modal?.classList.add('hidden');
-    modal?.classList.remove('flex');
-    modal?.setAttribute('aria-hidden', 'true');
+    modal?.classList.add("hidden");
+    modal?.classList.remove("flex");
+    modal?.setAttribute("aria-hidden", "true");
   };
 
-  document.getElementById('close-add-modal')?.addEventListener('click', close);
+  document.getElementById("close-add-modal")?.addEventListener("click", close);
 
-  // Close when clicking the dark backdrop
-  modal?.addEventListener('click', (e) => {
+  modal?.addEventListener("click", (e) => {
     if (e.target === modal) close();
   });
 
-  // Listen for the open trigger dispatched by the Add Room button
-  document.addEventListener('open-add-modal', open);
+  document.addEventListener("open-add-modal", open);
 
-  
-  // == Handle Form Submit & Call createGroupChat API ==
-  
-  addForm?.addEventListener('submit', async (e) => {
-    // Prevent the default browser redirect
+  async function fetchUserProfile(userId: string) {
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/users/${userId}`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          console.error("Unauthorized. Redirecting to login.");
+          window.location.href = "/login";
+          return;
+        }
+        throw new Error("Error fetching user profile: " + response.statusText);
+      }
+
+      const userData = await response.json();
+      // console.log("User data:", userData);
+
+      return userData;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  addForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    // Extract the entered username from the TextField
     const formData = new FormData(addForm);
-    const inviteCode = formData.get('inviteCode') as string;
+    const targetUsername = formData.get("username") as string;
 
-    if (!inviteCode) return;
-
-    try {
-      // Call the backend REST API to create a new chat room
-      // Note: We format the payload to match the createGroupChat controller expectations
-      const res = await fetch("http://localhost:3000/api/chats/group", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: `Chat with ${inviteCode}`,
-          participantIds: [inviteCode]
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        console.log("[Frontend] Successfully created new chat:", data);
-        addForm.reset();
-        close();
-        
-        // Refresh the page to reload the sidebar with the new chat
-        window.location.reload();
-      } else {
-        alert("Error creating chat: " + data.error);
-      }
-    } catch (error) {
-      console.error("[Frontend Error] Creating chat failed:", error);
-      alert("Failed to connect to the server.");
+    if (!targetUsername) {
+      alert("Please enter a username.");
+      return;
     }
+
+    const userData = await fetchUserProfile(targetUsername);
+
+    if (!userData) {
+      // TODO: Handle in a better way later
+      alert("User not found. Please check the username and try again.");
+      return;
+    }
+
+    document.dispatchEvent(
+      new CustomEvent("contact-selected", {
+        detail: { user: userData },
+      }),
+    );
+
+    addForm.reset();
+    close();
   });
 </script>

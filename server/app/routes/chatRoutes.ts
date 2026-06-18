@@ -2,7 +2,7 @@ import express from "express";
 
 import {
   getUserChats,
-  createGroupChat,
+  createChats,
   joinGroupChat
 } from "../controller/ChatController.ts";
 
@@ -15,9 +15,9 @@ const router = express.Router();
  */
 router.get("/", authMiddleware,  getUserChats);
 /**
- * @route {POST} /chat/group - Create a new group chat
+ * @route {POST} /chat/create - Create a new chat
  */
-router.post("/group", authMiddleware,  createGroupChat); 
+router.post("/create", authMiddleware,  createChats); 
 /**
  * @route {POST} /join - Join an existing chat (not implemented yet)
  */
