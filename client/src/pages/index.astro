@@ -43,23 +43,6 @@ if (res.ok) {
 <script>
   const btn = document.getElementById('loginBtn');
   const statusMsg = document.getElementById('status-msg');
-  const emailInput = document.querySelector('input[name="email"]') as HTMLInputElement;
-  const rememberCheckbox = document.querySelector('input[name="remember"]') as HTMLInputElement;
-
-  window.addEventListener('DOMContentLoaded', () => {
-    const savedEmail = localStorage.getItem('savedEmail');
-    if (savedEmail) {
-      emailInput.value = savedEmail;
-      rememberCheckbox.checked = true;
-    }
-  });
-
-  rememberCheckbox.addEventListener('change', () => {
-    if (!rememberCheckbox.checked) {
-      emailInput.value = '';
-      localStorage.removeItem('savedEmail');
-    }
-  });
 
   document.querySelectorAll('input').forEach((input) => {
     input.addEventListener('input', () => {
@@ -71,9 +54,9 @@ if (res.ok) {
   });
   
   btn?.addEventListener('click', async () => {
-    const email = emailInput.value;
+    const email = (document.querySelector('input[name="email"]') as HTMLInputElement).value;
     const password = (document.querySelector('input[name="password"]') as HTMLInputElement).value;
-    const remember = rememberCheckbox.checked;
+    const remember = (document.querySelector('input[name="remember"]') as HTMLInputElement).checked;
 
     if (!email || !password) {
       if (statusMsg) {
@@ -97,11 +80,6 @@ if (res.ok) {
           statusMsg.style.color = "red";
         }
       } else {
-        if (remember) {
-          localStorage.setItem('savedEmail', email);
-        } else {
-          localStorage.removeItem('savedEmail');
-        }
         window.location.href = '/home';
       }
     } catch (err) { 
