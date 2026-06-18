@@ -317,59 +317,60 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
     const customEvent = e as CustomEvent;
     const { user } = customEvent.detail;
 
-    console.log("Data form Modal:", user);
+    // console.log("Data form Modal:", user);
 
-    // try {
-    //   // 1. Llamamos al backend para inicializar la conversación real con este usuario
-    //   const res = await fetch("http://localhost:3000/api/chats/group", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({
-    //       name: `Chat con ${user.username}`,
-    //       participantIds: [user.id], // Le pasamos su ID real limpio
-    //     }),
-    //   });
+    try {
+      // 1. Call API to create new chat with that contact
+      const res = await fetch("http://localhost:3000/api/chats/create", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: `Chat con ${user.username}`,
+          isGroupChat: false,
+          participantIds: [user.id],
+        }),
+      });
 
-    //   const newChat = await res.json();
+      const newChat = await res.json();
 
-    //   if (!res.ok) throw new Error(newChat.error || "No se pudo crear el chat");
+      console.log("API response for new chat:", newChat);
 
-    //   // 2. Insertamos visualmente el nuevo chat arriba del todo en la barra lateral
-    //   if (sidebarList) {
-    //     const chatItemLink = document.createElement("a");
-    //     chatItemLink.setAttribute("href", `/chat/${newChat.id}`);
-    //     chatItemLink.className =
-    //       "block p-3 rounded-xl transition-all hover:bg-gray-50 bg-white shadow-sm border border-gray-100 flex flex-row items-center gap-3 cursor-pointer mb-2 animate-fade-in"; // Puedes añadir animación aquí
+      if (!res.ok) throw new Error(newChat.error || "No se pudo crear el chat");
 
-    //     chatItemLink.innerHTML = `
-    //     <div class="relative w-10 h-10 rounded-full bg-primary-20 flex items-center justify-center text-primary font-bold">
-    //       ${newChat.name ? newChat.name.charAt(0).toUpperCase() : "G"}
-    //     </div>
-    //     <div class="flex-1 min-w-0">
-    //       <div class="flex flex-row justify-between items-baseline">
-    //         <h3 class="text-sm font-semibold text-text-black truncate">${newChat.name}</h3>
-    //         <span class="text-[10px] text-green font-medium">Nuevo</span>
-    //       </div>
-    //     </div>
-    //   `;
+      // 2. Insert chat in sidebar
+      if (sidebarList) {
+        const chatItemLink = document.createElement("a");
+        chatItemLink.setAttribute("href", `/chat/${newChat.id}`);
+        chatItemLink.className =
+          "block p-3 rounded-xl transition-all hover:bg-gray-50 bg-white shadow-sm border border-gray-100 flex flex-row items-center gap-3 cursor-pointer mb-2 animate-fade-in"; // Puedes añadir animación aquí
 
-    //     // Si había un mensaje de "No active conversations found", lo limpiamos
-    //     if (sidebarList.querySelector("p")) {
-    //       sidebarList.innerHTML = "";
-    //     }
+        chatItemLink.innerHTML = `
+        <div class="relative w-10 h-10 rounded-full bg-primary-20 flex items-center justify-center text-primary font-bold">
+          ${newChat.name ? newChat.name.charAt(0).toUpperCase() : "G"}
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex flex-row justify-between items-baseline">
+            <h3 class="text-sm font-semibold text-text-black truncate">${newChat.name}</h3>
+            <span class="text-[10px] text-green font-medium">Nuevo</span>
+          </div>
+        </div>
+      `;
 
-    //     // Lo ponemos arriba de la lista como hace WhatsApp
-    //     sidebarList.insertBefore(chatItemLink, sidebarList.firstChild);
+        // if (chatListStatus) chatListStatus.remove();
+        if (sidebarList.querySelector("p")) {
+          sidebarList.innerHTML = "";
+        }
 
-    //     // 3. Opcional: Hacer clic automático en el nuevo chat creado para abrirlo de una vez
-    //     chatItemLink.click();
-    //   }
-    // } catch (error) {
-    //   console.error(
-    //     "[Padre Error] Error creando chat con nuevo contacto:",
-    //     error,
-    //   );
-    //   alert("Hubo un problema al añadir el contacto a tus chats.");
-    // }
+        // Add the new chat at the top of the list
+        sidebarList.insertBefore(chatItemLink, sidebarList.firstChild);
+
+        // 3. open the new chat immediately
+        chatItemLink.click();
+      }
+    } catch (error) {
+      console.error("Error creating new chat with contact:", error);
+      alert("There was a problem adding the new contact.");
+    }
   });
 </script>
