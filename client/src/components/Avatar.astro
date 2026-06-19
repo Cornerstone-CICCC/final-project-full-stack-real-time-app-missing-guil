@@ -6,11 +6,11 @@ interface Props {
 
 const { name, image } = Astro.props as Props;
 
-const initials = name
-  .split(" ")
-  .map((part) => part[0])
-  .join("")
-  .toUpperCase();
+// const initials = name
+//   .split(" ")
+//   .map((part) => part[0])
+//   .join("")
+//   .toUpperCase();
 
 const bgColors = [
   "bg-red-500",
@@ -32,5 +32,5 @@ const bgColor = bgColors[colorIndex];
   id="chat-header-avatar" 
   class={`inline-flex h-10 w-10 items-center justify-center rounded-full ${bgColor} text-white font-medium`}
 >
-  {initials}
+  {}
 </span>

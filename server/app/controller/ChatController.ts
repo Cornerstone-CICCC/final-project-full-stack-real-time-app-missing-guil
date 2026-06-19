@@ -35,14 +35,40 @@ export const getUserChats = async (
   res: express.Response,
 ) => {
   try {
-    // 1. Extract the `userId` from the current active session state.
+    // 1. Extract the userId from the current session
     const userId = req.session?.userId;
-    // 2. Query the data structures for all conversations mapped to the user by calling `getChatsByUserId(userId)`.
-    const userChats = getChatsbyUserId(userId);
-    // 3. Respond with the compiled list of direct and group chat structures in JSON format alongside a 200 OK status.
-    res.status(200).json(userChats);
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized access" });
+    }
+
+    // 2. Fetch raw chats from memory
+    const chats = getChatsbyUserId(userId);
+
+    // 3. Enrich direct chats with dynamic display names
+    const enrichedChats = chats.map((chat) => {
+      if (!chat.isGroupChat) {
+        // Find the ID of the participant that is NOT the current user
+        const otherUserId = chat.participantIds.find((id) => id !== userId);
+
+        if (otherUserId) {
+          const otherUser = findUserById(otherUserId);
+
+          // Replace null with the dynamically generated name
+          return {
+            ...chat,
+            name: otherUser
+              ? `${otherUser.username}`
+              : "Unknown User",
+          };
+        }
+      }
+      return chat; // Group chats already have persistent names
+    });
+
+    return res.status(200).json(enrichedChats);
   } catch (error) {
-    res.status(500).json({ error: "Failed to retrieve user chats" });
+    console.error("[ChatController] Error fetching chats:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -58,128 +84,69 @@ export const createChats = async (
   res: express.Response,
 ) => {
   try {
-    // 1. Extract the group `name` and member credentials from `req.body`
-    const { isGroupChat, participantIds } = req.body;
-
-    // 2. Capture the `userId` of the requesting user from the active session
-    const userId = (req as any).session?.userId;
-
-    // Security check: Make sure the user is actually logged in
+    const userId = req.session?.userId;
     if (!userId) {
-      res.status(401).json({ error: "Unauthorized: Please log in first." });
-      return;
+      return res.status(401).json({ error: "Unauthorized access" });
     }
+
+    const { name, isGroupChat, participantIds } = req.body;
 
     // > Group chat
-    if (isGroupChat === true) {
-      const { name } = req.body;
-      // 3. Enforce payload structural validation
-      if (!name || typeof name !== "string" || !Array.isArray(participantIds)) {
-        res.status(400).json({
-          error: "Bad Request: Invalid group name or participant list.",
+    if (isGroupChat) {
+      // 1. Create the group chat in memory with the provided name
+      const newChat = createChat(name, true, [userId, ...participantIds]);
+
+      // 2. Notify all invited participants via WebSockets
+      const io: Server = req.app.get("io");
+      if (io) {
+        // Iterate through all invited IDs (excluding the creator, who gets the HTTP response)
+        participantIds.forEach((pId: string) => {
+          io.to(pId).emit("NEW_CHAT_CREATED", newChat);
         });
-        return;
       }
 
-      if (name.trim() === "") {
-        res
-          .status(400)
-          .json({ error: "Bad Request: Group name cannot be empty." });
-        return;
-      }
-
-      if (participantIds.length === 0) {
-        res.status(400).json({
-          error:
-            "Bad Request: At least one participant is required to create a group chat.",
-        });
-        return;
-      }
-
-      if (participantIds.includes(userId)) {
-        res.status(400).json({
-          error:
-            "Bad Request: Creator should not be included in the participant list.",
-        });
-        return;
-      }
-
-      if (new Set(participantIds).size !== participantIds.length) {
-        res
-          .status(400)
-          .json({ error: "Bad Request: Duplicate participant IDs detected." });
-        return;
-      }
-
-      // 3.5 Validate that all participantIds correspond to existing users (optional but recommended for data integrity)
-      if (!participantIds.every((id) => findUserById(id))) {
-        res.status(400).json({
-          error: "Bad Request: One or more participant IDs are invalid.",
-        });
-        return;
-      }
-
-      // 4. Merge creator's `userId` with `participantIds` and remove duplicates
-      // Using Set ensures that if the creator accidentally included themselves in the participantIds, they aren't added twice.
-      const uniqueParticipants = Array.from(
-        new Set([userId, ...participantIds]),
-      );
-
-      // 5. Invoke the model constructor to instantiate the group chat
-      // We pass the clean data to the Model layer here.
-      const newChat = createChat(name, isGroupChat, uniqueParticipants);
-
-      // 6. Dispatch the resulting group object payload
-      res.status(201).json(newChat);
-    }
-    // > Direct message
+      // 3. Return the created group chat to the creator
+      return res.status(201).json(newChat);
+    } 
+    // > DM
     else {
-      console.log("Creating a direct message chat with payload:", req.body);
-      // For direct messages, we expect exactly one participantId which is the other user
-      if (!Array.isArray(participantIds) || participantIds.length !== 1) {
-        res.status(400).json({
-          error:
-            "Bad Request: Direct messages must have exactly one participant.",
-        });
-        return;
-      }
-
+      // Handle Direct Message creation
       const otherUserId = participantIds[0];
-
-      if (otherUserId === userId) {
-        res.status(400).json({
-          error: "Bad Request: Cannot create a direct message with yourself.",
-        });
-        return;
+      if (!otherUserId) {
+        return res.status(400).json({ error: "Missing participant ID" });
       }
 
-      if (!findUserById(otherUserId)) {
-        res.status(400).json({
-          error:
-            "Bad Request: The specified user for direct message does not exist.",
-        });
-        return;
-      }
-
-      // Check if a direct message chat already exists between these two users
-      const existingChat = getChatsbyUserId(userId).find(
-        (chat) =>
-          !chat.isGroupChat &&
-          chat.participantIds.includes(otherUserId) &&
-          chat.participantIds.includes(userId),
-      );
-      if (existingChat) {
-        res.status(200).json(existingChat);
-        return;
-      }
-
-      // Create a new direct message chat
+      // Create raw chat in database
       const newChat = createChat(null, false, [userId, otherUserId]);
-      res.status(201).json(newChat);
+
+      // --- SOCKET NOTIFICATION TO THE RECEIVER ---
+      const io: Server = req.app.get("io");
+      if (io) {
+        // We use the creator's identity so the receiver sees who added them
+        const creatorUser = findUserById(userId);
+
+        const chatForOtherUser = {
+          ...newChat,
+          name: creatorUser ? `${creatorUser.username}` : "New Chat",
+        };
+
+        // Emit strictly to the receiver's personal socket room
+        io.to(otherUserId).emit("NEW_CHAT_CREATED", chatForOtherUser);
+      }
+
+      // --- API RESPONSE FOR THE CREATOR ---
+      const otherUser = findUserById(otherUserId);
+      const chatForCreator = {
+        ...newChat,
+        name: otherUser ? `${otherUser.username}` : "New Chat",
+      };
+
+      // Return the fully enriched object so the frontend can display and click it instantly
+      return res.status(201).json(chatForCreator);
     }
   } catch (error) {
-    // console.error("[ChatController] Error in createGroupChat:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    console.error("[ChatController] Error creating chat:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -259,6 +226,8 @@ export const handleSocketConnect = (socket: Socket, io: Server): void => {
   // Bind user identity to the socket instance for future reference in event handlers
   socket.data.userId = userId;
   socket.data.username = username;
+
+  socket.join(userId.toString()); // Join a private room for the user to receive direct messages or notifications
 
   console.log(`[Socket Connected] User "${username}" linked.`);
 

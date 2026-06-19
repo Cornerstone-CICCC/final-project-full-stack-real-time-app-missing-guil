@@ -203,6 +203,7 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
     try {
       const res = await fetch("http://localhost:3000/api/chats", {
         method: "GET",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
       });
 
@@ -256,6 +257,7 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
 
     // Listen for chats created by other users
     socket.on("NEW_CHAT_CREATED", (newChatData: any) => {
+      console.log("[Socket] Received new chat notification:", newChatData);
       addChatToSidebar(newChatData, true);
     });
 
@@ -365,7 +367,7 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: `Chat with ${user.username}`,
+          name: `${user.username}`,
           isGroupChat: false,
           participantIds: [user.id],
         }),
