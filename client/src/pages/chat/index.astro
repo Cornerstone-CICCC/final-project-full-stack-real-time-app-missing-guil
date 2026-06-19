@@ -122,7 +122,55 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
   // 2. Initialize Socket Connection
   const socket = initializeSocket("http://localhost:3000");
 
-  // Helper Function: Render a single message bubble
+  // =========================================================================
+  // HELPER: RENDER CHAT IN SIDEBAR
+  // =========================================================================
+  function addChatToSidebar(chat: any, isNew: boolean = false) {
+    if (!sidebarList) return;
+
+    // Remove "loading" or "empty" state if it exists
+    if (sidebarList.querySelector("p")) {
+      sidebarList.querySelector("p")?.remove();
+    }
+
+    // Use fallback name if backend returns null
+    const displayName = chat.name || chat.fallbackName || "Chat";
+    const statusText = isNew ? "New" : "Recent";
+    const statusColor = isNew ? "text-green" : "text-text-gray";
+
+    // Check if chat already exists in UI to avoid duplicates
+    let chatItemLink = document.getElementById(
+      `sidebar-item-${chat.id}`,
+    ) as HTMLAnchorElement;
+
+    if (!chatItemLink) {
+      chatItemLink = document.createElement("a");
+      chatItemLink.id = `sidebar-item-${chat.id}`;
+      chatItemLink.setAttribute("href", `/chat/${chat.id}`);
+      chatItemLink.className =
+        "block p-3 rounded-xl transition-all hover:bg-gray-50 bg-white shadow-sm border border-gray-100 flex flex-row items-center gap-3 cursor-pointer mb-2 animate-fade-in";
+    }
+
+    chatItemLink.innerHTML = `
+      <div class="relative w-10 h-10 rounded-full bg-primary-20 flex items-center justify-center text-primary font-bold">
+        ${displayName.charAt(0).toUpperCase()}
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex flex-row justify-between items-baseline">
+          <h3 class="text-sm font-semibold text-text-black truncate">${displayName}</h3>
+          <span class="text-[10px] ${statusColor} font-medium">${statusText}</span>
+        </div>
+      </div>
+    `;
+
+    // Add it to the top of the list
+    sidebarList.insertBefore(chatItemLink, sidebarList.firstChild);
+    return chatItemLink;
+  }
+
+  // =========================================================================
+  // HELPER: RENDER A SINGLE MESSAGE BUBBLE
+  // =========================================================================
   function renderMessage(message: any) {
     if (!messagesList) return;
 
@@ -159,37 +207,14 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
       });
 
       const chats = await res.json();
-
       if (!res.ok) throw new Error(chats.error || "Failed to fetch chats");
 
       if (sidebarList) {
-        if (chatListStatus) chatListStatus.remove();
-
         if (chats.length === 0) {
           sidebarList.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">No active conversations found.</p>`;
           return;
         }
-
-        chats.forEach((chat: any) => {
-          const chatItemLink = document.createElement("a");
-          chatItemLink.setAttribute("href", `/chat/${chat.id}`);
-          chatItemLink.className =
-            "block p-3 rounded-xl transition-all hover:bg-gray-50 bg-white shadow-sm border border-gray-100 flex flex-row items-center gap-3 cursor-pointer mb-2";
-
-          chatItemLink.innerHTML = `
-            <div class="relative w-10 h-10 rounded-full bg-primary-20 flex items-center justify-center text-primary font-bold">
-              ${chat.name ? chat.name.charAt(0).toUpperCase() : "G"}
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="flex flex-row justify-between items-baseline">
-                <h3 class="text-sm font-semibold text-text-black truncate">${chat.name}</h3>
-                <span class="text-[10px] text-text-gray">Recent</span>
-              </div>
-            </div>
-          `;
-
-          sidebarList.appendChild(chatItemLink);
-        });
+        chats.reverse().forEach((chat: any) => addChatToSidebar(chat));
       }
     } catch (error) {
       console.error("[Frontend Error] Error loading sidebar chats:", error);
@@ -206,7 +231,6 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
   // =========================================================================
   if (socket) {
     socket.on(SOCKET_EVENTS.MESSAGE_HISTORY, (messages: any[]) => {
-      console.log("[Frontend] Received message history:", messages);
       if (messagesList) {
         messagesList.innerHTML = "";
         messages.forEach(renderMessage);
@@ -214,17 +238,31 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
     });
 
     socket.on(SOCKET_EVENTS.NEW_MESSAGE, (message: any) => {
-      console.log("[Frontend] Received new message:", message);
-      renderMessage(message);
+      // Render message if it belongs to the currently active chat
+      if (message.chatId === activeChatId) {
+        renderMessage(message);
+      }
+
+      // Move chat to the top of the sidebar
+      const existingSidebarItem = document.getElementById(
+        `sidebar-item-${message.chatId}`,
+      );
+      if (existingSidebarItem && sidebarList) {
+        sidebarList.prepend(existingSidebarItem);
+      } else {
+        fetchUserChats();
+      }
+    });
+
+    // Listen for chats created by other users
+    socket.on("NEW_CHAT_CREATED", (newChatData: any) => {
+      addChatToSidebar(newChatData, true);
     });
 
     let typingTimeout: any;
     socket.on("user_typing", (data: any) => {
-      // Show typing indicator when someone starts typing
       if (typingIndicatorWrapper) {
         typingIndicatorWrapper.classList.remove("hidden");
-
-        // Automatically hide it after 3 seconds of inactivity
         clearTimeout(typingTimeout);
         typingTimeout = setTimeout(() => {
           typingIndicatorWrapper.classList.add("hidden");
@@ -246,30 +284,39 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
     const newChatId = href?.split("/").pop();
 
     if (newChatId && newChatId !== activeChatId) {
-      // Leave previous room before joining a new one to prevent message bleed
       if (activeChatId && socket) {
         socket.emit(SOCKET_EVENTS.LEAVE_CHAT, { chatId: activeChatId });
-        console.log(`[Frontend] Gracefully left room channel: ${activeChatId}`);
       }
 
       activeChatId = newChatId;
 
+      // Extract the name from the clicked sidebar item
       const chatTitleEl = link.querySelector("h3");
       const currentChatName = chatTitleEl
         ? chatTitleEl.textContent
         : "Active Chat";
-      if (chatHeaderWrapper) {
-        chatHeaderWrapper.innerHTML = `
-          <div class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-30 relative">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-primary-20 flex items-center justify-center text-primary font-bold">${currentChatName?.charAt(0).toUpperCase()}</div>
-              <div>
-                <h2 class="text-sm font-semibold text-text-black">${currentChatName}</h2>
-                <p class="text-[11px] text-green font-medium">Connected</p>
-              </div>
-            </div>
-          </div>
-        `;
+
+      // Update DOM elements for the header
+      const headerNameEl = document.getElementById("chat-header-name");
+      const headerAvatarEl = document.getElementById("chat-header-avatar");
+
+      if (headerNameEl) {
+        headerNameEl.textContent = currentChatName;
+      }
+
+      if (headerAvatarEl && currentChatName) {
+        // Replicate Astro's initials logic on the client side
+        const initials = currentChatName
+          .split(" ")
+          .map((part) => part[0])
+          .join("")
+          .substring(0, 2) // Limit to 2 characters to prevent breaking the UI
+          .toUpperCase();
+
+        headerAvatarEl.textContent = initials;
+
+        // Optional: If you want the background color to update dynamically too,
+        // you would replicate the colorIndex logic here and modify className.
       }
 
       emptyState?.classList.add("hidden");
@@ -277,97 +324,64 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
       activeState?.classList.add("flex");
 
       socket?.emit(SOCKET_EVENTS.JOIN_CHAT, { chatId: activeChatId });
-      console.log(`[Frontend] Entered room scope: ${activeChatId}`);
     }
   });
 
   // =========================================================================
   // 6. TYPING & MESSAGE SEND HANDLERS
   // =========================================================================
-
-  // Emit 'typing' event when user types in the input field
   messageInput?.addEventListener("input", () => {
     if (activeChatId && socket) {
       socket.emit("typing", { chatId: activeChatId });
     }
   });
 
-  // Handle message submission
   chatForm?.addEventListener("submit", (e) => {
     e.preventDefault();
     const text = messageInput?.value.trim();
 
-    // Do nothing if text is empty or no room is selected
     if (!text || !activeChatId) return;
-
     socket?.emit(SOCKET_EVENTS.SEND_MESSAGE, { chatId: activeChatId, text });
-
     if (messageInput) messageInput.value = "";
   });
 
-  // 7. Modal logic
+  // =========================================================================
+  // 7. MODAL LOGIC
+  // =========================================================================
   document.getElementById("open-add-modal")?.addEventListener("click", () => {
     document.dispatchEvent(new CustomEvent("open-add-modal"));
   });
 
   // =========================================================================
-  // 8. Adding contact from modal
+  // 8. ADDING CONTACT FROM MODAL
   // =========================================================================
   document.addEventListener("contact-selected", async (e: Event) => {
     const customEvent = e as CustomEvent;
     const { user } = customEvent.detail;
 
-    // console.log("Data form Modal:", user);
-
     try {
-      // 1. Call API to create new chat with that contact
       const res = await fetch("http://localhost:3000/api/chats/create", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: `Chat con ${user.username}`,
+          name: `Chat with ${user.username}`,
           isGroupChat: false,
           participantIds: [user.id],
         }),
       });
 
       const newChat = await res.json();
+      if (!res.ok) throw new Error(newChat.error || "Failed to create chat");
 
-      console.log("API response for new chat:", newChat);
+      // Pass the modal username as a fallback name
+      newChat.fallbackName = user.username;
 
-      if (!res.ok) throw new Error(newChat.error || "No se pudo crear el chat");
+      // Inject into sidebar
+      const chatItemLink = addChatToSidebar(newChat, true);
 
-      // 2. Insert chat in sidebar
-      if (sidebarList) {
-        const chatItemLink = document.createElement("a");
-        chatItemLink.setAttribute("href", `/chat/${newChat.id}`);
-        chatItemLink.className =
-          "block p-3 rounded-xl transition-all hover:bg-gray-50 bg-white shadow-sm border border-gray-100 flex flex-row items-center gap-3 cursor-pointer mb-2 animate-fade-in"; // Puedes añadir animación aquí
-
-        chatItemLink.innerHTML = `
-        <div class="relative w-10 h-10 rounded-full bg-primary-20 flex items-center justify-center text-primary font-bold">
-          ${newChat.name ? newChat.name.charAt(0).toUpperCase() : "G"}
-        </div>
-        <div class="flex-1 min-w-0">
-          <div class="flex flex-row justify-between items-baseline">
-            <h3 class="text-sm font-semibold text-text-black truncate">${newChat.name}</h3>
-            <span class="text-[10px] text-green font-medium">Nuevo</span>
-          </div>
-        </div>
-      `;
-
-        // if (chatListStatus) chatListStatus.remove();
-        if (sidebarList.querySelector("p")) {
-          sidebarList.innerHTML = "";
-        }
-
-        // Add the new chat at the top of the list
-        sidebarList.insertBefore(chatItemLink, sidebarList.firstChild);
-
-        // 3. open the new chat immediately
-        chatItemLink.click();
-      }
+      // Open the chat immediately
+      if (chatItemLink) chatItemLink.click();
     } catch (error) {
       console.error("Error creating new chat with contact:", error);
       alert("There was a problem adding the new contact.");
