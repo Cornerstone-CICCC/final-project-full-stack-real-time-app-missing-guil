@@ -43,15 +43,17 @@ const {
         <span id="chat-header-name" class="font-medium">{name}</span>
 
         <div
+          id="chat-header-status-container"
           class={`flex items-center gap-1 text-sm font-medium ${
             status === "online" ? "text-green" : "text-gray-400"
           }`}
         >
           <span
+            id="chat-header-status-dot"
             class={`h-2 w-2 rounded-full ${
               status === "online" ? "bg-green" : "bg-gray-300"
             }`}></span>
-          <span>{status}</span>
+          <span id="chat-header-status-text">{status}</span>
         </div>
       </div>
 

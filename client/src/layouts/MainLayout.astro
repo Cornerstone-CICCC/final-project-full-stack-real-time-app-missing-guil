@@ -1,17 +1,13 @@
 ---
-import Sidebar from '../components/SideBar.astro'
+import Sidebar from "../components/SideBar.astro";
 
 interface Props {
   title: string;
   container?: string;
-  active?: 'Home' | 'Chat' | 'Rooms' | 'Profile' | 'Logout';
+  active?: "Home" | "Chat" | "Rooms" | "Profile" | "Logout";
 }
 
-const {
-  title,
-  container = "max-w-6xl",
-  active
-} = Astro.props as Props;
+const { title, container = "max-w-6xl", active } = Astro.props as Props;
 ---
 
 <!doctype html>
@@ -31,13 +27,19 @@ const {
 
   <body>
     <div class="flex min-h-screen">
-      <!-- Sidebar -->
       <Sidebar active={active} />
 
-      <!-- Main -->
       <main class={`${container}`}>
         <slot />
       </main>
     </div>
+
+    <script>
+      import { initializeSocket } from "../lib/socket";
+
+      // Initialize socket globally so the user appears online on any page using this layout.
+      // Thanks to the singleton pattern in socket.ts, the chat page will just reuse this existing connection.
+      initializeSocket("http://localhost:3000");
+    </script>
   </body>
 </html>

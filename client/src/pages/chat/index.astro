@@ -138,6 +138,9 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
     const statusText = isNew ? "New" : "Recent";
     const statusColor = isNew ? "text-green" : "text-text-gray";
 
+    // Extract status from API or default to offline
+    const userPresenceStatus = chat.status || "offline";
+
     // Check if chat already exists in UI to avoid duplicates
     let chatItemLink = document.getElementById(
       `sidebar-item-${chat.id}`,
@@ -150,6 +153,9 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
       chatItemLink.className =
         "block p-3 rounded-xl transition-all hover:bg-gray-50 bg-white shadow-sm border border-gray-100 flex flex-row items-center gap-3 cursor-pointer mb-2 animate-fade-in";
     }
+
+    // Bind the real-time status to the DOM element
+    chatItemLink.setAttribute("data-status", userPresenceStatus);
 
     chatItemLink.innerHTML = `
       <div class="relative w-10 h-10 rounded-full bg-primary-20 flex items-center justify-center text-primary font-bold">
@@ -271,6 +277,54 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
         }, 3000);
       }
     });
+
+    // User precence updates (online/offline)
+    socket.on(SOCKET_EVENTS.USER_PRESENCE, (payload: any) => {
+      console.log("[Socket] User presence changed:", payload);
+
+      // Check if the current active chat belongs to the user whose status changed
+      const headerNameEl = document.getElementById("chat-header-name");
+
+      if (
+        headerNameEl &&
+        headerNameEl.textContent
+          ?.toLowerCase()
+          .includes(payload.username.toLowerCase())
+      ) {
+        const statusTextEl = document.getElementById("chat-header-status-text");
+        const statusDotEl = document.getElementById("chat-header-status-dot");
+        const statusContainerEl = document.getElementById(
+          "chat-header-status-container",
+        );
+
+        // Update text (online / offline)
+        if (statusTextEl) {
+          statusTextEl.textContent = payload.status;
+        }
+
+        // Update the green / gray dot indicator
+        if (statusDotEl) {
+          statusDotEl.className = `h-2 w-2 rounded-full ${
+            payload.status === "online" ? "bg-green" : "bg-gray-300"
+          }`;
+        }
+
+        // Update the text color in the container
+        if (statusContainerEl) {
+          statusContainerEl.className = `flex items-center gap-1 text-sm font-medium ${
+            payload.status === "online" ? "text-green" : "text-gray-400"
+          }`;
+        }
+      }
+      // Keep sidebar items synchronized so clicks always fetch the latest status
+      const allSidebarLinks = document.querySelectorAll("#chat-sidebar-list a");
+      allSidebarLinks.forEach((sidebarLink) => {
+        const nameEl = sidebarLink.querySelector("h3");
+        if (nameEl && nameEl.textContent?.includes(payload.username)) {
+          sidebarLink.setAttribute("data-status", payload.status);
+        }
+      });
+    });
   }
 
   // =========================================================================
@@ -302,6 +356,14 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
       const headerNameEl = document.getElementById("chat-header-name");
       const headerAvatarEl = document.getElementById("chat-header-avatar");
 
+      // Read status from the sidebar item and update UI dynamically
+      const currentStatus = link.getAttribute("data-status") || "offline";
+      const statusTextEl = document.getElementById("chat-header-status-text");
+      const statusDotEl = document.getElementById("chat-header-status-dot");
+      const statusContainerEl = document.getElementById(
+        "chat-header-status-container",
+      );
+
       if (headerNameEl) {
         headerNameEl.textContent = currentChatName;
       }
@@ -319,6 +381,15 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
 
         // Optional: If you want the background color to update dynamically too,
         // you would replicate the colorIndex logic here and modify className.
+      }
+
+      // Apply color and text based on the clicked chat's status
+      if (statusTextEl) statusTextEl.textContent = currentStatus;
+      if (statusDotEl) {
+        statusDotEl.className = `h-2 w-2 rounded-full ${currentStatus === "online" ? "bg-green" : "bg-gray-300"}`;
+      }
+      if (statusContainerEl) {
+        statusContainerEl.className = `flex items-center gap-1 text-sm font-medium ${currentStatus === "online" ? "text-green" : "text-gray-400"}`;
       }
 
       emptyState?.classList.add("hidden");

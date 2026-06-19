@@ -56,9 +56,8 @@ export const getUserChats = async (
           // Replace null with the dynamically generated name
           return {
             ...chat,
-            name: otherUser
-              ? `${otherUser.username}`
-              : "Unknown User",
+            name: otherUser ? `${otherUser.username}` : "Unknown User",
+            status: otherUser ? `${otherUser.status}` : "offline",
           };
         }
       }
@@ -73,7 +72,7 @@ export const getUserChats = async (
 };
 
 /**
- * @function createGroupChat
+ * @function createChats
  * @param {express.Request} req - The Express request object containing group configuration parameters within the body
  * @param {express.Response} res - The Express response object used to return the initialized group record
  * @returns {Promise<void>} Sends a JSON response with the newly generated group chat details
@@ -91,30 +90,42 @@ export const createChats = async (
 
     const { name, isGroupChat, participantIds } = req.body;
 
-    // > Group chat
     if (isGroupChat) {
-      // 1. Create the group chat in memory with the provided name
       const newChat = createChat(name, true, [userId, ...participantIds]);
 
-      // 2. Notify all invited participants via WebSockets
       const io: Server = req.app.get("io");
       if (io) {
-        // Iterate through all invited IDs (excluding the creator, who gets the HTTP response)
         participantIds.forEach((pId: string) => {
           io.to(pId).emit("NEW_CHAT_CREATED", newChat);
         });
       }
 
-      // 3. Return the created group chat to the creator
       return res.status(201).json(newChat);
-    } 
-    // > DM
-    else {
+    } else {
       // Handle Direct Message creation
       const otherUserId = participantIds[0];
       if (!otherUserId) {
         return res.status(400).json({ error: "Missing participant ID" });
       }
+
+      // --- NUEVO: VALIDACIÓN PARA EVITAR DUPLICADOS ---
+      const userChats = getChatsbyUserId(userId);
+      const existingChat = userChats.find(
+        (chat) =>
+          !chat.isGroupChat && chat.participantIds.includes(otherUserId),
+      );
+
+      if (existingChat) {
+        const otherUser = findUserById(otherUserId);
+        const chatForCreator = {
+          ...existingChat,
+          name: otherUser ? `${otherUser.username}` : "Unknown User",
+          status: otherUser ? otherUser.status : "offline",
+        };
+        // Retornamos 200 OK y el chat existente
+        return res.status(200).json(chatForCreator);
+      }
+      // -------------------------------------------------
 
       // Create raw chat in database
       const newChat = createChat(null, false, [userId, otherUserId]);
@@ -122,15 +133,12 @@ export const createChats = async (
       // --- SOCKET NOTIFICATION TO THE RECEIVER ---
       const io: Server = req.app.get("io");
       if (io) {
-        // We use the creator's identity so the receiver sees who added them
         const creatorUser = findUserById(userId);
-
         const chatForOtherUser = {
           ...newChat,
           name: creatorUser ? `${creatorUser.username}` : "New Chat",
+          status: creatorUser ? creatorUser.status : "offline",
         };
-
-        // Emit strictly to the receiver's personal socket room
         io.to(otherUserId).emit("NEW_CHAT_CREATED", chatForOtherUser);
       }
 
@@ -138,10 +146,10 @@ export const createChats = async (
       const otherUser = findUserById(otherUserId);
       const chatForCreator = {
         ...newChat,
-        name: otherUser ? `${otherUser.username}` : "New Chat",
+        name: otherUser ? `Chat with ${otherUser.username}` : "New Chat",
+        status: otherUser ? otherUser.status : "offline",
       };
 
-      // Return the fully enriched object so the frontend can display and click it instantly
       return res.status(201).json(chatForCreator);
     }
   } catch (error) {
@@ -232,7 +240,7 @@ export const handleSocketConnect = (socket: Socket, io: Server): void => {
   console.log(`[Socket Connected] User "${username}" linked.`);
 
   // Update user status in memory
-  updateUserStatus(username, "online");
+  updateUserStatus(userId, "online");
 
   // Broadcast presence update to all other clients
   socket.broadcast.emit(SOCKET_EVENTS.USER_PRESENCE, {
@@ -378,13 +386,16 @@ export const handleTyping = (
  */
 export const handleSocketDisconnect = (socket: Socket, io: Server): void => {
   const username = socket.data.username;
+  const userId = socket.data.userId; // <-- CORRECCIÓN: Extraer userId
 
-  if (username) {
-    updateUserStatus(username, "offline");
+  if (username && userId) {
+    // 1. Update user status in memory (FIXED: Usar userId, no username)
+    updateUserStatus(userId, "offline");
 
-    io.emit("user_presence", {
-      userId: socket.data.userId,
-      username: username,
+    // 2. Broadcast presence to all clients
+    io.emit(SOCKET_EVENTS.USER_PRESENCE, {
+      userId,
+      username,
       status: "offline",
     });
   }
