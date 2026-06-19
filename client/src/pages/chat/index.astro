@@ -135,8 +135,12 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
 
     // Use fallback name if backend returns null
     const displayName = chat.name || chat.fallbackName || "Chat";
-    const statusText = isNew ? "New" : "Recent";
-    const statusColor = isNew ? "text-green" : "text-text-gray";
+    const statusText = isNew ? "New" : "" + (chat.status || "offline");
+    const statusColor = isNew
+      ? "text-green"
+      : chat.status === "online"
+        ? "text-green"
+        : "text-gray-400";
 
     // Extract status from API or default to offline
     const userPresenceStatus = chat.status || "offline";
@@ -164,7 +168,7 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
       <div class="flex-1 min-w-0">
         <div class="flex flex-row justify-between items-baseline">
           <h3 class="text-sm font-semibold text-text-black truncate">${displayName}</h3>
-          <span class="text-[10px] ${statusColor} font-medium">${statusText}</span>
+          <span class="sidebar-chat-status text-[10px] ${statusColor} font-medium">${statusText}</span>
         </div>
       </div>
     `;
@@ -320,8 +324,32 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
       const allSidebarLinks = document.querySelectorAll("#chat-sidebar-list a");
       allSidebarLinks.forEach((sidebarLink) => {
         const nameEl = sidebarLink.querySelector("h3");
-        if (nameEl && nameEl.textContent?.includes(payload.username)) {
+
+        // Apply case insensitive matching
+        if (
+          nameEl &&
+          nameEl.textContent
+            ?.toLowerCase()
+            .includes(payload.username.toLowerCase())
+        ) {
+          // 1. Update the hidden data attribute
           sidebarLink.setAttribute("data-status", payload.status);
+
+          // 2. Update the visual text and color in the sidebar
+          const statusSpan = sidebarLink.querySelector(".sidebar-chat-status");
+          if (statusSpan) {
+            // Update text
+            statusSpan.textContent = payload.status;
+
+            // Swap Tailwind classes for color
+            if (payload.status === "online") {
+              statusSpan.classList.remove("text-gray-400", "text-text-gray");
+              statusSpan.classList.add("text-green");
+            } else {
+              statusSpan.classList.remove("text-green");
+              statusSpan.classList.add("text-gray-400");
+            }
+          }
         }
       });
     });
