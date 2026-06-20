@@ -31,3 +31,9 @@
     background: url('../assets/bg/home-bg.webp') no-repeat center center fixed;
     background-size: cover;
 }
+
+/* Utility class for flipping icons (used when reusing the back arrow as "next") */
+.flip {
+    transform: scaleX(-1);
+    display: inline-block;
+}

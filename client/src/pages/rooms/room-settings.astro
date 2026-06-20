@@ -5,12 +5,10 @@ import MainLayout from "../../layouts/MainLayout.astro";
 import SearchField from "../../components/SearchField.astro";
 import Button from "../../components/Button.astro";
 
-import PlusIcon from "../../assets/icon/green/plus.svg?url";
 import BackIcon from "../../assets/icon/green/back.svg?url";
 
 import Avatar from "../../components/Avatar.astro";
 import TextField from "../../components/TextField.astro";
-
 
 // FETCH AUTHENTICATED USER & ALL USERS FROM BACKEND API
 
@@ -18,7 +16,7 @@ const cookie = Astro.request.headers.get("cookie") || "";
 
 // 1. Check if user is logged in
 const authRes = await fetch("http://localhost:3000/api/auth/me", {
-  headers: { Cookie: cookie }
+  headers: { Cookie: cookie },
 });
 if (!authRes.ok) return Astro.redirect("/");
 const currentUser = await authRes.json();
@@ -27,11 +25,13 @@ const currentUser = await authRes.json();
 let allUsers: any[] = [];
 try {
   const usersRes = await fetch("http://localhost:3000/api/users", {
-    headers: { Cookie: cookie }
+    headers: { Cookie: cookie },
   });
   if (usersRes.ok) {
     const data = await usersRes.json();
-    allUsers = data.filter((u: any) => u.id !== currentUser.id && u._id !== currentUser._id);
+    allUsers = data.filter(
+      (u: any) => u.id !== currentUser.id && u._id !== currentUser._id,
+    );
   }
 } catch (error) {
   console.error("Failed to fetch users");
@@ -49,56 +49,94 @@ const roomAvatars = [
 
 <MainLayout title="Create Room" active="Rooms" container="w-full">
   <div class="flex h-screen">
-
-    <aside class="w-100 p-4 flex flex-col shadow-lg">
-      <a
-        href="/room"
-        class="mb-6 inline-flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-primary hover:bg-primary-10 transition-colors w-fit"
+    <!-- LEFT: User selection sidebar -->
+<aside
+  id="mobile-aside"
+  class="w-full flex flex-col shadow-lg md:w-1/2 lg:w-100 bg-bg overflow-y-auto z-10"
+>
+      <div
+        class="flex flex-row justify-between items-center border-b border-gray-200 p-1 fixed w-full md:relative md:w-auto md:border-none z-10 bg-bg"
       >
-        <img src={BackIcon} alt="Back" class="h-5 w-5" />
-        Back
-      </a>
+        <a
+          href="/rooms"
+          class="inline-flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-primary hover:bg-primary-10 transition-colors w-fit"
+        >
+          <img src={BackIcon} alt="Back" class="h-5 w-5" />
+          Back
+        </a>
 
-      <div class="mb-6">
-        <h1 class="text-2xl font-bold flex items-center gap-2 text-primary-60 mb-1">
-          <img src={PlusIcon} alt="Rooms" class="h-7 w-7" />
-          Create Room
-        </h1>
-        <p class="text-sm text-text-gray ml-9">Add members to the room</p>
+        <button
+          id="mobile-next-btn"
+          type="button"
+          class="inline-flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-primary hover:bg-primary-10 transition-colors w-fit md:hidden"
+        >
+          Next
+          <img src={BackIcon} alt="Next" class="h-5 w-5 flip" />
+        </button>
       </div>
 
-      <div class="mb-4">
+      <div class="p-4 mt-12">
+        <h1
+          class="text-2xl font-bold flex items-center gap-2 text-primary-60 mb-1"
+        >
+          Create Room
+        </h1>
+        <p class="text-sm text-text-gray">Add members to the room</p>
+      </div>
+
+      <div class=" p-4">
         <SearchField placeholder="Search members..." />
       </div>
 
       <div class="mt-4 space-y-2 overflow-y-auto flex-1 px-4">
-        {allUsers.length === 0 ? (
-          <p class="text-sm text-gray-500 text-center mt-4">No other users found.</p>
-        ) : (
-          allUsers.map((user) => (
-            <label class="flex items-center gap-3 px-2 py-3 rounded-lg cursor-pointer hover:bg-primary-10 transition-colors">
-              <Avatar name={user.username || user.name || "U"} image="" />
+        {
+          allUsers.length === 0 ? (
+            <p class="text-sm text-gray-500 text-center mt-4">
+              No other users found.
+            </p>
+          ) : (
+            allUsers.map((user) => (
+              <label class="flex items-center gap-3 px-2 py-3 rounded-lg cursor-pointer hover:bg-primary-10 transition-colors">
+                <Avatar name={user.username || user.name || "U"} image="" />
 
-              <span class="flex-1 font-medium text-text-black">
-                {user.username || user.name || "Unknown User"}
-              </span>
+                <span class="flex-1 font-medium text-text-black">
+                  {user.username || user.name || "Unknown User"}
+                </span>
 
-              <input
-                type="checkbox"
-                name="participants"
-                value={user.id || user._id}
-                class="participant-checkbox h-5 w-5 rounded border-2 border-primary accent-primary cursor-pointer"
-              />
-            </label>
-          ))
-        )}
+                <input
+                  type="checkbox"
+                  name="participants"
+                  value={user.id || user._id}
+                  data-username={user.username || user.name || "Unknown User"}
+                  class="participant-checkbox h-5 w-5 rounded border-2 border-primary accent-primary cursor-pointer"
+                />
+              </label>
+            ))
+          )
+        }
       </div>
     </aside>
 
-    <div class="flex-1 bg-bg p-8 overflow-y-auto">
-      <div class="max-w-2xl mx-auto">
-        <div class="p-8">
+    <!-- RIGHT -->
 
+    <div
+      id="mobile-right"
+      class="w-full md:w-1/2 lg:flex-1 bg-bg overflow-y-auto hidden md:block"
+    >
+      <div
+        class="flex flex-row justify-between items-center border-b border-gray-200 p-1 md:hidden fixed w-full z-10 bg-bg"
+      >
+        <a
+          href="/rooms/room-settings"
+          class="inline-flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-primary hover:bg-primary-10 transition-colors w-fit"
+        >
+          <img src={BackIcon} alt="Back" class="h-5 w-5" />
+          Back
+        </a>
+      </div>
+
+      <div class="max-w-2xl mx-auto px-8 pb-8 pt-12 md:pt-8">
+        <div class="p-8">
           <div class="mb-8">
             <h1 class="text-4xl font-bold text-text-black mb-2">
               Set Up Room Profile
@@ -109,10 +147,10 @@ const roomAvatars = [
           </div>
 
           <form id="create-room-form" class="space-y-6">
-
             <TextField
               name="roomName"
               label="Room Name"
+              labelClass="block text-sm font-medium text-text-black mb-3"
               placeholder="Enter room name..."
               required
             />
@@ -123,41 +161,73 @@ const roomAvatars = [
               </label>
 
               <div class="flex flex-wrap gap-4">
-                {roomAvatars.map((avatar, index) => (
-                  <label class="cursor-pointer">
-                    <input
-                      type="radio"
-                      name="roomAvatar"
-                      value={avatar.emoji}
-                      class="peer sr-only"
-                      checked={index === 0}
-                    />
+                {
+                  roomAvatars.map((avatar, index) => (
+                    <label class="cursor-pointer">
+                      <input
+                        type="radio"
+                        name="roomAvatar"
+                        value={avatar.emoji}
+                        class="peer sr-only"
+                        checked={index === 0}
+                      />
 
-                    <div
-                      class={`relative h-20 w-20 rounded-full ${avatar.color}
+                      <div
+                        class={`relative h-20 w-20 rounded-full ${avatar.color}
                       border-4 border-transparent flex items-center justify-center
                       text-4xl transition-all peer-checked:border-primary`}
-                    >
-                      {avatar.emoji}
-                      <div class="absolute bottom-0 right-0 hidden peer-checked:flex h-6 w-6 rounded-full bg-primary text-white items-center justify-center text-xs font-bold">
-                        ✓
+                      >
+                        {avatar.emoji}
+                        <div class="absolute bottom-0 right-0 hidden peer-checked:flex h-6 w-6 rounded-full bg-primary text-white items-center justify-center text-xs font-bold">
+                          ✓
+                        </div>
                       </div>
-                    </div>
-                  </label>
-                ))}
+                    </label>
+                  ))
+                }
               </div>
             </div>
-
-            <div class="border-t border-gray-200 pt-6 flex items-center gap-4">
-              <Button type="submit" variant="primary" class="px-8 cursor-pointer">
-                Create Room
-              </Button>
-
-              <Button type="button" variant="subtle" class="px-8 cursor-pointer" href="/room">
+            <div>
+              <label class="block text-sm font-medium text-text-black mb-3">
+                Participants
+              </label>
+              <p class="text-sm text-text-gray">
+                Select users to add to the room from the left sidebar.
+              </p>
+              <div id="selected-participants" class="mt-2">
+                <p
+                  id="selected-participants-empty"
+                  class="text-sm text-gray-500"
+                >
+                  No participants selected.
+                </p>
+                <div
+                  id="selected-participants-list"
+                  class="flex flex-wrap gap-2 mt-2"
+                  style="display:none"
+                >
+                </div>
+              </div>
+            </div>
+            <div
+              class="border-t border-gray-200 pt-6 flex items-center gap-4 justify-around"
+            >
+              <Button
+                type="button"
+                variant="subtle"
+                class="px-8 cursor-pointer"
+                href="/rooms"
+              >
                 Cancel
               </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                class="px-8 cursor-pointer"
+              >
+                Create Room
+              </Button>
             </div>
-
           </form>
         </div>
       </div>
@@ -165,7 +235,97 @@ const roomAvatars = [
   </div>
 
   <script>
-    const createForm = document.getElementById("create-room-form") as HTMLFormElement;
+    const createForm = document.getElementById(
+      "create-room-form",
+    ) as HTMLFormElement;
+
+    const selectedParticipantsList = document.getElementById(
+      "selected-participants-list",
+    );
+    const selectedParticipantsEmpty = document.getElementById(
+      "selected-participants-empty",
+    );
+
+    function renderSelectedParticipants() {
+      const checked = Array.from(
+        document.querySelectorAll(".participant-checkbox:checked"),
+      );
+      if (!selectedParticipantsList || !selectedParticipantsEmpty) return;
+      if (checked.length === 0) {
+        selectedParticipantsList.innerHTML = "";
+        selectedParticipantsList.style.display = "none";
+        selectedParticipantsEmpty.style.display = "";
+        return;
+      }
+
+      selectedParticipantsEmpty.style.display = "none";
+      selectedParticipantsList.style.display = "flex";
+      selectedParticipantsList.innerHTML = checked
+        .map((cb) => {
+          const input = cb as HTMLInputElement;
+          const name =
+            (input.dataset && input.dataset.username) ||
+            (
+              cb.closest("label")?.querySelector("span")?.textContent ||
+              "Unknown"
+            ).trim();
+          const initial = name.charAt(0).toUpperCase();
+
+          return (
+            `<div class="flex items-center gap-2 px-3 py-2 rounded-md bg-primary-10">` +
+            `<div class="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">${initial}</div>` +
+            `<div class="text-sm font-medium text-text-black">${name}</div>` +
+            `</div>`
+          );
+        })
+        .join("");
+    }
+
+    document.addEventListener("change", (e) => {
+      const target = e.target as HTMLElement;
+      if (
+        target &&
+        target.classList &&
+        (target as HTMLElement).classList.contains("participant-checkbox")
+      ) {
+        renderSelectedParticipants();
+      }
+    });
+
+    // initialize
+    renderSelectedParticipants();
+
+    // Mobile pane toggling: show aside first, then right pane when Next is tapped.
+    const mobileAside = document.getElementById("mobile-aside");
+    const mobileRight = document.getElementById("mobile-right");
+    const mobileNextBtn = document.getElementById("mobile-next-btn");
+    const mobileBackBtn = document.getElementById("mobile-back-btn");
+
+    function showRight() {
+      // hide aside and show right pane on mobile
+      if (mobileAside) mobileAside.classList.add("hidden");
+      if (mobileRight) mobileRight.classList.remove("hidden");
+      // re-render selected participants in case selection changed
+      renderSelectedParticipants();
+      // scroll top
+      mobileRight?.scrollIntoView({ behavior: "smooth" });
+    }
+
+    function showLeft() {
+      if (mobileRight) mobileRight.classList.add("hidden");
+      if (mobileAside) mobileAside.classList.remove("hidden");
+      mobileAside?.scrollIntoView({ behavior: "smooth" });
+    }
+
+    mobileNextBtn?.addEventListener("click", (e) => {
+      e.preventDefault();
+      showRight();
+    });
+
+    mobileBackBtn?.addEventListener("click", (e) => {
+      e.preventDefault();
+      showLeft();
+    });
 
     createForm?.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -173,10 +333,14 @@ const roomAvatars = [
       // Gather input data
       const formData = new FormData(createForm);
       const roomName = formData.get("roomName") as string;
-      
+
       // Get all checked user IDs from the sidebar
-      const checkedBoxes = document.querySelectorAll('.participant-checkbox:checked');
-      const participantIds = Array.from(checkedBoxes).map((cb) => (cb as HTMLInputElement).value);
+      const checkedBoxes = document.querySelectorAll(
+        ".participant-checkbox:checked",
+      );
+      const participantIds = Array.from(checkedBoxes).map(
+        (cb) => (cb as HTMLInputElement).value,
+      );
 
       if (!roomName) {
         alert("Please enter a room name.");
@@ -191,7 +355,7 @@ const roomAvatars = [
           credentials: "include",
           body: JSON.stringify({
             name: roomName,
-            participantIds: participantIds // Backend expects this array
+            participantIds: participantIds, // Backend expects this array
           }),
         });
 
