@@ -35,33 +35,28 @@ export const getUserChats = async (
   res: express.Response,
 ) => {
   try {
-    // 1. Extract the userId from the current session
     const userId = req.session?.userId;
     if (!userId) {
       return res.status(401).json({ error: "Unauthorized access" });
     }
 
-    // 2. Fetch raw chats from memory
     const chats = getChatsbyUserId(userId);
 
-    // 3. Enrich direct chats with dynamic display names
     const enrichedChats = chats.map((chat) => {
       if (!chat.isGroupChat) {
-        // Find the ID of the participant that is NOT the current user
         const otherUserId = chat.participantIds.find((id) => id !== userId);
 
         if (otherUserId) {
           const otherUser = findUserById(otherUserId);
-
-          // Replace null with the dynamically generated name
           return {
             ...chat,
             name: otherUser ? `${otherUser.username}` : "Unknown User",
-            status: otherUser ? `${otherUser.status}` : "offline",
+            status: otherUser ? otherUser.status : "offline",
+            lastActiveAt: otherUser?.lastActiveAt || null, // <-- User's last activity
           };
         }
       }
-      return chat; // Group chats already have persistent names
+      return chat;
     });
 
     return res.status(200).json(enrichedChats);
@@ -92,23 +87,18 @@ export const createChats = async (
 
     if (isGroupChat) {
       const newChat = createChat(name, true, [userId, ...participantIds]);
-
       const io: Server = req.app.get("io");
       if (io) {
         participantIds.forEach((pId: string) => {
           io.to(pId).emit("NEW_CHAT_CREATED", newChat);
         });
       }
-
       return res.status(201).json(newChat);
     } else {
-      // Handle Direct Message creation
       const otherUserId = participantIds[0];
-      if (!otherUserId) {
+      if (!otherUserId)
         return res.status(400).json({ error: "Missing participant ID" });
-      }
 
-      // --- NUEVO: VALIDACIÓN PARA EVITAR DUPLICADOS ---
       const userChats = getChatsbyUserId(userId);
       const existingChat = userChats.find(
         (chat) =>
@@ -121,16 +111,13 @@ export const createChats = async (
           ...existingChat,
           name: otherUser ? `${otherUser.username}` : "Unknown User",
           status: otherUser ? otherUser.status : "offline",
+          lastActiveAt: otherUser?.lastActiveAt || null,
         };
-        // Retornamos 200 OK y el chat existente
         return res.status(200).json(chatForCreator);
       }
-      // -------------------------------------------------
 
-      // Create raw chat in database
       const newChat = createChat(null, false, [userId, otherUserId]);
 
-      // --- SOCKET NOTIFICATION TO THE RECEIVER ---
       const io: Server = req.app.get("io");
       if (io) {
         const creatorUser = findUserById(userId);
@@ -138,16 +125,17 @@ export const createChats = async (
           ...newChat,
           name: creatorUser ? `${creatorUser.username}` : "New Chat",
           status: creatorUser ? creatorUser.status : "offline",
+          lastActiveAt: creatorUser?.lastActiveAt || null,
         };
         io.to(otherUserId).emit("NEW_CHAT_CREATED", chatForOtherUser);
       }
 
-      // --- API RESPONSE FOR THE CREATOR ---
       const otherUser = findUserById(otherUserId);
       const chatForCreator = {
         ...newChat,
-        name: otherUser ? `Chat with ${otherUser.username}` : "New Chat",
+        name: otherUser ? `${otherUser.username}` : "New Chat",
         status: otherUser ? otherUser.status : "offline",
+        lastActiveAt: otherUser?.lastActiveAt || null,
       };
 
       return res.status(201).json(chatForCreator);
@@ -386,17 +374,18 @@ export const handleTyping = (
  */
 export const handleSocketDisconnect = (socket: Socket, io: Server): void => {
   const username = socket.data.username;
-  const userId = socket.data.userId; // <-- CORRECCIÓN: Extraer userId
+  const userId = socket.data.userId;
 
   if (username && userId) {
-    // 1. Update user status in memory (FIXED: Usar userId, no username)
-    updateUserStatus(userId, "offline");
+    // This now updates the timestamp in User.ts
+    const updatedUser = updateUserStatus(userId, "offline");
 
-    // 2. Broadcast presence to all clients
+    // Include the new timestamp in the presence broadcast
     io.emit(SOCKET_EVENTS.USER_PRESENCE, {
       userId,
       username,
       status: "offline",
+      lastActiveAt: updatedUser?.lastActiveAt || new Date(),
     });
   }
 };

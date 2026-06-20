@@ -98,6 +98,25 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
 <script>
   import { initializeSocket, SOCKET_EVENTS } from "../../lib/socket";
 
+  // =========================================================================
+  // HELPER: FORMAT TIMESTAMP
+  // =========================================================================
+  function getTimeAgo(date: string | Date) {
+    if (!date || date === "null") return "offline";
+    const now = new Date();
+    const past = new Date(date);
+    const diff = now.getTime() - past.getTime();
+
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (minutes < 1) return "just now";
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    return `${days}d ago`;
+  }
+
   // 1. DOM Elements
   const sidebarList = document.getElementById("chat-sidebar-list");
   const chatListStatus = document.getElementById("chat-list-status");
@@ -135,7 +154,14 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
 
     // Use fallback name if backend returns null
     const displayName = chat.name || chat.fallbackName || "Chat";
-    const statusText = isNew ? "New" : "" + (chat.status || "offline");
+    let statusText = "offline";
+    if (isNew) {
+      statusText = "New";
+    } else if (chat.status === "online") {
+      statusText = "online";
+    } else if (chat.lastActiveAt) {
+      statusText = getTimeAgo(chat.lastActiveAt); // Muestra "5m ago" en lugar de "offline"
+    }
     const statusColor = isNew
       ? "text-green"
       : chat.status === "online"
@@ -160,6 +186,7 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
 
     // Bind the real-time status to the DOM element
     chatItemLink.setAttribute("data-status", userPresenceStatus);
+    chatItemLink.setAttribute("data-last-active", chat.lastActiveAt || "null");
 
     chatItemLink.innerHTML = `
       <div class="relative w-10 h-10 rounded-full bg-primary-20 flex items-center justify-center text-primary font-bold">
@@ -300,6 +327,9 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
         const statusContainerEl = document.getElementById(
           "chat-header-status-container",
         );
+        const headerTimestampEl = document.getElementById(
+          "chat-header-timestamp",
+        );
 
         // Update text (online / offline)
         if (statusTextEl) {
@@ -319,6 +349,17 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
             payload.status === "online" ? "text-green" : "text-gray-400"
           }`;
         }
+
+        // Update the "last active" text in the header
+        if (headerTimestampEl) {
+          if (payload.status === "offline" && payload.lastActiveAt) {
+            headerTimestampEl.textContent = `last active just now`;
+            headerTimestampEl.classList.remove("italic");
+          } else if (payload.status === "online") {
+            headerTimestampEl.textContent = "active now";
+            headerTimestampEl.classList.remove("italic");
+          }
+        }
       }
       // Keep sidebar items synchronized so clicks always fetch the latest status
       const allSidebarLinks = document.querySelectorAll("#chat-sidebar-list a");
@@ -335,17 +376,22 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
           // 1. Update the hidden data attribute
           sidebarLink.setAttribute("data-status", payload.status);
 
+          if (payload.status === "offline" && payload.lastActiveAt) {
+            sidebarLink.setAttribute("data-last-active", payload.lastActiveAt);
+          }
+
           // 2. Update the visual text and color in the sidebar
           const statusSpan = sidebarLink.querySelector(".sidebar-chat-status");
           if (statusSpan) {
-            // Update text
-            statusSpan.textContent = payload.status;
-
-            // Swap Tailwind classes for color
             if (payload.status === "online") {
+              statusSpan.textContent = "online";
               statusSpan.classList.remove("text-gray-400", "text-text-gray");
               statusSpan.classList.add("text-green");
             } else {
+              // Muestra "just now" al instante de desconectarse
+              statusSpan.textContent = payload.lastActiveAt
+                ? "just now"
+                : "offline";
               statusSpan.classList.remove("text-green");
               statusSpan.classList.add("text-gray-400");
             }
@@ -384,13 +430,14 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
       const headerNameEl = document.getElementById("chat-header-name");
       const headerAvatarEl = document.getElementById("chat-header-avatar");
 
-      // Read status from the sidebar item and update UI dynamically
+      // Read status and timestamp from the sidebar item
       const currentStatus = link.getAttribute("data-status") || "offline";
+      const currentLastActive = link.getAttribute("data-last-active");
+
       const statusTextEl = document.getElementById("chat-header-status-text");
       const statusDotEl = document.getElementById("chat-header-status-dot");
-      const statusContainerEl = document.getElementById(
-        "chat-header-status-container",
-      );
+      const statusContainerEl = document.getElementById("chat-header-status-container");
+      const headerTimestampEl = document.getElementById("chat-header-timestamp");
 
       if (headerNameEl) {
         headerNameEl.textContent = currentChatName;
@@ -406,18 +453,37 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
           .toUpperCase();
 
         headerAvatarEl.textContent = initials;
-
-        // Optional: If you want the background color to update dynamically too,
-        // you would replicate the colorIndex logic here and modify className.
       }
 
-      // Apply color and text based on the clicked chat's status
+      // Apply color and text for the status dot in the header
       if (statusTextEl) statusTextEl.textContent = currentStatus;
       if (statusDotEl) {
         statusDotEl.className = `h-2 w-2 rounded-full ${currentStatus === "online" ? "bg-green" : "bg-gray-300"}`;
       }
       if (statusContainerEl) {
         statusContainerEl.className = `flex items-center gap-1 text-sm font-medium ${currentStatus === "online" ? "text-green" : "text-gray-400"}`;
+      }
+
+      // Apply dynamic "last active" text to the header
+      if (headerTimestampEl) {
+        if (currentStatus === "online") {
+          headerTimestampEl.textContent = "active now";
+          headerTimestampEl.classList.remove("italic");
+        } else if (currentLastActive && currentLastActive !== "null") {
+          headerTimestampEl.textContent = `last active ${getTimeAgo(currentLastActive)}`;
+          headerTimestampEl.classList.remove("italic");
+        } else {
+          headerTimestampEl.textContent = "offline";
+          headerTimestampEl.classList.add("italic");
+        }
+      }
+
+      // Update the sidebar text to show the exact time (e.g. 5m ago) when clicked
+      if (currentStatus === "offline" && currentLastActive && currentLastActive !== "null") {
+        const sidebarStatusSpan = link.querySelector(".sidebar-chat-status");
+        if (sidebarStatusSpan) {
+          sidebarStatusSpan.textContent = getTimeAgo(currentLastActive);
+        }
       }
 
       emptyState?.classList.add("hidden");
