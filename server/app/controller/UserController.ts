@@ -13,27 +13,21 @@ export const getAllUsers = async (
   req: express.Request,
   res: express.Response,
 ) => {
-  // 1. Extract current user's userId from the active session.
   const currentUserId = req.session?.userId;
-  // 2. Fetch all registered users from the data layer using `findAllUsers()`.
   const allUsers = await findAllUsers();
-  // 3. Filter the array to exclude the current logged-in user so they do not see themselves in the contacts list.
   const filteredUsers = allUsers.filter((user) => user.id !== currentUserId);
-  // 4. Map through the filtered users to omit sensitive data fields like `passwordHash`.
   const safeUsers = filteredUsers.map(({ id, username, email, status }) => ({
     id,
     username,
     email,
     status,
   }));
-  // 5. Return the safe list of contacts in JSON format with a 200 OK status.
   res.status(200).json(safeUsers);
 };
 
 export const getUser = async (req: express.Request, res: express.Response) => {
   try {
     const { name } = req.params as { name: string };
-
     const user = findUserbyName(name);
 
     if (!user) {
@@ -46,7 +40,6 @@ export const getUser = async (req: express.Request, res: express.Response) => {
     }
 
     const { passwordHash, ...safeUserData } = user;
-
     res.status(200).json(safeUserData);
   } catch (error) {
     res.status(500).json({ error: "Internal server error." });
@@ -77,36 +70,32 @@ export const updateUser = async (
       return res.status(404).json({ error: "User not found" });
     }
 
-    // 1. Validation for username
+    if (!currentPassword) {
+      return res.status(400).json({ error: "Current password is required to update profile", field: "currentPassword" });
+    }
+
+    const isMatch = await comparePassword(currentPassword, user.passwordHash);
+    if (!isMatch) {
+      return res.status(401).json({ error: "Current password incorrect", field: "currentPassword" });
+    }
+
     if (username && username.length > 15) {
-      return res.status(400).json({ error: "Username must be 15 characters or less" });
+      return res.status(400).json({ error: "Username must be 15 characters or less", field: "username" });
     }
 
-    // 2. Validation for email format
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return res.status(400).json({ error: "Invalid email format" });
+      return res.status(400).json({ error: "Invalid email format", field: "email" });
     }
 
-    // 3. Password change logic with validation
     let passwordHash = user.passwordHash;
     if (newPassword) {
-      if (!currentPassword) {
-        return res.status(400).json({ error: "Current password is required to set a new one" });
-      }
-
-      const isMatch = await comparePassword(currentPassword, user.passwordHash);
-      if (!isMatch) {
-        return res.status(401).json({ error: "Current password incorrect" });
-      }
-
       const passRegex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{5,})/;
       if (!passRegex.test(newPassword)) {
-        return res.status(400).json({ error: "New password does not meet requirements" });
+        return res.status(400).json({ error: "New password does not meet requirements", field: "newPassword" });
       }
       passwordHash = await hashPassword(newPassword);
     }
 
-    // 4. Update the user data
     updateUserData(userId, {
       username: username || user.username,
       email: email || user.email,
@@ -114,6 +103,31 @@ export const updateUser = async (
     });
 
     return res.status(200).json({ message: "Profile updated successfully" });
+  } catch (error) {
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+/**
+ * @function getMyProfile
+ * @param {express.Request} req - The Express request object containing the user session
+ * @param {express.Response} res - The Express response object
+ * @returns {Promise<void>} Sends a JSON response with the current user's profile or an error message
+ * @description Retrieves the authenticated user's profile information from memory, excluding sensitive data like passwordHash.
+ */
+export const getMyProfile = async (
+  req: express.Request,
+  res: express.Response,
+) => {
+  try {
+    const userId = req.session?.userId;
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    
+    const user = findUserById(userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    
+    const { passwordHash, ...safeUserData } = user;
+    return res.status(200).json(safeUserData);
   } catch (error) {
     return res.status(500).json({ error: "Internal Server Error" });
   }

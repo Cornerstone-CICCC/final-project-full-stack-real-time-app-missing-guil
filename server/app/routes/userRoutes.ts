@@ -3,9 +3,9 @@ import express from "express";
 import {
   getAllUsers,
   getUser,
-  updateUser
+  updateUser,
+  getMyProfile
 } from "../controller/UserController.ts";
-
 
 import { authMiddleware } from "../middleware/authMiddleware.ts";
 
@@ -16,6 +16,14 @@ const router = express.Router();
  */
 router.get("/", authMiddleware, getAllUsers);
 
+/**
+ * @route {GET} /users/me - Get the current user's profile
+ */
+router.get("/me", authMiddleware, getMyProfile);
+
+/**
+ * @route {GET} /users/:name - Get a specific user by name
+ */
 router.get("/:name", authMiddleware, getUser);
 
 /**
