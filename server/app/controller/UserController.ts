@@ -118,3 +118,29 @@ export const updateUser = async (
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+
+/**
+ * @function getMyProfile
+ * @param {express.Request} req - The Express request object containing the user session
+ * @param {express.Response} res - The Express response object
+ * @returns {Promise<void>} Sends a JSON response with the current user's profile or an error message
+ * @description Retrieves the authenticated user's profile information from memory, excluding sensitive data like passwordHash.
+ */
+export const getMyProfile = async (
+  req: express.Request,
+  res: express.Response,
+) => {
+  try {
+    const userId = req.session?.userId;
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    
+    const user = findUserById(userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    
+    const { passwordHash, ...safeUserData } = user;
+    return res.status(200).json(safeUserData);
+  } catch (error) {
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};

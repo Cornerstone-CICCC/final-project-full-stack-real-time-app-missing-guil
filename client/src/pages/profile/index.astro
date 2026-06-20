@@ -2,6 +2,25 @@
 import MainLayout from "../../layouts/MainLayout.astro";
 import Button from "../../components/Button.astro";
 import TextField from "../../components/TextField.astro";
+
+let userData = { username: "Loading...", email: "Loading..." };
+
+try {
+  const res = await fetch("http://localhost:3000/api/users/me", {
+    headers: { 
+      Cookie: Astro.request.headers.get("cookie") || "" 
+    },
+  });
+
+  if (res.ok) {
+    userData = await res.json();
+    console.log("userData loaded:", userData);
+  } else {
+    console.log("Fetch failed:", res.status);
+  }
+} catch (err) {
+  console.error("Fetch error:", err);
+}
 ---
 
 <MainLayout title="Profile Settings" active="Profile" container="w-full">
@@ -28,6 +47,16 @@ import TextField from "../../components/TextField.astro";
             >
               <span id="profile-avatar-initial" class="text-6xl font-bold text-text-black leading-none">U</span>
             </div>
+
+            <div class="text-center">
+              <p class="text-text-gray font-normal text-xs">
+                Username: <span class="font-bold text-text-black">{userData.username}</span>
+              </p>
+              <p class="text-text-gray font-normal text-xs mt-1">
+                Email: <span class="font-bold text-text-black">{userData.email}</span>
+              </p>
+            </div>
+
             <p class="mt-1 max-w-52 text-center text-xs leading-5 text-text-gray">
               Click the avatar to randomize your profile color.
             </p>
