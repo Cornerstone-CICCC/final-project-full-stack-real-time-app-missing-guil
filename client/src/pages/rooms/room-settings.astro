@@ -49,11 +49,10 @@ const roomAvatars = [
 
 <MainLayout title="Create Room" active="Rooms" container="w-full">
   <div class="flex h-screen">
-    <!-- LEFT: User selection sidebar -->
-<aside
-  id="mobile-aside"
-  class="w-full flex flex-col shadow-lg md:w-1/2 lg:w-100 bg-bg overflow-y-auto z-10"
->
+    <aside
+      id="mobile-aside"
+      class="w-full flex flex-col shadow-lg md:w-1/2 lg:w-100 bg-bg overflow-y-auto z-10"
+    >
       <div
         class="flex flex-row justify-between items-center border-b border-gray-200 p-1 fixed w-full md:relative md:w-auto md:border-none z-10 bg-bg"
       >
@@ -117,8 +116,6 @@ const roomAvatars = [
       </div>
     </aside>
 
-    <!-- RIGHT -->
-
     <div
       id="mobile-right"
       class="w-full md:w-1/2 lg:flex-1 bg-bg overflow-y-auto hidden md:block"
@@ -126,13 +123,14 @@ const roomAvatars = [
       <div
         class="flex flex-row justify-between items-center border-b border-gray-200 p-1 md:hidden fixed w-full z-10 bg-bg"
       >
-        <a
-          href="/rooms/room-settings"
+        <button
+          id="mobile-back-btn"
+          type="button"
           class="inline-flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-primary hover:bg-primary-10 transition-colors w-fit"
         >
           <img src={BackIcon} alt="Back" class="h-5 w-5" />
           Back
-        </a>
+        </button>
       </div>
 
       <div class="max-w-2xl mx-auto px-8 pb-8 pt-12 md:pt-8">
@@ -235,16 +233,10 @@ const roomAvatars = [
   </div>
 
   <script>
-    const createForm = document.getElementById(
-      "create-room-form",
-    ) as HTMLFormElement;
+    const createForm = document.getElementById("create-room-form") as HTMLFormElement;
 
-    const selectedParticipantsList = document.getElementById(
-      "selected-participants-list",
-    );
-    const selectedParticipantsEmpty = document.getElementById(
-      "selected-participants-empty",
-    );
+    const selectedParticipantsList = document.getElementById("selected-participants-list");
+    const selectedParticipantsEmpty = document.getElementById("selected-participants-empty");
 
     function renderSelectedParticipants() {
       const checked = Array.from(
@@ -302,12 +294,9 @@ const roomAvatars = [
     const mobileBackBtn = document.getElementById("mobile-back-btn");
 
     function showRight() {
-      // hide aside and show right pane on mobile
       if (mobileAside) mobileAside.classList.add("hidden");
       if (mobileRight) mobileRight.classList.remove("hidden");
-      // re-render selected participants in case selection changed
       renderSelectedParticipants();
-      // scroll top
       mobileRight?.scrollIntoView({ behavior: "smooth" });
     }
 
@@ -322,6 +311,7 @@ const roomAvatars = [
       showRight();
     });
 
+    // FIX: This now correctly targets the <button id="mobile-back-btn"> in the HTML
     mobileBackBtn?.addEventListener("click", (e) => {
       e.preventDefault();
       showLeft();
@@ -333,6 +323,9 @@ const roomAvatars = [
       // Gather input data
       const formData = new FormData(createForm);
       const roomName = formData.get("roomName") as string;
+      
+      // If backend supports avatars, we capture it here. Otherwise, it is ignored safely.
+      const roomAvatar = formData.get("roomAvatar") as string;
 
       // Get all checked user IDs from the sidebar
       const checkedBoxes = document.querySelectorAll(
@@ -348,22 +341,23 @@ const roomAvatars = [
       }
 
       try {
-        // Send POST request to backend API
-        const res = await fetch("http://localhost:3000/api/chats/group", {
+        // FIX: Pointing to the unified /create endpoint and passing isGroupChat: true
+        const res = await fetch("http://localhost:3000/api/chats/create", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({
             name: roomName,
-            participantIds: participantIds, // Backend expects this array
+            isGroupChat: true,
+            participantIds: participantIds, 
           }),
         });
 
         const data = await res.json();
 
         if (res.ok) {
-          // Success! Redirect to the main rooms page
-          window.location.href = "/room";
+          // FIX: Redirect to /rooms instead of /room
+          window.location.href = "/rooms";
         } else {
           alert("Error creating room: " + data.error);
         }
