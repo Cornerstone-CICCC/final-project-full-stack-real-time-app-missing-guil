@@ -150,34 +150,35 @@ try {
     const currentPassword = (document.querySelector('input[name="currentPassword"]') as HTMLInputElement).value;
     const newPassword = (document.querySelector('input[name="newPassword"]') as HTMLInputElement).value;
 
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{5,}$/;
-    
-    if (currentPassword && !newPassword) {
-      document.getElementById("newPassword-error")!.textContent = "New password required";
-      (document.querySelector('input[name="newPassword"]') as HTMLElement).focus();
-      (document.querySelector('input[name="newPassword"]') as HTMLElement).style.borderColor = "red";
+    if (username && username.length > 15) {
+      document.getElementById("username-error")!.textContent = "Username must be 15 characters or less";
+      (document.querySelector('input[name="username"]') as HTMLElement).style.borderColor = "red";
       return;
     }
-    if (!currentPassword && newPassword) {
-      document.getElementById("currentPassword-error")!.textContent = "Current password required";
-      (document.querySelector('input[name="currentPassword"]') as HTMLElement).focus();
-      (document.querySelector('input[name="currentPassword"]') as HTMLElement).style.borderColor = "red";
+
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      document.getElementById("email-error")!.textContent = "Invalid email format";
+      (document.querySelector('input[name="email"]') as HTMLElement).style.borderColor = "red";
       return;
     }
+
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{5,})/;
     if (newPassword && !passwordRegex.test(newPassword)) {
       document.getElementById("newPassword-error")!.textContent = "New password does not meet requirements";
-      (document.querySelector('input[name="newPassword"]') as HTMLElement).focus();
       (document.querySelector('input[name="newPassword"]') as HTMLElement).style.borderColor = "red";
       return;
     }
 
-    const payload: any = {};
+    if (!currentPassword) {
+      document.getElementById("currentPassword-error")!.textContent = "Current password is required";
+      (document.querySelector('input[name="currentPassword"]') as HTMLElement).style.borderColor = "red";
+      return;
+    }
+
+    const payload: any = { currentPassword };
     if (username) payload.username = username;
     if (email) payload.email = email;
-    if (currentPassword && newPassword) {
-      payload.currentPassword = currentPassword;
-      payload.newPassword = newPassword;
-    }
+    if (newPassword) payload.newPassword = newPassword;
 
     try {
       const res = await fetch("http://localhost:3000/api/users/profile", {
@@ -190,20 +191,11 @@ try {
       const result = await res.json();
 
       if (!res.ok) {
-        let field = result.field;
-        if (!field) {
-          const msg = result.error.toLowerCase();
-          if (msg.includes("email")) field = "email";
-          else if (msg.includes("username")) field = "username";
-          else if (msg.includes("password") || msg.includes("incorrect")) field = "currentPassword";
-        }
-
-        const errorEl = document.getElementById(`${field}-error`);
+        const errorEl = document.getElementById(`${result.field}-error`);
         if (errorEl) {
           errorEl.textContent = result.error;
-          const targetInput = document.querySelector(`input[name="${field}"]`) as HTMLElement;
+          const targetInput = document.querySelector(`input[name="${result.field}"]`) as HTMLElement;
           targetInput.style.borderColor = "red";
-          targetInput.focus();
         }
       } else {
         alert("Profile updated successfully!");
