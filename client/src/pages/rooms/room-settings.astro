@@ -10,8 +10,9 @@ import BackIcon from "../../assets/icon/green/back.svg?url";
 import Avatar from "../../components/Avatar.astro";
 import TextField from "../../components/TextField.astro";
 
+// =========================================================================
 // FETCH AUTHENTICATED USER & ALL USERS FROM BACKEND API
-
+// =========================================================================
 const cookie = Astro.request.headers.get("cookie") || "";
 
 // 1. Check if user is logged in
@@ -20,6 +21,7 @@ const authRes = await fetch("http://localhost:3000/api/auth/me", {
 });
 if (!authRes.ok) return Astro.redirect("/");
 const currentUser = await authRes.json();
+const currentUserId = currentUser.id || currentUser._id;
 
 // 2. Fetch all registered users for the selection list
 let allUsers: any[] = [];
@@ -29,8 +31,9 @@ try {
   });
   if (usersRes.ok) {
     const data = await usersRes.json();
+    // Exclude the current user so they don't invite themselves
     allUsers = data.filter(
-      (u: any) => u.id !== currentUser.id && u._id !== currentUser._id,
+      (u: any) => String(u.id || u._id) !== String(currentUserId)
     );
   }
 } catch (error) {
@@ -49,13 +52,12 @@ const roomAvatars = [
 
 <MainLayout title="Create Room" active="Rooms" container="w-full">
   <div class="flex h-screen">
+    
     <aside
       id="mobile-aside"
       class="w-full flex flex-col shadow-lg md:w-1/2 lg:w-100 bg-bg overflow-y-auto z-10"
     >
-      <div
-        class="flex flex-row justify-between items-center border-b border-gray-200 p-1 fixed w-full md:relative md:w-auto md:border-none z-10 bg-bg"
-      >
+      <div class="flex flex-row justify-between items-center border-b border-gray-200 p-1 fixed w-full md:relative md:w-auto md:border-none z-10 bg-bg">
         <a
           href="/rooms"
           class="inline-flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-primary hover:bg-primary-10 transition-colors w-fit"
@@ -75,15 +77,13 @@ const roomAvatars = [
       </div>
 
       <div class="p-4 mt-12">
-        <h1
-          class="text-2xl font-bold flex items-center gap-2 text-primary-60 mb-1"
-        >
+        <h1 class="text-2xl font-bold flex items-center gap-2 text-primary-60 mb-1">
           Create Room
         </h1>
         <p class="text-sm text-text-gray">Add members to the room</p>
       </div>
 
-      <div class=" p-4">
+      <div class="p-4">
         <SearchField placeholder="Search members..." />
       </div>
 
@@ -96,7 +96,9 @@ const roomAvatars = [
           ) : (
             allUsers.map((user) => (
               <label class="flex items-center gap-3 px-2 py-3 rounded-lg cursor-pointer hover:bg-primary-10 transition-colors">
-                <Avatar name={user.username || user.name || "U"} image="" />
+                <div class="relative w-10 h-10 rounded-full bg-primary-20 flex items-center justify-center text-primary font-bold shrink-0">
+                  {(user.username || user.name || "U").charAt(0).toUpperCase()}
+                </div>
 
                 <span class="flex-1 font-medium text-text-black">
                   {user.username || user.name || "Unknown User"}
@@ -120,9 +122,7 @@ const roomAvatars = [
       id="mobile-right"
       class="w-full md:w-1/2 lg:flex-1 bg-bg overflow-y-auto hidden md:block"
     >
-      <div
-        class="flex flex-row justify-between items-center border-b border-gray-200 p-1 md:hidden fixed w-full z-10 bg-bg"
-      >
+      <div class="flex flex-row justify-between items-center border-b border-gray-200 p-1 md:hidden fixed w-full z-10 bg-bg">
         <button
           id="mobile-back-btn"
           type="button"
@@ -170,11 +170,7 @@ const roomAvatars = [
                         checked={index === 0}
                       />
 
-                      <div
-                        class={`relative h-20 w-20 rounded-full ${avatar.color}
-                      border-4 border-transparent flex items-center justify-center
-                      text-4xl transition-all peer-checked:border-primary`}
-                      >
+                      <div class={`relative h-20 w-20 rounded-full ${avatar.color} border-4 border-transparent flex items-center justify-center text-4xl transition-all peer-checked:border-primary`}>
                         {avatar.emoji}
                         <div class="absolute bottom-0 right-0 hidden peer-checked:flex h-6 w-6 rounded-full bg-primary text-white items-center justify-center text-xs font-bold">
                           ✓
@@ -185,109 +181,93 @@ const roomAvatars = [
                 }
               </div>
             </div>
-            <div>
-              <label class="block text-sm font-medium text-text-black mb-3">
-                Participants
+
+            <div class="border-t border-gray-200 pt-6">
+              <label class="block text-sm font-medium text-text-black mb-2">
+                Selected Participants
               </label>
-              <p class="text-sm text-text-gray">
-                Select users to add to the room from the left sidebar.
+              <p class="text-sm text-text-gray mb-4">
+                Select users from the left sidebar to add them to this group.
               </p>
-              <div id="selected-participants" class="mt-2">
-                <p
-                  id="selected-participants-empty"
-                  class="text-sm text-gray-500"
-                >
-                  No participants selected.
+              
+              <div id="selected-participants" class="bg-white p-4 rounded-xl border border-gray-100 min-h-[80px]">
+                <p id="selected-participants-empty" class="text-sm text-gray-400 text-center py-2">
+                  No participants selected yet.
                 </p>
-                <div
-                  id="selected-participants-list"
-                  class="flex flex-wrap gap-2 mt-2"
-                  style="display:none"
-                >
-                </div>
+                <div id="selected-participants-list" class="flex flex-wrap gap-2" style="display:none"></div>
               </div>
             </div>
-            <div
-              class="border-t border-gray-200 pt-6 flex items-center gap-4 justify-around"
-            >
-              <Button
-                type="button"
-                variant="subtle"
-                class="px-8 cursor-pointer"
-                href="/rooms"
-              >
+
+            <div class="border-t border-gray-200 pt-6 flex items-center gap-4 justify-end">
+              <Button type="button" variant="subtle" class="px-8 cursor-pointer" href="/rooms">
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                class="px-8 cursor-pointer"
-              >
+              <Button type="submit" variant="primary" class="px-8 cursor-pointer shadow-md hover:shadow-lg">
                 Create Room
               </Button>
             </div>
           </form>
+
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    const createForm = document.getElementById("create-room-form") as HTMLFormElement;
-
+    // =========================================================================
+    // DYNAMIC UI LOGIC: LEFT CHECKBOXES -> RIGHT PANE
+    // =========================================================================
     const selectedParticipantsList = document.getElementById("selected-participants-list");
     const selectedParticipantsEmpty = document.getElementById("selected-participants-empty");
 
     function renderSelectedParticipants() {
-      const checked = Array.from(
-        document.querySelectorAll(".participant-checkbox:checked"),
-      );
+      // Get all checked checkboxes
+      const checked = Array.from(document.querySelectorAll(".participant-checkbox:checked"));
+      
       if (!selectedParticipantsList || !selectedParticipantsEmpty) return;
+      
       if (checked.length === 0) {
         selectedParticipantsList.innerHTML = "";
         selectedParticipantsList.style.display = "none";
-        selectedParticipantsEmpty.style.display = "";
+        selectedParticipantsEmpty.style.display = "block";
         return;
       }
 
+      // Hide empty text, show list
       selectedParticipantsEmpty.style.display = "none";
       selectedParticipantsList.style.display = "flex";
-      selectedParticipantsList.innerHTML = checked
-        .map((cb) => {
-          const input = cb as HTMLInputElement;
-          const name =
-            (input.dataset && input.dataset.username) ||
-            (
-              cb.closest("label")?.querySelector("span")?.textContent ||
-              "Unknown"
-            ).trim();
-          const initial = name.charAt(0).toUpperCase();
+      
+      // Generate HTML for each selected user
+      selectedParticipantsList.innerHTML = checked.map((cb) => {
+        const input = cb as HTMLInputElement;
+        const name = input.dataset.username || "Unknown";
+        const initial = name.charAt(0).toUpperCase();
 
-          return (
-            `<div class="flex items-center gap-2 px-3 py-2 rounded-md bg-primary-10">` +
-            `<div class="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">${initial}</div>` +
-            `<div class="text-sm font-medium text-text-black">${name}</div>` +
-            `</div>`
-          );
-        })
-        .join("");
+        return `
+          <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary-10 border border-primary-20 animate-fade-in">
+            <div class="h-6 w-6 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs">
+              ${initial}
+            </div>
+            <div class="text-sm font-medium text-text-black pr-1">${name}</div>
+          </div>
+        `;
+      }).join("");
     }
 
+    // Listen for ANY change on checkboxes to trigger the UI update
     document.addEventListener("change", (e) => {
       const target = e.target as HTMLElement;
-      if (
-        target &&
-        target.classList &&
-        (target as HTMLElement).classList.contains("participant-checkbox")
-      ) {
+      if (target && target.classList.contains("participant-checkbox")) {
         renderSelectedParticipants();
       }
     });
 
-    // initialize
+    // Run once on load to ensure state matches UI
     renderSelectedParticipants();
 
-    // Mobile pane toggling: show aside first, then right pane when Next is tapped.
+    // =========================================================================
+    // MOBILE PANE TOGGLING (For small screens)
+    // =========================================================================
     const mobileAside = document.getElementById("mobile-aside");
     const mobileRight = document.getElementById("mobile-right");
     const mobileNextBtn = document.getElementById("mobile-next-btn");
@@ -311,52 +291,54 @@ const roomAvatars = [
       showRight();
     });
 
-    // FIX: This now correctly targets the <button id="mobile-back-btn"> in the HTML
     mobileBackBtn?.addEventListener("click", (e) => {
       e.preventDefault();
       showLeft();
     });
 
+    // =========================================================================
+    // API INTEGRATION: CREATE ROOM
+    // =========================================================================
+    const createForm = document.getElementById("create-room-form") as HTMLFormElement;
+
     createForm?.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      // Gather input data
       const formData = new FormData(createForm);
       const roomName = formData.get("roomName") as string;
-      
-      // If backend supports avatars, we capture it here. Otherwise, it is ignored safely.
-      const roomAvatar = formData.get("roomAvatar") as string;
+      const roomAvatar = formData.get("roomAvatar") as string; // Will be sent if backend supports it
 
-      // Get all checked user IDs from the sidebar
-      const checkedBoxes = document.querySelectorAll(
-        ".participant-checkbox:checked",
-      );
-      const participantIds = Array.from(checkedBoxes).map(
-        (cb) => (cb as HTMLInputElement).value,
-      );
+      // Collect selected IDs
+      const checkedBoxes = document.querySelectorAll(".participant-checkbox:checked");
+      const participantIds = Array.from(checkedBoxes).map((cb) => (cb as HTMLInputElement).value);
 
       if (!roomName) {
         alert("Please enter a room name.");
         return;
       }
+      
+      if (participantIds.length === 0) {
+        alert("Please select at least one member to create a group.");
+        return;
+      }
 
       try {
-        // FIX: Pointing to the unified /create endpoint and passing isGroupChat: true
         const res = await fetch("http://localhost:3000/api/chats/create", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({
             name: roomName,
-            isGroupChat: true,
+            isGroupChat: true, // Required by our unified backend
             participantIds: participantIds, 
+            avatar: roomAvatar // Optional depending on backend model
           }),
         });
 
         const data = await res.json();
 
         if (res.ok) {
-          // FIX: Redirect to /rooms instead of /room
+          // Redirect to the main rooms page on success
           window.location.href = "/rooms";
         } else {
           alert("Error creating room: " + data.error);
