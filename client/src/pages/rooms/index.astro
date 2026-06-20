@@ -139,7 +139,6 @@ if (authRes.ok) {
   const roomSidebar = document.getElementById("room-sidebar");
   const roomPanel = document.getElementById("room-panel");
   const messagesList = document.getElementById("messages-list");
-  const scrollAnchor = document.getElementById("scroll-anchor");
   
   const typingIndicatorWrapper = document.getElementById("typing-indicator-wrapper");
   const chatForm = document.getElementById("chat-form") as HTMLFormElement;
@@ -151,19 +150,29 @@ if (authRes.ok) {
   const socket = initializeSocket("http://localhost:3000");
 
   // =========================================================================
-  // MOBILE BACK BUTTON LOGIC
+  // CLOSE ROOM LOGIC (Mobile Back & Leave Room)
   // =========================================================================
-  document.getElementById("back-to-rooms-btn")?.addEventListener("click", () => {
-      if (activeRoomId && socket) {
-        socket.emit(SOCKET_EVENTS.LEAVE_CHAT, { chatId: activeRoomId });
-      }
-      activeRoomId = null;
-      roomPanel?.classList.add("hidden");
-      roomPanel?.classList.remove("flex");
-      roomSidebar?.classList.remove("hidden");
-      activeState?.classList.add("hidden");
-      activeState?.classList.remove("flex");
-      emptyState?.classList.remove("hidden");
+  function closeActiveRoom() {
+    if (activeRoomId && socket) {
+      socket.emit(SOCKET_EVENTS.LEAVE_CHAT, { chatId: activeRoomId });
+    }
+    activeRoomId = null;
+    roomPanel?.classList.add("hidden");
+    roomPanel?.classList.remove("flex");
+    roomSidebar?.classList.remove("hidden");
+    activeState?.classList.add("hidden");
+    activeState?.classList.remove("flex");
+    emptyState?.classList.remove("hidden");
+  }
+
+  document.getElementById("back-to-rooms-btn")?.addEventListener("click", closeActiveRoom);
+  
+  // Event Delegation for dynamically injected "Leave Room" button
+  document.addEventListener("click", (e) => {
+    const target = e.target as HTMLElement;
+    if (target.closest("#leave-room-btn")) {
+      closeActiveRoom();
+    }
   });
 
   // =========================================================================
@@ -193,9 +202,12 @@ if (authRes.ok) {
     bubbleDiv.appendChild(textElement);
     wrapperDiv.appendChild(bubbleDiv);
     
-    if (scrollAnchor) {
-      messagesList.insertBefore(wrapperDiv, scrollAnchor);
-      scrollAnchor.scrollIntoView({ behavior: "smooth" });
+    // 💡 BUG FIX: 毎回最新のアンカーを取得する (Dynamic DOM Reference)
+    const currentAnchor = document.getElementById("scroll-anchor");
+    
+    if (currentAnchor) {
+      messagesList.insertBefore(wrapperDiv, currentAnchor);
+      currentAnchor.scrollIntoView({ behavior: "smooth" });
     } else {
       messagesList.appendChild(wrapperDiv);
       messagesList.scrollTop = messagesList.scrollHeight;
@@ -203,7 +215,7 @@ if (authRes.ok) {
   }
 
   // =========================================================================
-  // HELPER: ADD ROOM TO SIDEBAR
+  // HELPER: ADD ROOM TO SIDEBAR (With Avatar Support)
   // =========================================================================
   function addRoomToSidebar(room: any) {
     if (!sidebarList) return;
@@ -229,12 +241,16 @@ if (authRes.ok) {
     const onlineCount = room.onlineCount || 0;
     const memberCount = room.participantIds?.length || room.members?.length || 0;
 
-    roomItemLink.setAttribute("data-member-count", String(memberCount));
+    // 💡 NEW: Avatar Handling
+    const avatarContent = room.avatar ? `<span class="text-xl">${room.avatar}</span>` : roomName.charAt(0).toUpperCase();
 
-    // sidebar HTML
+    // Store data for the header
+    roomItemLink.setAttribute("data-member-count", String(memberCount));
+    roomItemLink.setAttribute("data-avatar", room.avatar || "");
+
     roomItemLink.innerHTML = `
       <div class="h-10 w-10 rounded-full bg-primary-20 flex items-center justify-center text-primary font-bold text-sm shrink-0">
-        ${roomName.charAt(0).toUpperCase()}
+        ${avatarContent}
       </div>
       <div class="flex-1 min-w-0">
         <div class="flex items-center justify-between">
@@ -296,8 +312,15 @@ if (authRes.ok) {
   if (socket) {
     socket.on(SOCKET_EVENTS.MESSAGE_HISTORY, (messages: any[]) => {
       if (messagesList) {
+        // Reset DOM for new messages
         messagesList.innerHTML = `<div class="mt-auto"></div><div id="scroll-anchor"></div>`;
         messages.forEach(renderMessage);
+        
+        // Force scroll to bottom immediately after history loads
+        setTimeout(() => {
+          const anchor = document.getElementById("scroll-anchor");
+          if (anchor) anchor.scrollIntoView();
+        }, 50);
       }
     });
 
@@ -305,7 +328,6 @@ if (authRes.ok) {
       if (message.chatId === activeRoomId) {
         renderMessage(message);
       }
-      // Re-fetch to update order/sidebar
       fetchUserRooms();
     });
 
@@ -344,14 +366,17 @@ if (authRes.ok) {
     const roomTitleEl = link.querySelector("span.font-medium");
     const currentRoomName = roomTitleEl ? roomTitleEl.textContent : "Active Room";
     const memberCount = link.getAttribute("data-member-count") || "0";
-
     
+    // 💡 NEW: Extract Avatar for the Header
+    const roomAvatar = link.getAttribute("data-avatar");
+    const avatarContent = roomAvatar ? `<span class="text-xl">${roomAvatar}</span>` : currentRoomName?.charAt(0).toUpperCase();
+
     if (roomHeaderWrapper) {
       roomHeaderWrapper.innerHTML = `
         <div class="relative z-10 flex items-center gap-4 px-5 py-3 bg-bg shadow-sm">
           <div class="flex items-center gap-3 flex-1 min-w-0">
             <div class="h-10 w-10 rounded-full bg-primary-20 flex items-center justify-center text-primary font-bold text-sm shrink-0">
-              ${currentRoomName?.charAt(0).toUpperCase()}
+              ${avatarContent}
             </div>
             <div class="min-w-0">
               <p class="font-bold text-text-black truncate">${currentRoomName}</p>
@@ -363,7 +388,7 @@ if (authRes.ok) {
             </div>
           </div>
           <div class="flex items-center gap-4 shrink-0">
-            <button class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors">
+            <button id="leave-room-btn" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors">
               Leave Room
             </button>
           </div>
@@ -375,7 +400,6 @@ if (authRes.ok) {
     activeState?.classList.remove("hidden");
     activeState?.classList.add("flex");
 
-    // On mobile/tablet: hide sidebar, show room panel
     if (window.innerWidth < 1024) {
       roomSidebar?.classList.add("hidden");
       roomPanel?.classList.remove("hidden");
