@@ -86,6 +86,7 @@ export const findAllUsers = (): User[] => {
   return users;
 };
 
+
 /**
  * @function updateUserData
  * @param {string} userId - The unique ID of the user to update
