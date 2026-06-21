@@ -18,16 +18,24 @@ import BackIcon from "../../assets/icon/green/back.svg?url";
 // FETCH AUTHENTICATED USER SESSION
 // =========================================================================
 const cookie = Astro.request.headers.get("cookie") || "";
-const authRes = await fetch("http://localhost:3000/api/auth/me", {
-  headers: { Cookie: cookie },
-});
 
 let currentUserId = "test-user-001";
+let currentUserName = "Me";
 
-if (authRes.ok) {
-  const authData = await authRes.json();
-  currentUserId =
-    authData.id || authData._id || authData.user?.id || authData.userId || currentUserId;
+try {
+  const authRes = await fetch("http://localhost:3000/api/auth/me", {
+    headers: { Cookie: cookie },
+  });
+
+  if (authRes.ok) {
+    const resJson = await authRes.json();
+    const userPayload = resJson.data?.user || resJson.user || resJson.data || resJson;
+    
+    currentUserId = userPayload.id || userPayload._id || userPayload.userId || currentUserId;
+    currentUserName = userPayload.username || userPayload.name || currentUserName;
+  }
+} catch (error) {
+  console.error("Auth fetch failed:", error);
 }
 ---
 
@@ -35,6 +43,7 @@ if (authRes.ok) {
   <div
     class="flex h-screen"
     data-my-user-id={currentUserId}
+    data-my-username={currentUserName}
     id="room-container"
   >
     <div
@@ -42,9 +51,7 @@ if (authRes.ok) {
       class="w-full lg:w-100 p-4 flex flex-col shadow-lg bg-bg z-10"
     >
       <div class="flex flex-row justify-between items-center">
-        <h1
-          class="text-3xl font-bold mb-4 flex items-center gap-2 text-primary-60"
-        >
+        <h1 class="text-3xl font-bold mb-4 flex items-center gap-2 text-primary-60">
           <img src={RoomIcon} alt="Rooms" class="h-8 w-8" />
           Rooms
         </h1>
@@ -71,10 +78,7 @@ if (authRes.ok) {
       id="room-panel"
       class="hidden lg:flex flex-1 relative flex-col overflow-hidden bg-bg"
     >
-      <div
-        id="empty-room-state"
-        class="absolute inset-0 flex items-center justify-center z-10"
-      >
+      <div id="empty-room-state" class="absolute inset-0 flex items-center justify-center z-10">
         <div class="home-bg absolute inset-0 opacity-30 pointer-events-none"></div>
         <p class="text-gray-500 text-lg text-center z-10">
           Select a room to start messaging
@@ -93,13 +97,7 @@ if (authRes.ok) {
         </div>
 
         <div id="room-header-wrapper">
-          <RoomHeader
-            name="Active Room"
-            avatar=""
-            memberCount={0}
-            onlineCount={0}
-            members={[]}
-          />
+          <RoomHeader name="Active Room" avatar="" memberCount={0} onlineCount={0} members={[]} />
         </div>
 
         <div class="home-bg absolute inset-0 opacity-40 pointer-events-none"></div>
@@ -112,7 +110,7 @@ if (authRes.ok) {
           <div id="scroll-anchor"></div>
         </div>
 
-        <div id="typing-indicator-wrapper" class="hidden px-6">
+        <div id="typing-indicator-wrapper" class="hidden px-6 pb-2">
           <TypingIndicator message="Someone is typing ..." />
         </div>
 
@@ -129,7 +127,7 @@ if (authRes.ok) {
   import { initializeSocket, SOCKET_EVENTS } from "../../lib/socket";
 
   // =========================================================================
-  // DOM ELEMENTS
+  // DOM ELEMENTS & GLOBALS
   // =========================================================================
   const sidebarList = document.getElementById("room-sidebar-list");
   const roomListStatus = document.getElementById("room-list-status");
@@ -147,64 +145,91 @@ if (authRes.ok) {
 
   let activeRoomId: string | null = null;
   const myUserId = roomContainer?.getAttribute("data-my-user-id") || "test-user-001";
+  const myUserName = roomContainer?.getAttribute("data-my-username") || "Me";
+  
   const socket = initializeSocket("http://localhost:3000");
 
+  // Global user dictionary to resolve IDs into usernames locally
+  let roomUsersMap: Record<string, string> = {};
+  // Track whole room metadata objects temporarily
+  let cachedRoomsData: any[] = [];
+
   // =========================================================================
-  // CLOSE ROOM LOGIC (Mobile Back & Leave Room)
+  // CLOSE ROOM LOGIC
   // =========================================================================
   function closeActiveRoom() {
-    if (activeRoomId && socket) {
-      socket.emit(SOCKET_EVENTS.LEAVE_CHAT, { chatId: activeRoomId });
-    }
+    if (activeRoomId && socket) socket.emit(SOCKET_EVENTS.LEAVE_CHAT, { chatId: activeRoomId });
     activeRoomId = null;
-    roomPanel?.classList.add("hidden");
-    roomPanel?.classList.remove("flex");
+    roomPanel?.classList.add("hidden"); roomPanel?.classList.remove("flex");
     roomSidebar?.classList.remove("hidden");
-    activeState?.classList.add("hidden");
-    activeState?.classList.remove("flex");
+    activeState?.classList.add("hidden"); activeState?.classList.remove("flex");
     emptyState?.classList.remove("hidden");
   }
 
   document.getElementById("back-to-rooms-btn")?.addEventListener("click", closeActiveRoom);
-  
-  // Event Delegation for dynamically injected "Leave Room" button
   document.addEventListener("click", (e) => {
     const target = e.target as HTMLElement;
-    if (target.closest("#leave-room-btn")) {
-      closeActiveRoom();
-    }
+    if (target.closest("#leave-room-btn")) closeActiveRoom();
   });
 
   // =========================================================================
-  // HELPER: RENDER A SINGLE MESSAGE BUBBLE
+  // 💡 BULLETPROOF UI RENDERING FIX (Colors, Side Alignments & Dynamic Names)
   // =========================================================================
   function renderMessage(message: any) {
     if (!messagesList) return;
     
-    // Robust Sender ID check
-    const senderId = message.senderId || message.sender?._id || message.sender || message.userId;
-    const isOwn = String(senderId) === String(myUserId);
+    // Resolve any type or field nesting difference between REST history and WebSocket new messages
+    let senderId = "";
+    if (message.senderId) senderId = message.senderId;
+    else if (message.sender && typeof message.sender === 'object') senderId = message.sender.id || message.sender._id;
+    else if (message.sender) senderId = message.sender; 
+    else if (message.userId) senderId = message.userId;
+
+    // Strict type casting to clean string and comparison check
+    const normalizedSenderId = String(senderId).trim();
+    const normalizedMyUserId = String(myUserId).trim();
+    const isOwn = normalizedSenderId === normalizedMyUserId;
+
+    // Resolve Name from object presence, dictionary fallback, or absolute final defaults
+    let senderName = "User";
+    if (isOwn) {
+      senderName = myUserName;
+    } else if (typeof message.sender === 'object' && message.sender && (message.sender.username || message.sender.name)) {
+      senderName = message.sender.username || message.sender.name;
+    } else if (roomUsersMap[normalizedSenderId]) {
+      senderName = roomUsersMap[normalizedSenderId];
+    }
 
     const wrapperDiv = document.createElement("div");
-    wrapperDiv.className = `flex w-full ${isOwn ? "justify-end" : "justify-start"} mb-1`;
+    wrapperDiv.className = `flex w-full ${isOwn ? "justify-end" : "justify-start"} mb-3`;
 
-    const bubbleDiv = document.createElement("div");
-    bubbleDiv.className = `relative max-w-xs lg:max-w-md px-4 py-2.5 rounded-2xl text-sm shadow-sm ${
-      isOwn
-        ? "bg-green text-text-black rounded-br-sm"
-        : "bg-white text-text-black rounded-bl-sm border border-gray-100"
-    }`;
-
-    const textElement = document.createElement("p");
-    textElement.className = "leading-relaxed break-words";
-    textElement.textContent = message.text || message.content || "";
-
-    bubbleDiv.appendChild(textElement);
-    wrapperDiv.appendChild(bubbleDiv);
+    let avatarHtml = "";
+    let nameHtml = "";
     
-    // 💡 BUG FIX: 毎回最新のアンカーを取得する (Dynamic DOM Reference)
+    if (!isOwn) {
+      avatarHtml = `
+        <div class="h-8 w-8 rounded-full bg-primary-20 flex items-center justify-center text-primary font-bold text-xs shrink-0 mr-2 self-end">
+          ${senderName.charAt(0).toUpperCase()}
+        </div>
+      `;
+      nameHtml = `<p class="text-[10px] text-text-gray mb-0.5 ml-1">${senderName}</p>`;
+    }
+
+    wrapperDiv.innerHTML = `
+      ${avatarHtml}
+      <div class="flex flex-col max-w-[75%] lg:max-w-md">
+        ${nameHtml}
+        <div class="relative px-4 py-2.5 rounded-2xl text-sm shadow-sm ${
+          isOwn
+            ? "bg-green text-text-black rounded-br-sm"
+            : "bg-white text-text-black rounded-bl-sm border border-gray-100"
+        }">
+          <p class="leading-relaxed break-words">${message.text || message.content || ""}</p>
+        </div>
+      </div>
+    `;
+    
     const currentAnchor = document.getElementById("scroll-anchor");
-    
     if (currentAnchor) {
       messagesList.insertBefore(wrapperDiv, currentAnchor);
       currentAnchor.scrollIntoView({ behavior: "smooth" });
@@ -215,16 +240,13 @@ if (authRes.ok) {
   }
 
   // =========================================================================
-  // HELPER: ADD ROOM TO SIDEBAR (With Avatar Support)
+  // HELPER: ADD ROOM TO SIDEBAR
   // =========================================================================
   function addRoomToSidebar(room: any) {
     if (!sidebarList) return;
-
     if (sidebarList.querySelector("p#room-list-status") || sidebarList.querySelector("p")) {
       sidebarList.innerHTML = "";
     }
-
-    // Ensure only process group chats
     if (room.isGroupChat === false) return; 
 
     const roomId = room.id || room._id;
@@ -234,17 +256,14 @@ if (authRes.ok) {
       roomItemLink = document.createElement("a");
       roomItemLink.id = `sidebar-room-${roomId}`;
       roomItemLink.setAttribute("href", `/room/${roomId}`);
-      roomItemLink.className = "room-item flex items-center gap-4 p-4 rounded-lg cursor-pointer transition-colors hover:bg-primary-10 animate-fade-in";
+      roomItemLink.className = "room-item flex items-center gap-4 p-4 rounded-lg cursor-pointer transition-colors hover:bg-primary-10";
     }
 
     const roomName = room.name || "Unknown Room";
     const onlineCount = room.onlineCount || 0;
-    const memberCount = room.participantIds?.length || room.members?.length || 0;
-
-    // 💡 NEW: Avatar Handling
+    const memberCount = room.participantIds?.length || room.participants?.length || room.members?.length || 0;
     const avatarContent = room.avatar ? `<span class="text-xl">${room.avatar}</span>` : roomName.charAt(0).toUpperCase();
 
-    // Store data for the header
     roomItemLink.setAttribute("data-member-count", String(memberCount));
     roomItemLink.setAttribute("data-avatar", room.avatar || "");
 
@@ -266,12 +285,11 @@ if (authRes.ok) {
         </div>
       </div>
     `;
-
     sidebarList.insertBefore(roomItemLink, sidebarList.firstChild);
   }
 
   // =========================================================================
-  // API INTEGRATION: FETCH ROOMS
+  // API INTEGRATION: FETCH ROOMS & SAVE DICTIONARIES
   // =========================================================================
   async function fetchUserRooms() {
     try {
@@ -285,8 +303,6 @@ if (authRes.ok) {
 
       if (sidebarList) {
         if (roomListStatus) roomListStatus.remove();
-        
-        // Filter ONLY Group Chats for the Room Page
         const groupRooms = chats.filter((c: any) => c.isGroupChat === true);
 
         if (groupRooms.length === 0) {
@@ -294,16 +310,22 @@ if (authRes.ok) {
           return;
         }
 
+        cachedRoomsData = groupRooms; // Save to local cache
+
         groupRooms.reverse().forEach((room: any) => {
+          // Map participant usernames locally to recover missing sender payload properties later
+          if (room.participants && Array.isArray(room.participants)) {
+            room.participants.forEach((p: any) => {
+              roomUsersMap[String(p._id || p.id).trim()] = p.username || p.name || "User";
+            });
+          }
           addRoomToSidebar(room);
         });
       }
     } catch (error) {
       console.error("[Frontend Error] Fetching rooms:", error);
-      if (sidebarList) sidebarList.innerHTML = `<p class="text-xs text-red-500 text-center py-4">Error loading rooms.</p>`;
     }
   }
-
   fetchUserRooms();
 
   // =========================================================================
@@ -312,34 +334,39 @@ if (authRes.ok) {
   if (socket) {
     socket.on(SOCKET_EVENTS.MESSAGE_HISTORY, (messages: any[]) => {
       if (messagesList) {
-        // Reset DOM for new messages
         messagesList.innerHTML = `<div class="mt-auto"></div><div id="scroll-anchor"></div>`;
         messages.forEach(renderMessage);
-        
-        // Force scroll to bottom immediately after history loads
-        setTimeout(() => {
-          const anchor = document.getElementById("scroll-anchor");
-          if (anchor) anchor.scrollIntoView();
-        }, 50);
       }
     });
 
     socket.on(SOCKET_EVENTS.NEW_MESSAGE, (message: any) => {
-      if (message.chatId === activeRoomId) {
+      if (String(message.chatId).trim() === String(activeRoomId).trim()) {
         renderMessage(message);
       }
       fetchUserRooms();
     });
 
     socket.on("NEW_CHAT_CREATED", (newChatData: any) => {
-      if (newChatData.isGroupChat) {
-        addRoomToSidebar(newChatData);
-      }
+      if (newChatData.isGroupChat) addRoomToSidebar(newChatData);
     });
 
+    // 💡 FIX 2: TYPING INDICATOR WITH LIVE USERNAME INJECTION
     let typingTimeout: any;
-    socket.on("user_typing", () => {
+    socket.on("user_typing", (data: any) => {
+      if (!data || !data.chatId || String(data.chatId).trim() !== String(activeRoomId).trim()) return;
+      
+      const typingUserId = String(data.userId || data.senderId || "").trim();
+      if (typingUserId === String(myUserId).trim()) return; 
+
+      // Recover name from incoming payload, dictionary map, or generic fallback
+      const typerName = data.username || roomUsersMap[typingUserId] || "Someone";
+
       if (typingIndicatorWrapper) {
+        typingIndicatorWrapper.innerHTML = `
+          <div class="flex items-center gap-2 px-2">
+             <p class="text-xs text-text-gray font-medium italic animate-pulse">${typerName} is typing...</p>
+          </div>
+        `;
         typingIndicatorWrapper.classList.remove("hidden");
         clearTimeout(typingTimeout);
         typingTimeout = setTimeout(() => {
@@ -357,19 +384,23 @@ if (authRes.ok) {
     const newRoomId = href?.split("/").pop();
     if (!newRoomId || newRoomId === activeRoomId) return;
 
-    if (activeRoomId && socket) {
-      socket.emit(SOCKET_EVENTS.LEAVE_CHAT, { chatId: activeRoomId });
-    }
+    if (activeRoomId && socket) socket.emit(SOCKET_EVENTS.LEAVE_CHAT, { chatId: activeRoomId });
 
     activeRoomId = newRoomId;
 
     const roomTitleEl = link.querySelector("span.font-medium");
     const currentRoomName = roomTitleEl ? roomTitleEl.textContent : "Active Room";
     const memberCount = link.getAttribute("data-member-count") || "0";
-    
-    // 💡 NEW: Extract Avatar for the Header
     const roomAvatar = link.getAttribute("data-avatar");
     const avatarContent = roomAvatar ? `<span class="text-xl">${roomAvatar}</span>` : currentRoomName?.charAt(0).toUpperCase();
+
+    // Re-verify the users mapping dictionary index for the currently selected room
+    const targetRoomObj = cachedRoomsData.find(r => String(r.id || r._id).trim() === String(activeRoomId).trim());
+    if (targetRoomObj && targetRoomObj.participants) {
+      targetRoomObj.participants.forEach((p: any) => {
+        roomUsersMap[String(p._id || p.id).trim()] = p.username || p.name || "User";
+      });
+    }
 
     if (roomHeaderWrapper) {
       roomHeaderWrapper.innerHTML = `
@@ -397,13 +428,11 @@ if (authRes.ok) {
     }
 
     emptyState?.classList.add("hidden");
-    activeState?.classList.remove("hidden");
-    activeState?.classList.add("flex");
+    activeState?.classList.remove("hidden"); activeState?.classList.add("flex");
 
     if (window.innerWidth < 1024) {
       roomSidebar?.classList.add("hidden");
-      roomPanel?.classList.remove("hidden");
-      roomPanel?.classList.add("flex");
+      roomPanel?.classList.remove("hidden"); roomPanel?.classList.add("flex");
     }
 
     socket?.emit(SOCKET_EVENTS.JOIN_CHAT, { chatId: activeRoomId });
@@ -417,17 +446,21 @@ if (authRes.ok) {
   });
 
   // =========================================================================
-  // TYPING & SENDING
+  // TYPING & SENDING PAYLOAD ENHANCEMENTS
   // =========================================================================
   messageInput?.addEventListener("input", () => {
-    if (activeRoomId && socket) socket.emit("typing", { chatId: activeRoomId });
+    if (activeRoomId && socket) {
+      socket.emit("typing", { chatId: activeRoomId, userId: myUserId, username: myUserName });
+    }
   });
 
   chatForm?.addEventListener("submit", (e) => {
     e.preventDefault();
     const text = messageInput?.value.trim();
     if (!text || !activeRoomId) return;
-    socket?.emit(SOCKET_EVENTS.SEND_MESSAGE, { chatId: activeRoomId, text });
+    
+    // Explicitly package transaction attributes to fit the model constraints perfectly
+    socket?.emit(SOCKET_EVENTS.SEND_MESSAGE, { chatId: activeRoomId, text, senderId: myUserId });
     if (messageInput) messageInput.value = "";
   });
 
