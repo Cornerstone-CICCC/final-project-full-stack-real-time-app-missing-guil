@@ -3,37 +3,72 @@ import "../styles/global.css";
 
 import emojiIcon from "../assets/icon/green/emoji.svg?url";
 import sendIcon from "../assets/icon/green/send.svg?url";
-
-
 ---
 
 <form id="chat-form" class="relative flex items-center gap-3 px-12 pt-4 pb-10 bg-transparent">
-
-
-  <div class="flex flex-row flex-1  rounded-xl border-text-gray-50 gap-7 bg-bg/90 px-5 py-2.5 text-sm text-text-black placeholder:text-text-gray focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">
+  <div class="flex flex-row flex-1 rounded-xl border-text-gray-50 gap-7 bg-bg/90 px-5 py-2.5 text-sm text-text-black placeholder:text-text-gray focus-within:border-primary focus-within:outline-none focus-within:ring-2 focus-within:ring-primary/20">
     <button
-    type="button"
-    class="shrink-0 text-text-gray hover:text-primary transition-colors"
-    aria-label="Emoji"
-  >
-    <img src={emojiIcon} alt="Emoji" class="h-5 w-5" />
+      type="button"
+      class="shrink-0 text-text-gray hover:text-primary transition-colors"
+      aria-label="Emoji"
+    >
+      <img src={emojiIcon} alt="Emoji" class="h-5 w-5" />
+    </button>
 
-  </button>
+    <input
+      type="text"
+      id="message-input"
+      placeholder="Message"
+      autocomplete="off"
+      class="text-sm text-text-black placeholder:text-text-gray focus:outline-none w-full bg-transparent"
+    />
 
-  <input
-    type="text"
-    id="message-input"
-    placeholder="Message"
-    autocomplete="off"
-    class="text-sm text-text-black placeholder:text-text-gray  focus:outline-none w-full"
-  />
-
-  <button
-    type="submit"
-    class="shrink-0 h-10 w-10 rounded-full bg-transparent flex items-center justify-center hover:bg-primary-10 transition-colors cursor-pointer"
-    aria-label="Send"
-  >
-    <img src={sendIcon} alt="Send" class="h-7 w-7 opacity-60 hover:opacity-100 transition-opacity" />
-  </button>
+    <button
+      type="submit"
+      class="shrink-0 h-10 w-10 rounded-full bg-transparent flex items-center justify-center hover:bg-[#14311043] transition-colors cursor-pointer"
+      aria-label="Send"
+    >
+      <img 
+        id="send-icon" 
+        src={sendIcon} 
+        alt="Send" 
+        class="h-7 w-7 opacity-60 transition-opacity" 
+      />
+    </button>
   </div>
 </form>
+
+<script>
+  // 1. Get DOM elements
+  const messageInput = document.getElementById("message-input") as HTMLInputElement;
+  const sendIcon = document.getElementById("send-icon");
+  const chatForm = document.getElementById("chat-form");
+
+  if (messageInput && sendIcon) {
+    // 2. Listen to input changes
+    messageInput.addEventListener("input", () => {
+      const textLength = messageInput.value.trim().length;
+
+      if (textLength > 0) {
+        // User is typing: make the icon fully visible (green)
+        sendIcon.classList.remove("opacity-60");
+        sendIcon.classList.add("opacity-100");
+      } else {
+        // Input is empty: dim the icon
+        sendIcon.classList.remove("opacity-100");
+        sendIcon.classList.add("opacity-60");
+      }
+    });
+  }
+
+  if (chatForm && sendIcon) {
+    // 3. Reset the icon opacity when the message is sent
+    chatForm.addEventListener("submit", () => {
+      // Small timeout to allow the main logic to clear the input first
+      setTimeout(() => {
+        sendIcon.classList.remove("opacity-100");
+        sendIcon.classList.add("opacity-60");
+      }, 10);
+    });
+  }
+</script>

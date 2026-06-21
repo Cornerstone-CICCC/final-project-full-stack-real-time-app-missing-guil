@@ -34,25 +34,26 @@ const {
 } = Astro.props as Props;
 ---
 
-<div class="relative z-10 flex items-center gap-4 px-5 py-3 bg-bg  shadow-sm">
-  <!-- LEFT: Avatar + Name -->
+<div class="relative z-10 flex items-center gap-4 px-5 py-3 bg-bg shadow-sm">
   <div class="flex items-center gap-3 flex-1">
     <Avatar image={avatar} name={name} />
 
     <div class="flex flex-col">
       <div class="flex flex-row items-center gap-2">
-        <span class="font-medium">{name}</span>
-        <!-- STATUS -->
+        <span id="chat-header-name" class="font-medium">{name}</span>
+
         <div
+          id="chat-header-status-container"
           class={`flex items-center gap-1 text-sm font-medium ${
             status === "online" ? "text-green" : "text-gray-400"
           }`}
         >
           <span
+            id="chat-header-status-dot"
             class={`h-2 w-2 rounded-full ${
               status === "online" ? "bg-green" : "bg-gray-300"
             }`}></span>
-          <span>{status}</span>
+          <span id="chat-header-status-text">{status}</span>
         </div>
       </div>
 
@@ -67,11 +68,4 @@ const {
       }
     </div>
   </div>
-
-  <!-- LOGOUT ICON -->
-  <!-- <img
-    src={logoutIcon}
-    alt="logout"
-    class="w-5 h-5 ml-2 opacity-60 hover:opacity-100 cursor-pointer"
-  /> -->
 </div>

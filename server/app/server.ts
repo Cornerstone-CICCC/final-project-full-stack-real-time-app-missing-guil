@@ -53,6 +53,9 @@ const io = new Server(server, {
   },
 });
 
+// Make the Socket.io instance globally available to Express controllers
+app.set("io", io);
+
 // Middleware to integrate cookie sessions with Socket.io connections
 io.use((socket, next) => {
   // @ts-ignore

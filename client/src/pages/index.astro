@@ -1,5 +1,4 @@
 ---
-// LOGIN PAGE
 import AuthLayout from "../layouts/AuthLayout.astro";
 import Button from "../components/Button.astro";
 import TextField from "../components/TextField.astro";
@@ -26,7 +25,19 @@ if (res.ok) {
     </div>
 
     <div class="space-y-1">
-      <TextField name="password" type="password" placeholder="••••••••" />
+      <div class="relative flex items-center">
+        <TextField
+          name="password"
+          type="password"
+          placeholder="••••••••"
+          class="w-full"
+        />
+        <span
+          id="togglePassword"
+          class="absolute right-3 cursor-pointer text-xs text-gray-500 select-none"
+          >Show</span
+        >
+      </div>
     </div>
 
     <div class="flex items-center justify-between pt-1">
@@ -49,6 +60,15 @@ if (res.ok) {
 <script>
   const btn = document.getElementById("loginBtn");
   const statusMsg = document.getElementById("status-msg");
+  const togglePass = document.getElementById("togglePassword");
+  const passInput = document.querySelector('input[name="password"]') as HTMLInputElement;
+
+  // Show/Hide Password
+  togglePass?.addEventListener("click", () => {
+    const isPassword = passInput.type === "password";
+    passInput.type = isPassword ? "text" : "password";
+    togglePass.textContent = isPassword ? "Hide" : "Show";
+  });
 
   document.querySelectorAll("input").forEach((input) => {
     input.addEventListener("input", () => {
@@ -63,9 +83,7 @@ if (res.ok) {
     const email = (
       document.querySelector('input[name="email"]') as HTMLInputElement
     ).value;
-    const password = (
-      document.querySelector('input[name="password"]') as HTMLInputElement
-    ).value;
+    const password = passInput.value;
     const remember = (
       document.querySelector('input[name="remember"]') as HTMLInputElement
     ).checked;

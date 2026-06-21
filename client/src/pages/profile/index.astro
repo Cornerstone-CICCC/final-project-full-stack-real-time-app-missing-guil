@@ -1,15 +1,30 @@
 ---
-// PROFILE PAGE
-
 import MainLayout from "../../layouts/MainLayout.astro";
-
 import Button from "../../components/Button.astro";
-
 import TextField from "../../components/TextField.astro";
+
+let userData = { username: "Loading...", email: "Loading..." };
+
+try {
+  const res = await fetch("http://localhost:3000/api/users/me", {
+    headers: { 
+      Cookie: Astro.request.headers.get("cookie") || "" 
+    },
+  });
+
+  if (res.ok) {
+    userData = await res.json();
+    console.log("userData loaded:", userData);
+  } else {
+    console.log("Fetch failed:", res.status);
+  }
+} catch (err) {
+  console.error("Fetch error:", err);
+}
 ---
 
 <MainLayout title="Profile Settings" active="Profile" container="w-full">
-  <div class="flex min-h-screen flex-col items-center justify-start px-4 pt-8 pb-8 sm:h-screen sm:px-0 sm:pt-0 sm:pb-0 sm:justify-center login-bg">
+  <div class="flex flex-col h-screen items-center justify-center login-bg">
     <div class="rounded-2xl bg-bg/90 p-8 shadow-xl">
       <div class="text-center">
         <h1 class="font-display text-4xl font-bold text-text-black">
@@ -20,7 +35,7 @@ import TextField from "../../components/TextField.astro";
         </p>
       </div>
 
-      <div class="flex flex-col gap-6 sm:flex-row items-center">
+      <div class="flex flex-row gap-6">
         <div class="flex items-center gap-4">
           <div class="flex flex-col items-center gap-3">
             <div
@@ -33,42 +48,46 @@ import TextField from "../../components/TextField.astro";
               <span id="profile-avatar-initial" class="text-6xl font-bold text-text-black leading-none">U</span>
             </div>
 
-            <p
-              class="mt-1 max-w-52 text-center text-xs leading-5 text-text-gray"
-            >
-                Click the avatar to randomize your profile color.
+            <div class="text-center">
+              <p class="text-text-gray font-normal text-xs">
+                Username: <span class="font-bold text-text-black">{userData.username}</span>
+              </p>
+              <p class="text-text-gray font-normal text-xs mt-1">
+                Email: <span class="font-bold text-text-black">{userData.email}</span>
+              </p>
+            </div>
+
+            <p class="mt-1 max-w-52 text-center text-xs leading-5 text-text-gray">
+              Click the avatar to randomize your profile color.
             </p>
           </div>
         </div>
-        <!-- Text Fields -->
 
         <div class="flex flex-col gap-4 w-80">
-          <TextField
-            label="Username"
-            name="username"
-            placeholder="Enter your username"
-          />
-          <TextField
-            label="Email"
-            name="email"
-            placeholder="Enter your email"
-          />
-          <TextField
-            label="Current Password"
-            name="currentPassword"
-            type="password"
-            placeholder="Enter your current password"
-          />
-          <TextField
-            label="New Password"
-            name="newPassword"
-            type="password"
-            placeholder="Enter your new password"
-          />
+          <div class="flex flex-col gap-1">
+            <TextField name="username" label="Username" placeholder="Enter your username" maxlength="15" />
+            <p id="username-error" class="error-msg text-red-500 text-xs min-h-[1rem]"></p>
+          </div>
 
-          <Button variant="primary" class="w-full cursor-pointer"
-            >Save Profile</Button
-          >
+          <div class="flex flex-col gap-1">
+            <TextField name="email" label="Email" placeholder="Enter your email" />
+            <p id="email-error" class="error-msg text-red-500 text-xs min-h-[1rem]"></p>
+          </div>
+
+          <div class="flex flex-col gap-1 relative">
+            <TextField name="currentPassword" type="password" label="Current Password" placeholder="••••••••" class="w-full" />
+            <span id="toggleCurrent" class="absolute right-3 top-[34px] cursor-pointer text-xs text-gray-500 select-none">Show</span>
+            <p id="currentPassword-error" class="error-msg text-red-500 text-xs min-h-[1rem]"></p>
+          </div>
+
+          <div class="flex flex-col gap-1 relative">
+            <TextField name="newPassword" type="password" label="New Password" placeholder="••••••••" class="w-full" />
+            <span id="toggleNew" class="absolute right-3 top-[34px] cursor-pointer text-xs text-gray-500 select-none">Show</span>
+            <p class="text-gray-400 text-[10px] mt-0">At least 5 chars, 1 uppercase, 1 number, 1 special char</p>
+            <p id="newPassword-error" class="error-msg text-red-500 text-xs min-h-[1rem]"></p>
+          </div>
+
+          <Button id="save-btn" variant="primary" class="w-full cursor-pointer mt-2">Save Profile</Button>
         </div>
       </div>
     </div>
@@ -76,40 +95,114 @@ import TextField from "../../components/TextField.astro";
 </MainLayout>
 
 <script>
-  const bgColors = [
-    "bg-red-500",
-    "bg-green-500",
-    "bg-blue-500",
-    "bg-yellow-500",
-    "bg-purple-500",
-    "bg-pink-500",
-    "bg-indigo-500",
-  ];
+  const saveBtn = document.getElementById("save-btn") as HTMLElement;
+  const inputs = document.querySelectorAll("input") as NodeListOf<HTMLInputElement>;
+  const disabledClasses = ["bg-text-gray", "border-gray-300", "pointer-events-none", "opacity-60"];
 
-  const avatar = document.getElementById("profile-avatar");
-  const initial = document.getElementById("profile-avatar-initial");
+  saveBtn.classList.add(...disabledClasses);
 
-  const applyRandomColor = () => {
-    if (!avatar || !initial) return;
-
-    avatar.classList.remove(...bgColors, "bg-primary-20");
-
-    const colorClass = bgColors[Math.floor(Math.random() * bgColors.length)];
-    avatar.classList.add(colorClass);
-
-    initial.classList.remove("text-primary", "text-white", "text-black");
-    initial.classList.add(colorClass === "bg-yellow-500" ? "text-black" : "text-white");
+  const checkForm = (): void => {
+    let hasValue = false;
+    inputs.forEach(input => { if (input.value.trim().length > 0) hasValue = true; });
+    
+    if (hasValue) saveBtn.classList.remove(...disabledClasses);
+    else saveBtn.classList.add(...disabledClasses);
   };
 
-  avatar?.addEventListener("click", applyRandomColor);
-  avatar?.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      applyRandomColor();
-    }
+  const avatar = document.getElementById("profile-avatar") as HTMLElement;
+  const colors = ["bg-red-500", "bg-blue-500", "bg-green-500", "bg-yellow-500", "bg-purple-500", "bg-pink-500"];
+  avatar?.addEventListener("click", () => {
+    const currentColor = colors.find(c => avatar.classList.contains(c));
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    if (currentColor) avatar.classList.remove(currentColor);
+    avatar.classList.add(randomColor);
   });
 
-  if (initial) {
-    initial.classList.remove("text-primary");
-  }
+  const toggleVisibility = (btnId: string, inputName: string) => {
+    const btn = document.getElementById(btnId);
+    const input = document.querySelector(`input[name="${inputName}"]`) as HTMLInputElement;
+    btn?.addEventListener("click", () => {
+      const isPass = input.type === "password";
+      input.type = isPass ? "text" : "password";
+      btn.textContent = isPass ? "Hide" : "Show";
+    });
+  };
+  toggleVisibility("toggleCurrent", "currentPassword");
+  toggleVisibility("toggleNew", "newPassword");
+
+  document.querySelectorAll("input").forEach((input) => {
+    input.addEventListener("input", () => {
+      input.style.borderColor = "";
+      const errorEl = document.getElementById(`${input.getAttribute("name")}-error`);
+      if (errorEl) errorEl.textContent = "";
+      checkForm();
+    });
+  });
+
+  saveBtn?.addEventListener("click", async () => {
+    if (saveBtn.classList.contains("pointer-events-none")) return;
+
+    document.querySelectorAll(".error-msg").forEach(el => (el as HTMLElement).textContent = "");
+    document.querySelectorAll("input").forEach(el => (el as HTMLElement).style.borderColor = "");
+
+    const username = (document.querySelector('input[name="username"]') as HTMLInputElement).value;
+    const email = (document.querySelector('input[name="email"]') as HTMLInputElement).value;
+    const currentPassword = (document.querySelector('input[name="currentPassword"]') as HTMLInputElement).value;
+    const newPassword = (document.querySelector('input[name="newPassword"]') as HTMLInputElement).value;
+
+    if (username && username.length > 15) {
+      document.getElementById("username-error")!.textContent = "Username must be 15 characters or less";
+      (document.querySelector('input[name="username"]') as HTMLElement).style.borderColor = "red";
+      return;
+    }
+
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      document.getElementById("email-error")!.textContent = "Invalid email format";
+      (document.querySelector('input[name="email"]') as HTMLElement).style.borderColor = "red";
+      return;
+    }
+
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{5,})/;
+    if (newPassword && !passwordRegex.test(newPassword)) {
+      document.getElementById("newPassword-error")!.textContent = "New password does not meet requirements";
+      (document.querySelector('input[name="newPassword"]') as HTMLElement).style.borderColor = "red";
+      return;
+    }
+
+    if (!currentPassword) {
+      document.getElementById("currentPassword-error")!.textContent = "Current password is required";
+      (document.querySelector('input[name="currentPassword"]') as HTMLElement).style.borderColor = "red";
+      return;
+    }
+
+    const payload: any = { currentPassword };
+    if (username) payload.username = username;
+    if (email) payload.email = email;
+    if (newPassword) payload.newPassword = newPassword;
+
+    try {
+      const res = await fetch("http://localhost:3000/api/users/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        const errorEl = document.getElementById(`${result.field}-error`);
+        if (errorEl) {
+          errorEl.textContent = result.error;
+          const targetInput = document.querySelector(`input[name="${result.field}"]`) as HTMLElement;
+          targetInput.style.borderColor = "red";
+        }
+      } else {
+        alert("Profile updated successfully!");
+        window.location.reload();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  });
 </script>

@@ -4,6 +4,7 @@ export type User = {
   email: string;
   passwordHash: string;
   status: "online" | "offline";
+  lastActiveAt?: Date;
 };
 
 const users: User[] = [];
@@ -69,6 +70,9 @@ export const updateUserStatus = (
   const user = users.find((u) => u.id === userId);
   if (user) {
     user.status = status;
+    if (status === "offline") {
+      user.lastActiveAt = new Date();
+    }
     return user;
   }
 };
@@ -80,4 +84,25 @@ export const updateUserStatus = (
  */
 export const findAllUsers = (): User[] => {
   return users;
+};
+
+
+/**
+ * @function updateUserData
+ * @param {string} userId - The unique ID of the user to update
+ * @param {Partial<Omit<User, "id" | "status">>} updates - Object containing fields to update
+ * @returns {User | undefined} The updated user object, or undefined if not found
+ * @description Updates the user profile fields in memory based on the provided partial data.
+ */
+export const updateUserData = (
+  userId: string,
+  updates: Partial<Omit<User, "id" | "status">>,
+): User | undefined => {
+  const user = users.find((u) => u.id === userId);
+  if (user) {
+    // Apply the updates to the found user object
+    Object.assign(user, updates);
+    return user;
+  }
+  return undefined;
 };
