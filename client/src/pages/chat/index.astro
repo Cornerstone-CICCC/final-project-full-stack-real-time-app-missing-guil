@@ -14,7 +14,7 @@ import PlusIcon from "../../assets/icon/outlined/plus.svg?url";
 import AddModal from "../../components/AddModal.astro";
 import BackIcon from "../../assets/icon/green/back.svg?url";
 
-const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c";
+const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace with real Auth ID later
 ---
 
 <MainLayout title="Chat" active="Chat" container="w-full">
@@ -116,7 +116,26 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c";
 <script>
   import { initializeSocket, SOCKET_EVENTS } from "../../lib/socket";
 
-  const sidebarList = document.getElementById("chat-sidebar-list");
+  // =========================================================================
+  // HELPER: FORMAT TIMESTAMP
+  // =========================================================================
+  function getTimeAgo(date: string | Date) {
+    if (!date || date === "null") return "offline";
+    const now = new Date();
+    const past = new Date(date);
+    const diff = now.getTime() - past.getTime();
+
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (minutes < 1) return "just now";
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    return `${days}d ago`;
+  }
+
+  // 1. DOM Elements
   const chatListStatus = document.getElementById("chat-list-status");
   const emptyState = document.getElementById("empty-chat-state");
   const activeState = document.getElementById("active-chat-state");
@@ -124,6 +143,9 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c";
   const chatContainer = document.getElementById("chat-container");
   const chatSidebar = document.getElementById("chat-sidebar");
   const chatContent = document.getElementById("chat-content");
+  const sidebarList = document.getElementById("chat-sidebar-list");
+  const chatHeaderWrapper = document.getElementById("chat-header-wrapper");
+
   const typingIndicatorWrapper = document.getElementById(
     "typing-indicator-wrapper",
   );
@@ -135,9 +157,13 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c";
   let activeChatId: string | null = null;
   const myUserId =
     chatContainer?.getAttribute("data-my-user-id") || "test-user-001";
+
+  // 2. Initialize Socket Connection
   const socket = initializeSocket("http://localhost:3000");
 
-  // Back button — mobile/tablet only
+  // =========================================================================
+  // BACK TO SIDEBAR LOGIC (MOBILE ONLY)
+  // =========================================================================
   document
     .getElementById("back-to-sidebar-btn")
     ?.addEventListener("click", () => {
@@ -153,59 +179,118 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c";
       emptyState?.classList.remove("hidden");
     });
 
+  // =========================================================================
+  // HELPER: RENDER CHAT IN SIDEBAR
+  // =========================================================================
+  function addChatToSidebar(chat: any, isNew: boolean = false) {
+    if (!sidebarList) return;
+
+    // Remove "loading" or "empty" state if it exists
+    if (sidebarList.querySelector("p")) {
+      sidebarList.querySelector("p")?.remove();
+    }
+
+    // Use fallback name if backend returns null
+    const displayName = chat.name || chat.fallbackName || "Chat";
+    let statusText = "offline";
+    if (isNew) {
+      statusText = "New";
+    } else if (chat.status === "online") {
+      statusText = "online";
+    } else if (chat.lastActiveAt) {
+      statusText = getTimeAgo(chat.lastActiveAt); // Muestra "5m ago" en lugar de "offline"
+    }
+    const statusColor = isNew
+      ? "text-green"
+      : chat.status === "online"
+        ? "text-green"
+        : "text-gray-400";
+
+    // Extract status from API or default to offline
+    const userPresenceStatus = chat.status || "offline";
+
+    // Check if chat already exists in UI to avoid duplicates
+    let chatItemLink = document.getElementById(
+      `sidebar-item-${chat.id}`,
+    ) as HTMLAnchorElement;
+
+    if (!chatItemLink) {
+      chatItemLink = document.createElement("a");
+      chatItemLink.id = `sidebar-item-${chat.id}`;
+      chatItemLink.setAttribute("href", `/chat/${chat.id}`);
+      chatItemLink.className =
+        "block p-3 rounded-xl transition-all hover:bg-gray-50 bg-white shadow-sm border border-gray-100 flex flex-row items-center gap-3 cursor-pointer mb-2 animate-fade-in";
+    }
+
+    // Bind the real-time status to the DOM element
+    chatItemLink.setAttribute("data-status", userPresenceStatus);
+    chatItemLink.setAttribute("data-last-active", chat.lastActiveAt || "null");
+
+    chatItemLink.innerHTML = `
+      <div class="relative w-10 h-10 rounded-full bg-primary-20 flex items-center justify-center text-primary font-bold">
+        ${displayName.charAt(0).toUpperCase()}
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex flex-row justify-between items-baseline">
+          <h3 class="text-sm font-semibold text-text-black truncate">${displayName}</h3>
+          <span class="sidebar-chat-status text-[10px] ${statusColor} font-medium">${statusText}</span>
+        </div>
+      </div>
+    `;
+
+    // Add it to the top of the list
+    sidebarList.insertBefore(chatItemLink, sidebarList.firstChild);
+    return chatItemLink;
+  }
+
+  // =========================================================================
+  // HELPER: RENDER A SINGLE MESSAGE BUBBLE
+  // =========================================================================
   function renderMessage(message: any) {
     if (!messagesList) return;
+
     const isOwn = message.senderId === myUserId;
     const wrapperDiv = document.createElement("div");
     wrapperDiv.className = `flex ${isOwn ? "justify-end" : "justify-start"} mb-1`;
+
     const bubbleDiv = document.createElement("div");
     bubbleDiv.className = `relative max-w-xs lg:max-w-md px-4 py-2.5 rounded-2xl text-sm shadow-sm ${
       isOwn
         ? "bg-green text-text-black rounded-br-sm"
         : "bg-bg text-text-black rounded-bl-sm"
     }`;
+
     const textElement = document.createElement("p");
     textElement.className = "leading-relaxed";
     textElement.textContent = message.text;
+
     bubbleDiv.appendChild(textElement);
     wrapperDiv.appendChild(bubbleDiv);
     messagesList.appendChild(wrapperDiv);
+
     messagesList.scrollTop = messagesList.scrollHeight;
   }
 
+  // =========================================================================
+  // 3. API INTEGRATION: FETCH ACTIVE CHATS FOR SIDEBAR
+  // =========================================================================
   async function fetchUserChats() {
     try {
       const res = await fetch("http://localhost:3000/api/chats", {
         method: "GET",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
       });
+
       const chats = await res.json();
       if (!res.ok) throw new Error(chats.error || "Failed to fetch chats");
 
       if (sidebarList) {
-        if (chatListStatus) chatListStatus.remove();
         if (chats.length === 0) {
           sidebarList.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">No active conversations found.</p>`;
           return;
         }
-        chats.forEach((chat: any) => {
-          const chatItemLink = document.createElement("a");
-          chatItemLink.setAttribute("href", `/chat/${chat.id}`);
-          chatItemLink.className =
-            "room-trigger block p-4 rounded-lg transition-colors hover:bg-primary-10 bg-bg flex flex-row items-center gap-4 cursor-pointer mb-2";
-          chatItemLink.innerHTML = `
-            <div class="relative w-10 h-10 rounded-full bg-primary-20 flex items-center justify-center text-primary font-bold">
-              ${chat.name ? chat.name.charAt(0).toUpperCase() : "G"}
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="flex flex-row justify-between items-baseline">
-                <h3 class="text-sm font-semibold text-text-black truncate">${chat.name}</h3>
-                <span class="text-[10px] text-text-gray">Recent</span>
-              </div>
-            </div>
-          `;
-          sidebarList.appendChild(chatItemLink);
-        });
+        chats.reverse().forEach((chat: any) => addChatToSidebar(chat));
       }
     } catch (error) {
       console.error("[Frontend Error] Error loading sidebar chats:", error);
@@ -217,6 +302,119 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c";
 
   fetchUserChats();
 
+  // =========================================================================
+  // HELPER: OPEN CHAT MESSAGES IN MOBILE VIEW
+  // =========================================================================
+  function openChat(link: HTMLAnchorElement) {
+    const href = link.getAttribute("href");
+    const newChatId = href?.split("/").pop();
+
+    if (!newChatId || newChatId === activeChatId) return;
+
+    // 1. Leave current chat room if active
+    if (activeChatId && socket) {
+      socket.emit(SOCKET_EVENTS.LEAVE_CHAT, { chatId: activeChatId });
+    }
+
+    activeChatId = newChatId;
+
+    // 2. Extract the name from the clicked sidebar item
+    // Targeting both .font-medium (spans) and h3 to prevent UI breakage
+    const chatTitleEl = link.querySelector(".font-medium, h3");
+    const currentChatName = chatTitleEl?.textContent
+      ? chatTitleEl.textContent.trim()
+      : "Unknown User";
+
+    // 3. Update DOM elements for the header
+    const headerNameEl = document.getElementById("chat-header-name");
+    const headerAvatarEl = document.getElementById("chat-header-avatar");
+
+    // Read status and timestamp from the sidebar item
+    const currentStatus = link.getAttribute("data-status") || "offline";
+    const currentLastActive = link.getAttribute("data-last-active");
+
+    const statusTextEl = document.getElementById("chat-header-status-text");
+    const statusDotEl = document.getElementById("chat-header-status-dot");
+    const statusContainerEl = document.getElementById(
+      "chat-header-status-container",
+    );
+    const headerTimestampEl = document.getElementById("chat-header-timestamp");
+
+    // Apply Name
+    if (headerNameEl) {
+      headerNameEl.textContent = currentChatName;
+    }
+
+    // Apply Avatar Initials
+    if (headerAvatarEl && currentChatName) {
+      const initials = currentChatName
+        .split(" ")
+        .map((part) => part[0])
+        .join("")
+        .substring(0, 2)
+        .toUpperCase();
+      headerAvatarEl.textContent = initials;
+    }
+
+    // Apply Status UI (dot & text)
+    if (statusTextEl) statusTextEl.textContent = currentStatus;
+    if (statusDotEl) {
+      statusDotEl.className = `h-2 w-2 rounded-full ${currentStatus === "online" ? "bg-green" : "bg-gray-300"}`;
+    }
+    if (statusContainerEl) {
+      statusContainerEl.className = `flex items-center gap-1 text-sm font-medium ${currentStatus === "online" ? "text-green" : "text-gray-400"}`;
+    }
+
+    // Apply dynamic "last active" text to the header
+    if (headerTimestampEl) {
+      if (currentStatus === "online") {
+        headerTimestampEl.textContent = "active now";
+        headerTimestampEl.classList.remove("italic");
+      } else if (currentLastActive && currentLastActive !== "null") {
+        headerTimestampEl.textContent = `last active ${getTimeAgo(currentLastActive)}`;
+        headerTimestampEl.classList.remove("italic");
+      } else {
+        headerTimestampEl.textContent = "offline";
+        headerTimestampEl.classList.add("italic");
+      }
+    }
+
+    // Update the sidebar text to show the exact time (e.g. 5m ago) when clicked
+    if (
+      currentStatus === "offline" &&
+      currentLastActive &&
+      currentLastActive !== "null"
+    ) {
+      const sidebarStatusSpan = link.querySelector(".sidebar-chat-status");
+      if (sidebarStatusSpan) {
+        sidebarStatusSpan.textContent = getTimeAgo(currentLastActive);
+      }
+    }
+
+    // 4. Toggle Chat Visibility (Desktop)
+    emptyState?.classList.add("hidden");
+    activeState?.classList.remove("hidden");
+    activeState?.classList.add("flex");
+
+    // 5. Mobile Responsiveness: hide sidebar, show chat content
+    if (window.innerWidth < 1024) {
+      const chatSidebar = document.getElementById("chat-sidebar");
+      const chatContent = document.getElementById("chat-content");
+
+      chatSidebar?.classList.add("hidden");
+      chatSidebar?.classList.remove("flex"); // Ensure flex is fully removed
+
+      chatContent?.classList.remove("hidden");
+      chatContent?.classList.add("flex");
+    }
+
+    // 6. Join new chat room
+    socket?.emit(SOCKET_EVENTS.JOIN_CHAT, { chatId: activeChatId });
+  }
+
+  // =========================================================================
+  // 4. SOCKET EVENT REGISTRATION
+  // =========================================================================
   if (socket) {
     socket.on(SOCKET_EVENTS.MESSAGE_HISTORY, (messages: any[]) => {
       if (messagesList) {
@@ -226,11 +424,30 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c";
     });
 
     socket.on(SOCKET_EVENTS.NEW_MESSAGE, (message: any) => {
-      renderMessage(message);
+      // Render message if it belongs to the currently active chat
+      if (message.chatId === activeChatId) {
+        renderMessage(message);
+      }
+
+      // Move chat to the top of the sidebar
+      const existingSidebarItem = document.getElementById(
+        `sidebar-item-${message.chatId}`,
+      );
+      if (existingSidebarItem && sidebarList) {
+        sidebarList.prepend(existingSidebarItem);
+      } else {
+        fetchUserChats();
+      }
+    });
+
+    // Listen for chats created by other users
+    socket.on("NEW_CHAT_CREATED", (newChatData: any) => {
+      console.log("[Socket] Received new chat notification:", newChatData);
+      addChatToSidebar(newChatData, true);
     });
 
     let typingTimeout: any;
-    socket.on("user_typing", () => {
+    socket.on("user_typing", (data: any) => {
       if (typingIndicatorWrapper) {
         typingIndicatorWrapper.classList.remove("hidden");
         clearTimeout(typingTimeout);
@@ -239,40 +456,113 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c";
         }, 3000);
       }
     });
+
+    // User precence updates (online/offline)
+    socket.on(SOCKET_EVENTS.USER_PRESENCE, (payload: any) => {
+      console.log("[Socket] User presence changed:", payload);
+
+      // Check if the current active chat belongs to the user whose status changed
+      const headerNameEl = document.getElementById("chat-header-name");
+
+      if (
+        headerNameEl &&
+        headerNameEl.textContent
+          ?.toLowerCase()
+          .includes(payload.username.toLowerCase())
+      ) {
+        const statusTextEl = document.getElementById("chat-header-status-text");
+        const statusDotEl = document.getElementById("chat-header-status-dot");
+        const statusContainerEl = document.getElementById(
+          "chat-header-status-container",
+        );
+        const headerTimestampEl = document.getElementById(
+          "chat-header-timestamp",
+        );
+
+        // Update text (online / offline)
+        if (statusTextEl) {
+          statusTextEl.textContent = payload.status;
+        }
+
+        // Update the green / gray dot indicator
+        if (statusDotEl) {
+          statusDotEl.className = `h-2 w-2 rounded-full ${
+            payload.status === "online" ? "bg-green" : "bg-gray-300"
+          }`;
+        }
+
+        // Update the text color in the container
+        if (statusContainerEl) {
+          statusContainerEl.className = `flex items-center gap-1 text-sm font-medium ${
+            payload.status === "online" ? "text-green" : "text-gray-400"
+          }`;
+        }
+
+        // Update the "last active" text in the header
+        if (headerTimestampEl) {
+          if (payload.status === "offline" && payload.lastActiveAt) {
+            headerTimestampEl.textContent = `last active just now`;
+            headerTimestampEl.classList.remove("italic");
+          } else if (payload.status === "online") {
+            headerTimestampEl.textContent = "active now";
+            headerTimestampEl.classList.remove("italic");
+          }
+        }
+      }
+      // Keep sidebar items synchronized so clicks always fetch the latest status
+      const allSidebarLinks = document.querySelectorAll("#chat-sidebar-list a");
+      allSidebarLinks.forEach((sidebarLink) => {
+        const nameEl = sidebarLink.querySelector("h3");
+
+        // Apply case insensitive matching
+        if (
+          nameEl &&
+          nameEl.textContent
+            ?.toLowerCase()
+            .includes(payload.username.toLowerCase())
+        ) {
+          // 1. Update the hidden data attribute
+          sidebarLink.setAttribute("data-status", payload.status);
+
+          if (payload.status === "offline" && payload.lastActiveAt) {
+            sidebarLink.setAttribute("data-last-active", payload.lastActiveAt);
+          }
+
+          // 2. Update the visual text and color in the sidebar
+          const statusSpan = sidebarLink.querySelector(".sidebar-chat-status");
+          if (statusSpan) {
+            if (payload.status === "online") {
+              statusSpan.textContent = "online";
+              statusSpan.classList.remove("text-gray-400", "text-text-gray");
+              statusSpan.classList.add("text-green");
+            } else {
+              // Muestra "just now" al instante de desconectarse
+              statusSpan.textContent = payload.lastActiveAt
+                ? "just now"
+                : "offline";
+              statusSpan.classList.remove("text-green");
+              statusSpan.classList.add("text-gray-400");
+            }
+          }
+        }
+      });
+    });
   }
 
-  function openChat(link: HTMLAnchorElement) {
-    const href = link.getAttribute("href");
-    const newChatId = href?.split("/").pop();
-    if (!newChatId || newChatId === activeChatId) return;
-
-    if (activeChatId && socket) {
-      socket.emit(SOCKET_EVENTS.LEAVE_CHAT, { chatId: activeChatId });
-    }
-
-    activeChatId = newChatId;
-
-    emptyState?.classList.add("hidden");
-    activeState?.classList.remove("hidden");
-    activeState?.classList.add("flex");
-
-    // On mobile/tablet: hide sidebar, show chat content
-    if (window.innerWidth < 1024) {
-      chatSidebar?.classList.add("hidden");
-      chatContent?.classList.remove("hidden");
-      chatContent?.classList.add("flex");
-    }
-
-    socket?.emit(SOCKET_EVENTS.JOIN_CHAT, { chatId: activeChatId });
-  }
-
+  // =========================================================================
+  // 5. NAVIGATION INTERCEPTION (SPA ROUTING) & ROOM LEAVING
+  // =========================================================================
   sidebarList?.addEventListener("click", (e) => {
     const link = (e.target as HTMLElement).closest("a");
     if (!link) return;
+
     e.preventDefault();
     openChat(link as HTMLAnchorElement);
   });
 
+  // =========================================================================
+  // 6. TYPING & MESSAGE SEND HANDLERS
+  // =========================================================================
   messageInput?.addEventListener("input", () => {
     if (activeChatId && socket) {
       socket.emit("typing", { chatId: activeChatId });
@@ -282,15 +572,22 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c";
   chatForm?.addEventListener("submit", (e) => {
     e.preventDefault();
     const text = messageInput?.value.trim();
+
     if (!text || !activeChatId) return;
     socket?.emit(SOCKET_EVENTS.SEND_MESSAGE, { chatId: activeChatId, text });
     if (messageInput) messageInput.value = "";
   });
 
+  // =========================================================================
+  // 7. MODAL LOGIC
+  // =========================================================================
   document.getElementById("open-add-modal")?.addEventListener("click", () => {
     document.dispatchEvent(new CustomEvent("open-add-modal"));
   });
 
+  // =========================================================================
+  // 8. ADDING CONTACT FROM MODAL
+  // =========================================================================
   document.addEventListener("contact-selected", async (e: Event) => {
     const customEvent = e as CustomEvent;
     const { user } = customEvent.detail;
@@ -301,45 +598,23 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c";
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: `Chat con ${user.username}`,
+          name: `${user.username}`,
           isGroupChat: false,
           participantIds: [user.id],
         }),
       });
 
       const newChat = await res.json();
-      if (!res.ok) throw new Error(newChat.error || "No se pudo crear el chat");
+      if (!res.ok) throw new Error(newChat.error || "Failed to create chat");
 
-      if (sidebarList) {
-  const chatItemLink = document.createElement("a");
-chatItemLink.setAttribute("href", `/chat/${newChat.id}`);
-chatItemLink.className = "flex items-center gap-4 p-4 rounded-lg cursor-pointer transition-colors hover:bg-primary-10";
+      // Pass the modal username as a fallback name
+      newChat.fallbackName = user.username;
 
-chatItemLink.innerHTML = `
-  <div class="h-10 w-10 rounded-full bg-primary-20 flex items-center justify-center text-primary font-bold text-sm">
-    ${(newChat.name || "?").charAt(0).toUpperCase()}
-  </div>
-  <div class="flex-1">
-    <div class="flex items-center justify-between">
-      <span class="font-medium">${newChat.name || "Unknown"}</span>
-      <span class="text-sm text-text-gray">Recent</span>
-    </div>
-    <div class="flex items-center gap-2 mt-1">
-      <div class="flex items-center gap-1 text-sm font-medium text-green">
-        <span class="h-2 w-2 rounded-full bg-green"></span>
-        <span>online</span>
-      </div>
-    </div>
-  </div>
-`;
+      // Inject into sidebar
+      const chatItemLink = addChatToSidebar(newChat, true);
 
-        if (sidebarList.querySelector("p")) {
-          sidebarList.innerHTML = "";
-        }
-
-        sidebarList.insertBefore(chatItemLink, sidebarList.firstChild);
-        openChat(chatItemLink as HTMLAnchorElement);
-      }
+      // Open the chat immediately
+      if (chatItemLink) chatItemLink.click();
     } catch (error) {
       console.error("Error creating new chat with contact:", error);
       alert("There was a problem adding the new contact.");

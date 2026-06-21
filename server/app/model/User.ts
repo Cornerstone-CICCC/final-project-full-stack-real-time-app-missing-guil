@@ -4,6 +4,7 @@ export type User = {
   email: string;
   passwordHash: string;
   status: "online" | "offline";
+  lastActiveAt?: Date;
 };
 
 const users: User[] = [];
@@ -69,6 +70,9 @@ export const updateUserStatus = (
   const user = users.find((u) => u.id === userId);
   if (user) {
     user.status = status;
+    if (status === "offline") {
+      user.lastActiveAt = new Date();
+    }
     return user;
   }
 };
