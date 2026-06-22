@@ -89,6 +89,10 @@ export const updateUser = async (
       });
     }
 
+    if (findUserbyName(username) && username !== user.username) {
+      return res.status(409).json({ error: "Username already taken", field: "username" });
+    }
+
     const isMatch = await comparePassword(currentPassword, user.passwordHash);
     if (!isMatch) {
       return res.status(401).json({
