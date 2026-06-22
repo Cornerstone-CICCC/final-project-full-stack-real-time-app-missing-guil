@@ -286,11 +286,17 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
       if (!res.ok) throw new Error(chats.error || "Failed to fetch chats");
 
       if (sidebarList) {
-        if (chats.length === 0) {
+        if (chatListStatus) chatListStatus.remove();
+
+        const dmChats = chats.filter((chat: any) => !chat.isGroupChat);
+
+        if (dmChats.length === 0) {
           sidebarList.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">No active conversations found.</p>`;
           return;
         }
-        chats.reverse().forEach((chat: any) => addChatToSidebar(chat));
+
+        // 3. Renderizar solo los DMs
+        dmChats.reverse().forEach((chat: any) => addChatToSidebar(chat));
       }
     } catch (error) {
       console.error("[Frontend Error] Error loading sidebar chats:", error);
