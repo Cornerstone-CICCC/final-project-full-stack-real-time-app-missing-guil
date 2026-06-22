@@ -318,6 +318,31 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
 
     activeChatId = newChatId;
 
+    // 1.5 Apply active visual feedback to the sidebar item
+    const sidebarList = document.getElementById("chat-sidebar-list");
+    if (sidebarList) {
+      // 1. Remove active styles from all sidebar items and re-apply default styles
+      const allLinks = sidebarList.querySelectorAll("a");
+      allLinks.forEach((a) => {
+        a.classList.remove("bg-primary-10", "border-primary", "shadow-md");
+        a.classList.add(
+          "bg-white",
+          "border-gray-100",
+          "shadow-sm",
+          "hover:bg-gray-50",
+        );
+      });
+
+      // 2. Apply active styles to the clicked item
+      link.classList.remove(
+        "bg-white",
+        "border-gray-100",
+        "shadow-sm",
+        "hover:bg-gray-50",
+      );
+      link.classList.add("bg-primary-10", "border-primary", "shadow-md");
+    }
+
     // 2. Extract the name from the clicked sidebar item
     // Targeting both .font-medium (spans) and h3 to prevent UI breakage
     const chatTitleEl = link.querySelector(".font-medium, h3");
