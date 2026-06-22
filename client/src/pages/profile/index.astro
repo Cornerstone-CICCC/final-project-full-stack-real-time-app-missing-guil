@@ -24,10 +24,10 @@ try {
 ---
 
 <MainLayout title="Profile Settings" active="Profile" container="w-full">
-  <div class="flex flex-col h-screen items-center justify-center login-bg">
-    <div class="rounded-2xl bg-bg/90 p-8 shadow-xl">
+  <div class="flex flex-col min-h-screen items-center justify-center login-bg py-8 px-4">
+    <div class="rounded-2xl bg-bg/90 p-6 mb-12 md:p-8 md:mb-0 shadow-xl w-full max-w-2xl">
       <div class="text-center">
-        <h1 class="font-display text-4xl font-bold text-text-black">
+        <h1 class="font-display text-3xl md:text-4xl font-bold text-text-black">
           Profile Settings
         </h1>
         <p class="mt-1 mb-6 text-sm text-text-gray">
@@ -35,56 +35,55 @@ try {
         </p>
       </div>
 
-      <div class="flex flex-row gap-6">
-        <div class="flex items-center gap-4">
-          <div class="flex flex-col items-center gap-3">
-            <div
-              id="profile-avatar"
-              class="h-44 w-44 rounded-full bg-yellow-500 flex items-center justify-center overflow-hidden cursor-pointer transition-colors"
-              role="button"
-              tabindex="0"
-              aria-label="Randomize profile color"
-            >
-              <span id="profile-avatar-initial" class="text-6xl font-bold text-text-black leading-none">U</span>
-            </div>
+      <div class="flex flex-col md:flex-row items-center md:items-start justify-center gap-8 md:gap-10">
+        
+        <div class="flex flex-col items-center gap-3">
+          <div
+            id="profile-avatar"
+            class="h-32 w-32 md:h-44 md:w-44 rounded-full bg-yellow-500 flex items-center justify-center overflow-hidden cursor-pointer transition-colors"
+            role="button"
+            tabindex="0"
+            aria-label="Randomize profile color"
+          >
+            <span id="profile-avatar-initial" class="text-5xl md:text-6xl font-bold text-text-black leading-none">U</span>
+          </div>
 
-            <div class="text-center">
-              <p class="text-text-gray font-normal text-xs">
-                Username: <span class="font-bold text-text-black">{userData.username}</span>
-              </p>
-              <p class="text-text-gray font-normal text-xs mt-1">
-                Email: <span class="font-bold text-text-black">{userData.email}</span>
-              </p>
-            </div>
-
-            <p class="mt-1 max-w-52 text-center text-xs leading-5 text-text-gray">
-              Click the avatar to randomize your profile color.
+          <div class="text-center">
+            <p class="text-text-gray font-normal text-xs">
+              Username: <span class="font-bold text-text-black">{userData.username}</span>
+            </p>
+            <p class="text-text-gray font-normal text-xs mt-1">
+              Email: <span class="font-bold text-text-black">{userData.email}</span>
             </p>
           </div>
+
+          <!-- <p class="mt-1 max-w-52 text-center text-xs leading-5 text-text-gray">
+            Click the avatar to randomize your profile color.
+          </p> -->
         </div>
 
-        <div class="flex flex-col gap-4 w-80">
+        <div class="flex flex-col gap-4 w-full md:w-80">
           <div class="flex flex-col gap-1">
             <TextField name="username" label="Username" placeholder="Enter your username" maxlength="15" />
-            <p id="username-error" class="error-msg text-red-500 text-xs min-h-[1rem]"></p>
+            <p id="username-error" class="error-msg text-red-500 text-xs min-h-4"></p>
           </div>
 
           <div class="flex flex-col gap-1">
             <TextField name="email" label="Email" placeholder="Enter your email" />
-            <p id="email-error" class="error-msg text-red-500 text-xs min-h-[1rem]"></p>
+            <p id="email-error" class="error-msg text-red-500 text-xs min-h-4"></p>
           </div>
 
           <div class="flex flex-col gap-1 relative">
             <TextField name="currentPassword" type="password" label="Current Password" placeholder="••••••••" class="w-full" />
-            <span id="toggleCurrent" class="absolute right-3 top-[34px] cursor-pointer text-xs text-gray-500 select-none">Show</span>
-            <p id="currentPassword-error" class="error-msg text-red-500 text-xs min-h-[1rem]"></p>
+            <span id="toggleCurrent" class="absolute right-3 top-8.5 cursor-pointer text-xs text-gray-500 select-none">Show</span>
+            <p id="currentPassword-error" class="error-msg text-red-500 text-xs min-h-4"></p>
           </div>
 
           <div class="flex flex-col gap-1 relative">
             <TextField name="newPassword" type="password" label="New Password" placeholder="••••••••" class="w-full" />
-            <span id="toggleNew" class="absolute right-3 top-[34px] cursor-pointer text-xs text-gray-500 select-none">Show</span>
+            <span id="toggleNew" class="absolute right-3 top-8.5 cursor-pointer text-xs text-gray-500 select-none">Show</span>
             <p class="text-gray-400 text-[10px] mt-0">At least 5 chars, 1 uppercase, 1 number, 1 special char</p>
-            <p id="newPassword-error" class="error-msg text-red-500 text-xs min-h-[1rem]"></p>
+            <p id="newPassword-error" class="error-msg text-red-500 text-xs min-h-4"></p>
           </div>
 
           <Button id="save-btn" variant="primary" class="w-full cursor-pointer mt-2">Save Profile</Button>
