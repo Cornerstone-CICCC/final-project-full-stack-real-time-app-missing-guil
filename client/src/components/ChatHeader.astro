@@ -57,15 +57,9 @@ const {
         </div>
       </div>
 
-      {
-        lastTimestamp ? (
-          <span class="text-sm text-text-gray">
-            last message {getTimeAgo(lastTimestamp)}
-          </span>
-        ) : (
-          <span class="text-sm text-text-gray italic">start chatting</span>
-        )
-      }
+      <span id="chat-header-timestamp" class="text-sm text-text-gray italic">
+        start chatting
+      </span>
     </div>
   </div>
 </div>

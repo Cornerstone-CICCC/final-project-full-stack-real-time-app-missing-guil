@@ -371,7 +371,10 @@ const currentUserId = "78eb3e18-a534-460f-ad45-97a86c121e3c"; // TODO: Replace w
         headerTimestampEl.textContent = "active now";
         headerTimestampEl.classList.remove("italic");
       } else if (currentLastActive && currentLastActive !== "null") {
-        headerTimestampEl.textContent = `last active ${getTimeAgo(currentLastActive)}`;
+        const d = new Date(currentLastActive);
+        const timeStr = `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
+        // headerTimestampEl.textContent = `last active ${getTimeAgo(currentLastActive)}`;
+        headerTimestampEl.textContent = `Last time seen ${timeStr}`;
         headerTimestampEl.classList.remove("italic");
       } else {
         headerTimestampEl.textContent = "offline";
