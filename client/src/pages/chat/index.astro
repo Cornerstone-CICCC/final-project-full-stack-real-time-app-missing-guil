@@ -176,8 +176,7 @@ try {
   ) as HTMLInputElement;
 
   let activeChatId: string | null = null;
-  const myUserId =
-    chatContainer?.getAttribute("data-my-user-id");
+  const myUserId = chatContainer?.getAttribute("data-my-user-id");
 
   // 2. Initialize Socket Connection
   const socket = initializeSocket("http://localhost:3000");
@@ -482,6 +481,8 @@ try {
   // 4. SOCKET EVENT REGISTRATION
   // =========================================================================
   if (socket) {
+    let typingTimeout: any;
+
     socket.on(SOCKET_EVENTS.MESSAGE_HISTORY, (messages: any[]) => {
       if (messagesList) {
         messagesList.innerHTML = "";
@@ -493,6 +494,12 @@ try {
       // Render message if it belongs to the currently active chat
       if (message.chatId === activeChatId) {
         renderMessage(message);
+
+        // Hide typing indicator if visible since we just received a new message
+        if (typingIndicatorWrapper) {
+          typingIndicatorWrapper.classList.add("hidden");
+          clearTimeout(typingTimeout);
+        }
       }
 
       // Move chat to the top of the sidebar
@@ -512,14 +519,25 @@ try {
       addChatToSidebar(newChatData, true);
     });
 
-    let typingTimeout: any;
     socket.on("user_typing", (data: any) => {
+      // 1. Validate that the typing event is for the currently active chat
+      if (data.chatId !== activeChatId) return;
+
       if (typingIndicatorWrapper) {
+        // 2. Search for the TypingIndicator element and update its message
+        const typingTextEl = document.getElementById("typing-indicator");
+        if (typingTextEl && data.username) {
+          typingTextEl.textContent = `${data.username} is typing...`;
+        }
+
+        // 3. Show the typing indicator if it's hidden
         typingIndicatorWrapper.classList.remove("hidden");
+
+        // 4. Hide the typing indicator after 3 seconds of inactivity
         clearTimeout(typingTimeout);
         typingTimeout = setTimeout(() => {
           typingIndicatorWrapper.classList.add("hidden");
-        }, 3000);
+        }, 1500);
       }
     });
 
