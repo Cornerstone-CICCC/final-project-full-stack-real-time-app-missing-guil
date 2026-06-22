@@ -39,7 +39,7 @@
   const socket = initializeSocket("http://localhost:3000");
 
   if (socket) {
-    console.log("[Socket Client] Active tunnel verified.");
+    // console.log("[Socket Client] Active tunnel verified.");
 
     // =========================================================================
     // OUTGOING EMISSIONS (Client to Server Actions)
@@ -78,28 +78,28 @@
     socket.on(SOCKET_EVENTS.MESSAGE_HISTORY, (messages: ChatMessage[]) => {
       // TODO: Clear messagesList node wrapper.
       // TODO: Loop over the messages array and append nodes onto messagesList.
-      console.log("[LISTEN] Message history layout payload arrived:", messages);
+      // console.log("[LISTEN] Message history layout payload arrived:", messages);
     });
 
     // 7. INJECT LIVE INCOMING MESSAGES
     socket.on(SOCKET_EVENTS.NEW_MESSAGE, (message: ChatMessage) => {
       // TODO: Validate if message.chatId matches active screen view.
       // TODO: Create a structural paragraph block, append to messagesList, and force scroll down.
-      console.log("[LISTEN] New messaging packet received in real-time:", message);
+      // console.log("[LISTEN] New messaging packet received in real-time:", message);
     });
 
     // 8. DISPLAY LIVE USER TYPING INDICATORS
     socket.on(SOCKET_EVENTS.USER_TYPING, (data: UserTypingPayload) => {
       // TODO: Check data.chatId. If data.isTyping is true, project "${data.user} is writing..." into typingIndicator.
       // TODO: If false, clear typingIndicator text contents.
-      console.log("[LISTEN] User typing interaction signal altered:", data);
+      // console.log("[LISTEN] User typing interaction signal altered:", data);
     });
 
     // 9. GLOBAL NETWORK PRESENCE RADAR
     socket.on(SOCKET_EVENTS.USER_PRESENCE, (data: UserPresencePayload) => {
       // TODO: Search side-panel DOM elements matching the incoming user ID attribute tracker.
       // TODO: Toggle class toggles (e.g., replace bg-gray-400 with bg-green-500 or vice versa).
-      console.log("[LISTEN] Platform boundary node presence update:", data);
+      // console.log("[LISTEN] Platform boundary node presence update:", data);
     });
   }
 </script>

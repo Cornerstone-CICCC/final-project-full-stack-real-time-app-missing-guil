@@ -21,6 +21,10 @@ try {
 } catch (err) {
   console.error("Fetch error:", err);
 }
+
+const initialLetter = userData.username && userData.username !== "Loading..."
+  ? userData.username.charAt(0).toUpperCase()
+  : "U";
 ---
 
 <MainLayout title="Profile Settings" active="Profile" container="w-full">
@@ -45,7 +49,7 @@ try {
             tabindex="0"
             aria-label="Randomize profile color"
           >
-            <span id="profile-avatar-initial" class="text-5xl md:text-6xl font-bold text-text-black leading-none">U</span>
+            <span id="profile-avatar-initial" class="text-5xl md:text-6xl font-bold text-text-black leading-none">{initialLetter}</span>
           </div>
 
           <div class="text-center">

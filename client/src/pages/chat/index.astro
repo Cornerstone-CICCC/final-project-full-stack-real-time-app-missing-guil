@@ -28,12 +28,12 @@ try {
     // Extract id
     currentUserId = userData.userId;
 
-    console.log("Current user ID:", userData);
+    // console.log("Current user ID:", userData);
   } else {
     return Astro.redirect("/");
   }
 } catch (error) {
-  console.error("Error validando la sesión del usuario:", error);
+  // console.error("User data validation error:", error);
   return Astro.redirect("/");
 }
 ---
@@ -275,9 +275,7 @@ try {
     const sender = message.senderId;
     const isOwn = sender === myUserId;
 
-    console.log(
-      `[Message Render] Sender: ${sender}, Is Own: ${isOwn}, User ID: ${myUserId}`,
-    );
+    // console.log(`[Message Render] Sender: ${sender}, Is Own: ${isOwn}, User ID: ${myUserId}`,);
 
     const wrapperDiv = document.createElement("div");
     // Other user's messages are aligned to the left, yours to the right
@@ -330,7 +328,7 @@ try {
         dmChats.reverse().forEach((chat: any) => addChatToSidebar(chat));
       }
     } catch (error) {
-      console.error("[Frontend Error] Error loading sidebar chats:", error);
+      // console.error("[Frontend Error] Error loading sidebar chats:", error);
       if (sidebarList) {
         sidebarList.innerHTML = `<p class="text-xs text-red-500 text-center py-4">Error loading conversations.</p>`;
       }
@@ -515,7 +513,7 @@ try {
 
     // Listen for chats created by other users
     socket.on("NEW_CHAT_CREATED", (newChatData: any) => {
-      console.log("[Socket] Received new chat notification:", newChatData);
+      // console.log("[Socket] Received new chat notification:", newChatData);
       addChatToSidebar(newChatData, true);
     });
 
@@ -543,7 +541,7 @@ try {
 
     // User precence updates (online/offline)
     socket.on(SOCKET_EVENTS.USER_PRESENCE, (payload: any) => {
-      console.log("[Socket] User presence changed:", payload);
+      // console.log("[Socket] User presence changed:", payload);
 
       // Check if the current active chat belongs to the user whose status changed
       const headerNameEl = document.getElementById("chat-header-name");
@@ -700,7 +698,7 @@ try {
       // Open the chat immediately
       if (chatItemLink) chatItemLink.click();
     } catch (error) {
-      console.error("Error creating new chat with contact:", error);
+      // console.error("Error creating new chat with contact:", error);
       alert("There was a problem adding the new contact.");
     }
   });
