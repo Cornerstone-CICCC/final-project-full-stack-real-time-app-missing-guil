@@ -173,7 +173,7 @@ try {
   });
 
   // =========================================================================
-  // 💡 BULLETPROOF UI RENDERING FIX (Colors, Side Alignments & Dynamic Names)
+  // BULLETPROOF UI RENDERING (Colors, Side Alignments & Dynamic Names)
   // =========================================================================
   function renderMessage(message: any) {
     if (!messagesList) return;
@@ -416,6 +416,11 @@ try {
                 <span class="h-2 w-2 rounded-full bg-green"></span>
                 <span class="text-xs text-green whitespace-nowrap">Active</span>
               </div>
+              
+              <div class="flex items-center gap-1 mt-0.5">
+                <p class="text-[10px] text-gray-400 font-mono">ID: ${activeRoomId}</p>
+              </div>
+
             </div>
           </div>
           <div class="flex items-center gap-4 shrink-0">

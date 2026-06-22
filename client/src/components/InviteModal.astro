@@ -3,7 +3,6 @@ import Button from "./Button.astro";
 import TextField from "./TextField.astro";
 ---
 
-<!-- Backdrop -->
 <div
   id="invite-modal"
   class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm"
@@ -18,10 +17,7 @@ import TextField from "./TextField.astro";
       <p class="mt-1 text-sm text-text-gray">Paste it below to join a room</p>
     </div>
 
-    <form id="invite-form" 
-    class="space-y-4" 
-    action="/rooms/join">
-
+    <form id="invite-form" class="space-y-4">
       <TextField name="inviteCode" placeholder="Paste invite link or code" required />
       <Button type="submit" variant="primary" class="w-full cursor-pointer">Join Room</Button>
     </form>
@@ -39,6 +35,7 @@ import TextField from "./TextField.astro";
 
 <script>
   const modal = document.getElementById('invite-modal');
+  const inviteForm = document.getElementById('invite-form') as HTMLFormElement;
 
   const open = () => {
     modal?.classList.remove('hidden');
@@ -50,6 +47,7 @@ import TextField from "./TextField.astro";
     modal?.classList.add('hidden');
     modal?.classList.remove('flex');
     modal?.setAttribute('aria-hidden', 'true');
+    if (inviteForm) inviteForm.reset(); 
   };
 
   document.getElementById('close-invite-modal')?.addEventListener('click', close);
@@ -61,4 +59,42 @@ import TextField from "./TextField.astro";
 
   // Listen for the open trigger dispatched by the Add Room button
   document.addEventListener('open-invite-modal', open);
+
+  // =========================================================================
+  // API INTEGRATION: JOIN GROUP CHAT
+  // =========================================================================
+  inviteForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(inviteForm);
+    const inviteCode = formData.get('inviteCode') as string;
+
+    if (!inviteCode) return;
+
+    try {
+      // 1. Send the Room ID (inviteCode) to the backend Join endpoint
+      const res = await fetch("http://localhost:3000/api/chats/join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ chatId: inviteCode.trim() }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        // 2. Success! Close the modal
+        close();
+        
+        // 3. Reload the page so the newly joined room appears in the sidebar
+        window.location.reload();
+      } else {
+        // Handle explicit errors from backend (e.g., "Room not found", "Already joined")
+        alert("Failed to join room: " + (data.error || "Invalid Room ID"));
+      }
+    } catch (error) {
+      console.error("Join Room Error:", error);
+      alert("Server connection failed. Please try again.");
+    }
+  });
 </script>
