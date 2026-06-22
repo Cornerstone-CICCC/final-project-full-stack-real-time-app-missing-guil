@@ -23,314 +23,314 @@ let currentUserId = "test-user-001";
 let currentUserName = "Me";
 
 try {
-	const authRes = await fetch("http://localhost:3000/api/auth/me", {
-		headers: { Cookie: cookie },
-	});
+  const authRes = await fetch("http://localhost:3000/api/auth/me", {
+    headers: { Cookie: cookie },
+  });
 
-	if (authRes.ok) {
-		const resJson = await authRes.json();
-		const userPayload =
-			resJson.data?.user || resJson.user || resJson.data || resJson;
+  if (authRes.ok) {
+    const resJson = await authRes.json();
+    const userPayload =
+      resJson.data?.user || resJson.user || resJson.data || resJson;
 
-		currentUserId =
-			userPayload.id || userPayload._id || userPayload.userId || currentUserId;
-		currentUserName =
-			userPayload.username || userPayload.name || currentUserName;
-	}
+    currentUserId =
+      userPayload.id || userPayload._id || userPayload.userId || currentUserId;
+    currentUserName =
+      userPayload.username || userPayload.name || currentUserName;
+  }
 } catch (error) {
-	console.error("Auth fetch failed:", error);
+  console.error("Auth fetch failed:", error);
 }
 ---
 
 <MainLayout title="Rooms" active="Rooms" container="w-full">
-	<div
-		class="flex h-screen"
-		data-my-user-id={currentUserId}
-		data-my-username={currentUserName}
-		id="room-container"
-	>
-		<div
-			id="room-sidebar"
-			class="w-full lg:w-100 p-4 flex flex-col shadow-lg bg-bg z-10"
-		>
-			<div class="flex flex-row justify-between items-center">
-				<h1
-					class="text-3xl font-bold mb-4 flex items-center gap-2 text-primary-60"
-				>
-					<img src={RoomIcon} alt="Rooms" class="h-8 w-8" />
-					Rooms
-				</h1>
-				<Button
-					id="open-invite-modal"
-					variant="primary"
-					class="text-sm mb-4 cursor-pointer"
-				>
-					<img src={PlusIcon} alt="Add Room" class="h-5 w-5" />
-					Add Room
-				</Button>
-			</div>
+  <div
+    class="flex h-screen"
+    data-my-user-id={currentUserId}
+    data-my-username={currentUserName}
+    id="room-container"
+  >
+    <div
+      id="room-sidebar"
+      class="w-full lg:w-100 p-4 flex flex-col shadow-lg bg-bg z-10"
+    >
+      <div class="flex flex-row justify-between items-center">
+        <h1
+          class="text-3xl font-bold mb-4 flex items-center gap-2 text-primary-60"
+        >
+          <img src={RoomIcon} alt="Rooms" class="h-8 w-8" />
+          Rooms
+        </h1>
+        <Button
+          id="open-invite-modal"
+          variant="primary"
+          class="text-sm mb-4 cursor-pointer"
+        >
+          <img src={PlusIcon} alt="Add Room" class="h-5 w-5" />
+          Add Room
+        </Button>
+      </div>
 
-			<SearchField placeholder="Search..." />
+      <SearchField placeholder="Search..." />
 
-			<div id="room-sidebar-list" class="mt-4 space-y-2 overflow-y-auto flex-1">
-				<p id="room-list-status" class="text-xs text-gray-400 text-center py-4">
-					Loading rooms...
-				</p>
-			</div>
-		</div>
+      <div id="room-sidebar-list" class="mt-4 space-y-2 overflow-y-auto flex-1">
+        <p id="room-list-status" class="text-xs text-gray-400 text-center py-4">
+          Loading rooms...
+        </p>
+      </div>
+    </div>
 
-		<div
-			id="room-panel"
-			class="hidden lg:flex flex-1 relative flex-col overflow-hidden bg-bg"
-		>
-			<div
-				id="empty-room-state"
-				class="absolute inset-0 flex items-center justify-center z-10"
-			>
-				<div class="home-bg absolute inset-0 opacity-30 pointer-events-none">
-				</div>
-				<p class="text-gray-500 text-lg text-center z-10">
-					Select a room to start messaging
-				</p>
-			</div>
+    <div
+      id="room-panel"
+      class="hidden lg:flex flex-1 relative flex-col overflow-hidden bg-bg"
+    >
+      <div
+        id="empty-room-state"
+        class="absolute inset-0 flex items-center justify-center z-10"
+      >
+        <div class="home-bg absolute inset-0 opacity-30 pointer-events-none">
+        </div>
+        <p class="text-gray-500 text-lg text-center z-10">
+          Select a room to start messaging
+        </p>
+      </div>
 
-			<div id="active-room-state" class="hidden flex-col h-full z-20 bg-bg">
-				<div
-					class="flex items-center border-b border-gray-200 p-1 lg:hidden bg-bg z-10"
-				>
-					<button
-						id="back-to-rooms-btn"
-						class="inline-flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-primary hover:bg-primary-10 transition-colors"
-					>
-						<img src={BackIcon} alt="Back" class="h-5 w-5" />
-						Back
-					</button>
-				</div>
+      <div id="active-room-state" class="hidden flex-col h-full z-20 bg-bg">
+        <div
+          class="flex items-center border-b border-gray-200 p-1 lg:hidden bg-bg z-10"
+        >
+          <button
+            id="back-to-rooms-btn"
+            class="inline-flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-primary hover:bg-primary-10 transition-colors"
+          >
+            <img src={BackIcon} alt="Back" class="h-5 w-5" />
+            Back
+          </button>
+        </div>
 
-				<div id="room-header-wrapper">
-					<RoomHeader
-						name="Active Room"
-						avatar=""
-						memberCount={0}
-						onlineCount={0}
-						members={[]}
-					/>
-				</div>
+        <div id="room-header-wrapper">
+          <RoomHeader
+            name="Active Room"
+            avatar=""
+            memberCount={0}
+            onlineCount={0}
+            members={[]}
+          />
+        </div>
 
-				<div class="home-bg absolute inset-0 opacity-40 pointer-events-none">
-				</div>
+        <div class="home-bg absolute inset-0 opacity-40 pointer-events-none">
+        </div>
 
-				<div
-					id="messages-list"
-					class="relative flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-2"
-				>
-					<div class="mt-auto"></div>
-					<div id="scroll-anchor"></div>
-				</div>
+        <div
+          id="messages-list"
+          class="relative flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-2"
+        >
+          <div class="mt-auto"></div>
+          <div id="scroll-anchor"></div>
+        </div>
 
-				<div id="typing-indicator-wrapper" class="hidden px-6 pb-2">
-					<TypingIndicator message="Someone is typing ..." />
-				</div>
+        <div id="typing-indicator-wrapper" class="hidden px-6 pb-2">
+          <TypingIndicator message="Someone is typing ..." />
+        </div>
 
-				<div id="typebox-container" class="bg-bg border-t border-gray-200">
-					<TypeBox />
-				</div>
-			</div>
-		</div>
-	</div>
-	<InviteModal />
+        <div id="typebox-container" class="bg-bg border-t border-gray-200">
+          <TypeBox />
+        </div>
+      </div>
+    </div>
+  </div>
+  <InviteModal />
 </MainLayout>
 
 <script>
-	import { initializeSocket, SOCKET_EVENTS } from "../../lib/socket";
+  import { initializeSocket, SOCKET_EVENTS } from "../../lib/socket";
 
-	// =========================================================================
-	// DOM ELEMENTS & GLOBALS
-	// =========================================================================
-	const sidebarList = document.getElementById("room-sidebar-list");
-	const roomListStatus = document.getElementById("room-list-status");
-	const emptyState = document.getElementById("empty-room-state");
-	const activeState = document.getElementById("active-room-state");
-	const roomHeaderWrapper = document.getElementById("room-header-wrapper");
-	const roomSidebar = document.getElementById("room-sidebar");
-	const roomPanel = document.getElementById("room-panel");
-	const messagesList = document.getElementById("messages-list");
+  // =========================================================================
+  // DOM ELEMENTS & GLOBALS
+  // =========================================================================
+  const sidebarList = document.getElementById("room-sidebar-list");
+  const roomListStatus = document.getElementById("room-list-status");
+  const emptyState = document.getElementById("empty-room-state");
+  const activeState = document.getElementById("active-room-state");
+  const roomHeaderWrapper = document.getElementById("room-header-wrapper");
+  const roomSidebar = document.getElementById("room-sidebar");
+  const roomPanel = document.getElementById("room-panel");
+  const messagesList = document.getElementById("messages-list");
 
-	const typingIndicatorWrapper = document.getElementById(
-		"typing-indicator-wrapper",
-	);
-	const chatForm = document.getElementById("chat-form") as HTMLFormElement;
-	const messageInput = document.getElementById(
-		"message-input",
-	) as HTMLInputElement;
-	const roomContainer = document.getElementById("room-container");
+  const typingIndicatorWrapper = document.getElementById(
+    "typing-indicator-wrapper",
+  );
+  const chatForm = document.getElementById("chat-form") as HTMLFormElement;
+  const messageInput = document.getElementById(
+    "message-input",
+  ) as HTMLInputElement;
+  const roomContainer = document.getElementById("room-container");
 
-	let activeRoomId: string | null = null;
-	const myUserId =
-		roomContainer?.getAttribute("data-my-user-id") || "test-user-001";
-	const myUserName = roomContainer?.getAttribute("data-my-username") || "Me";
+  let activeRoomId: string | null = null;
+  const myUserId =
+    roomContainer?.getAttribute("data-my-user-id") || "test-user-001";
+  const myUserName = roomContainer?.getAttribute("data-my-username") || "Me";
 
-	const socket = initializeSocket("http://localhost:3000");
+  const socket = initializeSocket("http://localhost:3000");
 
-	// Track whole room metadata objects temporarily
-	let cachedRoomsData: any[] = [];
+  // Track whole room metadata objects temporarily
+  let cachedRoomsData: any[] = [];
 
-	// =========================================================================
-	//  BUILD A USER DICTIONARY (ID -> Name mapping)
-	// =========================================================================
-	let roomUsersMap: Record<string, string> = {};
+  // =========================================================================
+  //  BUILD A USER DICTIONARY (ID -> Name mapping)
+  // =========================================================================
+  let roomUsersMap: Record<string, string> = {};
 
-	async function buildUserDictionary() {
-		try {
-			const res = await fetch("http://localhost:3000/api/users", {
-				headers: { "Content-Type": "application/json" },
-				credentials: "include",
-			});
-			if (res.ok) {
-				const users = await res.json();
-				// Store names using ID as the key for fast O(1) lookups later
-				users.forEach((u: any) => {
-					roomUsersMap[String(u.id || u._id).trim()] = u.username || u.name;
-				});
-			}
-		} catch (err) {
-			console.error("Failed to build user dictionary:", err);
-		}
-	}
+  async function buildUserDictionary() {
+    try {
+      const res = await fetch("http://localhost:3000/api/users", {
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      if (res.ok) {
+        const users = await res.json();
+        // Store names using ID as the key for fast O(1) lookups later
+        users.forEach((u: any) => {
+          roomUsersMap[String(u.id || u._id).trim()] = u.username || u.name;
+        });
+      }
+    } catch (err) {
+      console.error("Failed to build user dictionary:", err);
+    }
+  }
 
-	buildUserDictionary();
+  buildUserDictionary();
 
-	// =========================================================================
-	// CLOSE ROOM LOGIC
-	// =========================================================================
-	function closeActiveRoom() {
-		if (activeRoomId && socket)
-			socket.emit(SOCKET_EVENTS.LEAVE_CHAT, { chatId: activeRoomId });
-		activeRoomId = null;
-		roomPanel?.classList.add("hidden");
-		roomPanel?.classList.remove("flex");
-		roomSidebar?.classList.remove("hidden");
-		activeState?.classList.add("hidden");
-		activeState?.classList.remove("flex");
-		emptyState?.classList.remove("hidden");
-	}
+  // =========================================================================
+  // CLOSE ROOM LOGIC
+  // =========================================================================
+  function closeActiveRoom() {
+    if (activeRoomId && socket)
+      socket.emit(SOCKET_EVENTS.LEAVE_CHAT, { chatId: activeRoomId });
+    activeRoomId = null;
+    roomPanel?.classList.add("hidden");
+    roomPanel?.classList.remove("flex");
+    roomSidebar?.classList.remove("hidden");
+    activeState?.classList.add("hidden");
+    activeState?.classList.remove("flex");
+    emptyState?.classList.remove("hidden");
+  }
 
-	document
-		.getElementById("back-to-rooms-btn")
-		?.addEventListener("click", closeActiveRoom);
-	document.addEventListener("click", (e) => {
-		const target = e.target as HTMLElement;
-		if (target.closest("#leave-room-btn")) closeActiveRoom();
-	});
+  document
+    .getElementById("back-to-rooms-btn")
+    ?.addEventListener("click", closeActiveRoom);
+  document.addEventListener("click", (e) => {
+    const target = e.target as HTMLElement;
+    if (target.closest("#leave-room-btn")) closeActiveRoom();
+  });
 
-	// =========================================================================
-	// RENDER MESSAGE (Colors, Side Alignments & Dynamic Names)
-	// =========================================================================
+  // =========================================================================
+  // RENDER MESSAGE (Colors, Side Alignments & Dynamic Names)
+  // =========================================================================
 
-	function renderMessage(message: any) {
-		if (!messagesList) return;
+  function renderMessage(message: any) {
+    if (!messagesList) return;
 
-		// Clean and extract the sender's ID (handles both strings and objects)
-		const senderId = String(
-			message.senderId ||
-				message.sender?._id ||
-				message.sender ||
-				message.userId,
-		).trim();
+    // Clean and extract the sender's ID (handles both strings and objects)
+    const senderId = String(
+      message.senderId ||
+        message.sender?._id ||
+        message.sender ||
+        message.userId,
+    ).trim();
 
-		// Check if this message belongs to the current authenticated user
-		const isOwn = senderId === String(myUserId).trim();
+    // Check if this message belongs to the current authenticated user
+    const isOwn = senderId === String(myUserId).trim();
 
-		// Look up the real name from our global dictionary
-		let senderName = "User";
-		if (isOwn) {
-			senderName = "Me";
-		} else if (roomUsersMap[senderId]) {
-			senderName = roomUsersMap[senderId];
-		}
+    // Look up the real name from our global dictionary
+    let senderName = "User";
+    if (isOwn) {
+      senderName = "Me";
+    } else if (roomUsersMap[senderId]) {
+      senderName = roomUsersMap[senderId];
+    }
 
-		const wrapperDiv = document.createElement("div");
-		wrapperDiv.className = `flex w-full ${isOwn ? "justify-end" : "justify-start"} mb-3`;
+    const wrapperDiv = document.createElement("div");
+    wrapperDiv.className = `flex w-full ${isOwn ? "justify-end" : "justify-start"} mb-3`;
 
-		let avatarHtml = "";
-		let nameHtml = "";
+    let avatarHtml = "";
+    let nameHtml = "";
 
-		// Only display avatar and name for incoming (received) messages
-		if (!isOwn) {
-			avatarHtml = `
+    // Only display avatar and name for incoming (received) messages
+    if (!isOwn) {
+      avatarHtml = `
         <div class="h-8 w-8 rounded-full bg-primary-20 flex items-center justify-center text-primary font-bold text-xs shrink-0 mr-2 self-end">
           ${senderName.charAt(0).toUpperCase()}
         </div>
       `;
-			nameHtml = `<p class="text-[10px] text-black mb-0.5 ml-1">${senderName}</p>`;
-		}
+      nameHtml = `<p class="text-[10px] text-black mb-0.5 ml-1">${senderName}</p>`;
+    }
 
-		// Build the bubble HTML (Green/Right for own, White/Left for others)
-		wrapperDiv.innerHTML = `
+    // Build the bubble HTML (Green/Right for own, White/Left for others)
+    wrapperDiv.innerHTML = `
       ${avatarHtml}
       <div class="flex flex-col max-w-[75%] lg:max-w-md">
         ${nameHtml}
         <div class="relative px-4 py-2.5 rounded-2xl text-sm shadow-sm ${
-					isOwn
-						? "bg-green text-text-black rounded-br-sm"
-						: "bg-white text-text-black rounded-bl-sm border border-gray-100"
-				}">
+          isOwn
+            ? "bg-green text-text-black rounded-br-sm"
+            : "bg-white text-text-black rounded-bl-sm border border-gray-100"
+        }">
           <p class="leading-relaxed break-words">${message.text || message.content || ""}</p>
         </div>
       </div>
     `;
 
-		const currentAnchor = document.getElementById("scroll-anchor");
-		if (currentAnchor) {
-			messagesList.insertBefore(wrapperDiv, currentAnchor);
-			currentAnchor.scrollIntoView({ behavior: "smooth" });
-		} else {
-			messagesList.appendChild(wrapperDiv);
-			messagesList.scrollTop = messagesList.scrollHeight;
-		}
-	}
+    const currentAnchor = document.getElementById("scroll-anchor");
+    if (currentAnchor) {
+      messagesList.insertBefore(wrapperDiv, currentAnchor);
+      currentAnchor.scrollIntoView({ behavior: "smooth" });
+    } else {
+      messagesList.appendChild(wrapperDiv);
+      messagesList.scrollTop = messagesList.scrollHeight;
+    }
+  }
 
-	// =========================================================================
-	// HELPER: ADD ROOM TO SIDEBAR
-	// =========================================================================
-	function addRoomToSidebar(room: any) {
-		if (!sidebarList) return;
-		if (
-			sidebarList.querySelector("p#room-list-status") ||
-			sidebarList.querySelector("p")
-		) {
-			sidebarList.innerHTML = "";
-		}
-		if (room.isGroupChat === false) return;
+  // =========================================================================
+  // HELPER: ADD ROOM TO SIDEBAR
+  // =========================================================================
+  function addRoomToSidebar(room: any) {
+    if (!sidebarList) return;
+    if (
+      sidebarList.querySelector("p#room-list-status") ||
+      sidebarList.querySelector("p")
+    ) {
+      sidebarList.innerHTML = "";
+    }
+    if (room.isGroupChat === false) return;
 
-		const roomId = room.id || room._id;
-		let roomItemLink = document.getElementById(
-			`sidebar-room-${roomId}`,
-		) as HTMLAnchorElement;
+    const roomId = room.id || room._id;
+    let roomItemLink = document.getElementById(
+      `sidebar-room-${roomId}`,
+    ) as HTMLAnchorElement;
 
-		if (!roomItemLink) {
-			roomItemLink = document.createElement("a");
-			roomItemLink.id = `sidebar-room-${roomId}`;
-			roomItemLink.setAttribute("href", `/room/${roomId}`);
-			roomItemLink.className =
-				"room-item flex items-center gap-4 p-4 rounded-lg cursor-pointer transition-colors hover:bg-primary-10";
-		}
+    if (!roomItemLink) {
+      roomItemLink = document.createElement("a");
+      roomItemLink.id = `sidebar-room-${roomId}`;
+      roomItemLink.setAttribute("href", `/room/${roomId}`);
+      roomItemLink.className =
+        "room-item flex items-center gap-4 p-4 rounded-lg cursor-pointer transition-colors hover:bg-primary-10";
+    }
 
-		const roomName = room.name || "Unknown Room";
-		const onlineCount = room.onlineCount || 0;
-		const memberCount =
-			room.participantIds?.length ||
-			room.participants?.length ||
-			room.members?.length ||
-			0;
-		const avatarContent = room.avatar
-			? `<span class="text-xl">${room.avatar}</span>`
-			: roomName.charAt(0).toUpperCase();
+    const roomName = room.name || "Unknown Room";
+    const onlineCount = room.onlineCount || 0;
+    const memberCount =
+      room.participantIds?.length ||
+      room.participants?.length ||
+      room.members?.length ||
+      0;
+    const avatarContent = room.avatar
+      ? `<span class="text-xl">${room.avatar}</span>`
+      : roomName.charAt(0).toUpperCase();
 
-		roomItemLink.setAttribute("data-member-count", String(memberCount));
-		roomItemLink.setAttribute("data-avatar", room.avatar || "");
+    roomItemLink.setAttribute("data-member-count", String(memberCount));
+    roomItemLink.setAttribute("data-avatar", room.avatar || "");
 
-		roomItemLink.innerHTML = `
+    roomItemLink.innerHTML = `
       <div class="h-10 w-10 rounded-full bg-primary-20 flex items-center justify-center text-primary font-bold text-sm shrink-0">
         ${avatarContent}
       </div>
@@ -341,147 +341,147 @@ try {
         </div>
         <div class="flex items-center gap-2 mt-1">
           ${
-						onlineCount > 0
-							? `<span class="h-2 w-2 rounded-full bg-green shrink-0"></span><span class="text-xs text-green whitespace-nowrap">${onlineCount} online</span>`
-							: `<span class="h-2 w-2 rounded-full bg-gray-400 shrink-0"></span><span class="text-xs text-gray-400 whitespace-nowrap">${memberCount} members</span>`
-					}
+            onlineCount > 0
+              ? `<span class="h-2 w-2 rounded-full bg-green shrink-0"></span><span class="text-xs text-green whitespace-nowrap">${onlineCount} online</span>`
+              : `<span class="h-2 w-2 rounded-full bg-gray-400 shrink-0"></span><span class="text-xs text-gray-400 whitespace-nowrap">${memberCount} members</span>`
+          }
         </div>
       </div>
     `;
-		sidebarList.insertBefore(roomItemLink, sidebarList.firstChild);
-	}
+    sidebarList.insertBefore(roomItemLink, sidebarList.firstChild);
+  }
 
-	// =========================================================================
-	// API INTEGRATION: FETCH ROOMS & SAVE DICTIONARIES
-	// =========================================================================
-	async function fetchUserRooms() {
-		try {
-			const res = await fetch("http://localhost:3000/api/chats", {
-				method: "GET",
-				headers: { "Content-Type": "application/json" },
-				credentials: "include",
-			});
-			const chats = await res.json();
-			if (!res.ok) throw new Error(chats.error || "Failed to fetch rooms");
+  // =========================================================================
+  // API INTEGRATION: FETCH ROOMS & SAVE DICTIONARIES
+  // =========================================================================
+  async function fetchUserRooms() {
+    try {
+      const res = await fetch("http://localhost:3000/api/chats", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      const chats = await res.json();
+      if (!res.ok) throw new Error(chats.error || "Failed to fetch rooms");
 
-			if (sidebarList) {
-				if (roomListStatus) roomListStatus.remove();
-				const groupRooms = chats.filter((c: any) => c.isGroupChat === true);
+      if (sidebarList) {
+        if (roomListStatus) roomListStatus.remove();
+        const groupRooms = chats.filter((c: any) => c.isGroupChat === true);
 
-				if (groupRooms.length === 0) {
-					sidebarList.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">No active rooms found.</p>`;
-					return;
-				}
+        if (groupRooms.length === 0) {
+          sidebarList.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">No active rooms found.</p>`;
+          return;
+        }
 
-				cachedRoomsData = groupRooms; // Save to local cache
+        cachedRoomsData = groupRooms; // Save to local cache
 
-				groupRooms.reverse().forEach((room: any) => {
-					// Map participant usernames locally to recover missing sender payload properties later
-					if (room.participants && Array.isArray(room.participants)) {
-						room.participants.forEach((p: any) => {
-							roomUsersMap[String(p._id || p.id).trim()] =
-								p.username || p.name || "User";
-						});
-					}
-					addRoomToSidebar(room);
-				});
-			}
-		} catch (error) {
-			console.error("[Frontend Error] Fetching rooms:", error);
-		}
-	}
-	fetchUserRooms();
+        groupRooms.reverse().forEach((room: any) => {
+          // Map participant usernames locally to recover missing sender payload properties later
+          if (room.participants && Array.isArray(room.participants)) {
+            room.participants.forEach((p: any) => {
+              roomUsersMap[String(p._id || p.id).trim()] =
+                p.username || p.name || "User";
+            });
+          }
+          addRoomToSidebar(room);
+        });
+      }
+    } catch (error) {
+      console.error("[Frontend Error] Fetching rooms:", error);
+    }
+  }
+  fetchUserRooms();
 
-	// =========================================================================
-	// SOCKET EVENT REGISTRATION
-	// =========================================================================
-	if (socket) {
-		socket.on(SOCKET_EVENTS.MESSAGE_HISTORY, (messages: any[]) => {
-			if (messagesList) {
-				messagesList.innerHTML = `<div class="mt-auto"></div><div id="scroll-anchor"></div>`;
-				messages.forEach(renderMessage);
-			}
-		});
+  // =========================================================================
+  // SOCKET EVENT REGISTRATION
+  // =========================================================================
+  if (socket) {
+    socket.on(SOCKET_EVENTS.MESSAGE_HISTORY, (messages: any[]) => {
+      if (messagesList) {
+        messagesList.innerHTML = `<div class="mt-auto"></div><div id="scroll-anchor"></div>`;
+        messages.forEach(renderMessage);
+      }
+    });
 
-		socket.on(SOCKET_EVENTS.NEW_MESSAGE, (message: any) => {
-			if (String(message.chatId).trim() === String(activeRoomId).trim()) {
-				renderMessage(message);
-			}
-			fetchUserRooms();
-		});
+    socket.on(SOCKET_EVENTS.NEW_MESSAGE, (message: any) => {
+      if (String(message.chatId).trim() === String(activeRoomId).trim()) {
+        renderMessage(message);
+      }
+      fetchUserRooms();
+    });
 
-		socket.on("NEW_CHAT_CREATED", (newChatData: any) => {
-			if (newChatData.isGroupChat) addRoomToSidebar(newChatData);
-		});
+    socket.on("NEW_CHAT_CREATED", (newChatData: any) => {
+      if (newChatData.isGroupChat) addRoomToSidebar(newChatData);
+    });
 
-		// 💡 FIX 2: TYPING INDICATOR WITH LIVE USERNAME INJECTION
-		let typingTimeout: any;
-		socket.on("user_typing", (data: any) => {
-			if (
-				!data ||
-				!data.chatId ||
-				String(data.chatId).trim() !== String(activeRoomId).trim()
-			)
-				return;
+    // 💡 FIX 2: TYPING INDICATOR WITH LIVE USERNAME INJECTION
+    let typingTimeout: any;
+    socket.on("user_typing", (data: any) => {
+      if (
+        !data ||
+        !data.chatId ||
+        String(data.chatId).trim() !== String(activeRoomId).trim()
+      )
+        return;
 
-			const typingUserId = String(data.userId || data.senderId || "").trim();
-			if (typingUserId === String(myUserId).trim()) return;
+      const typingUserId = String(data.userId || data.senderId || "").trim();
+      if (typingUserId === String(myUserId).trim()) return;
 
-			// Recover name from incoming payload, dictionary map, or generic fallback
-			const typerName =
-				data.username || roomUsersMap[typingUserId] || "Someone";
+      // Recover name from incoming payload, dictionary map, or generic fallback
+      const typerName =
+        data.username || roomUsersMap[typingUserId] || "Someone";
 
-			if (typingIndicatorWrapper) {
-				typingIndicatorWrapper.innerHTML = `
+      if (typingIndicatorWrapper) {
+        typingIndicatorWrapper.innerHTML = `
           <div class="flex items-center gap-2 px-2">
              <p class="text-xs text-text-gray font-medium italic animate-pulse">${typerName} is typing...</p>
           </div>
         `;
-				typingIndicatorWrapper.classList.remove("hidden");
-				clearTimeout(typingTimeout);
-				typingTimeout = setTimeout(() => {
-					typingIndicatorWrapper.classList.add("hidden");
-				}, 3000);
-			}
-		});
-	}
+        typingIndicatorWrapper.classList.remove("hidden");
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+          typingIndicatorWrapper.classList.add("hidden");
+        }, 3000);
+      }
+    });
+  }
 
-	// =========================================================================
-	// SPA ROUTING: OPENING A ROOM
-	// =========================================================================
-	function openRoom(link: HTMLAnchorElement) {
-		const href = link.getAttribute("href");
-		const newRoomId = href?.split("/").pop();
-		if (!newRoomId || newRoomId === activeRoomId) return;
+  // =========================================================================
+  // SPA ROUTING: OPENING A ROOM
+  // =========================================================================
+  function openRoom(link: HTMLAnchorElement) {
+    const href = link.getAttribute("href");
+    const newRoomId = href?.split("/").pop();
+    if (!newRoomId || newRoomId === activeRoomId) return;
 
-		if (activeRoomId && socket)
-			socket.emit(SOCKET_EVENTS.LEAVE_CHAT, { chatId: activeRoomId });
+    if (activeRoomId && socket)
+      socket.emit(SOCKET_EVENTS.LEAVE_CHAT, { chatId: activeRoomId });
 
-		activeRoomId = newRoomId;
+    activeRoomId = newRoomId;
 
-		const roomTitleEl = link.querySelector("span.font-medium");
-		const currentRoomName = roomTitleEl
-			? roomTitleEl.textContent
-			: "Active Room";
-		const memberCount = link.getAttribute("data-member-count") || "0";
-		const roomAvatar = link.getAttribute("data-avatar");
-		const avatarContent = roomAvatar
-			? `<span class="text-xl">${roomAvatar}</span>`
-			: currentRoomName?.charAt(0).toUpperCase();
+    const roomTitleEl = link.querySelector("span.font-medium");
+    const currentRoomName = roomTitleEl
+      ? roomTitleEl.textContent
+      : "Active Room";
+    const memberCount = link.getAttribute("data-member-count") || "0";
+    const roomAvatar = link.getAttribute("data-avatar");
+    const avatarContent = roomAvatar
+      ? `<span class="text-xl">${roomAvatar}</span>`
+      : currentRoomName?.charAt(0).toUpperCase();
 
-		// Re-verify the users mapping dictionary index for the currently selected room
-		const targetRoomObj = cachedRoomsData.find(
-			(r) => String(r.id || r._id).trim() === String(activeRoomId).trim(),
-		);
-		if (targetRoomObj && targetRoomObj.participants) {
-			targetRoomObj.participants.forEach((p: any) => {
-				roomUsersMap[String(p._id || p.id).trim()] =
-					p.username || p.name || "User";
-			});
-		}
+    // Re-verify the users mapping dictionary index for the currently selected room
+    const targetRoomObj = cachedRoomsData.find(
+      (r) => String(r.id || r._id).trim() === String(activeRoomId).trim(),
+    );
+    if (targetRoomObj && targetRoomObj.participants) {
+      targetRoomObj.participants.forEach((p: any) => {
+        roomUsersMap[String(p._id || p.id).trim()] =
+          p.username || p.name || "User";
+      });
+    }
 
-		if (roomHeaderWrapper) {
-			roomHeaderWrapper.innerHTML = `
+    if (roomHeaderWrapper) {
+      roomHeaderWrapper.innerHTML = `
         <div class="relative z-10 flex items-center gap-4 px-5 py-3 bg-bg shadow-sm">
           <div class="flex items-center gap-3 flex-1 min-w-0">
             <div class="h-10 w-10 rounded-full bg-primary-20 flex items-center justify-center text-primary font-bold text-sm shrink-0">
@@ -502,64 +502,124 @@ try {
             </div>
           </div>
           <div class="flex items-center gap-4 shrink-0">
-            <button id="leave-room-btn" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors">
+            <button id="leave-room-btn" data-room-id="${activeRoomId}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors">
               Leave Room
             </button>
           </div>
         </div>
       `;
-		}
+    }
 
-		emptyState?.classList.add("hidden");
-		activeState?.classList.remove("hidden");
-		activeState?.classList.add("flex");
+    emptyState?.classList.add("hidden");
+    activeState?.classList.remove("hidden");
+    activeState?.classList.add("flex");
 
-		if (window.innerWidth < 1024) {
-			roomSidebar?.classList.add("hidden");
-			roomPanel?.classList.remove("hidden");
-			roomPanel?.classList.add("flex");
-		}
+    if (window.innerWidth < 1024) {
+      roomSidebar?.classList.add("hidden");
+      roomPanel?.classList.remove("hidden");
+      roomPanel?.classList.add("flex");
+    }
 
-		socket?.emit(SOCKET_EVENTS.JOIN_CHAT, { chatId: activeRoomId });
-	}
+    socket?.emit(SOCKET_EVENTS.JOIN_CHAT, { chatId: activeRoomId });
+  }
 
-	sidebarList?.addEventListener("click", (e) => {
-		const link = (e.target as HTMLElement).closest("a.room-item");
-		if (!link) return;
-		e.preventDefault();
-		openRoom(link as HTMLAnchorElement);
-	});
+  sidebarList?.addEventListener("click", (e) => {
+    const link = (e.target as HTMLElement).closest("a.room-item");
+    if (!link) return;
+    e.preventDefault();
+    openRoom(link as HTMLAnchorElement);
+  });
 
-	// =========================================================================
-	// TYPING & SENDING PAYLOAD ENHANCEMENTS
-	// =========================================================================
-	messageInput?.addEventListener("input", () => {
-		if (activeRoomId && socket) {
-			socket.emit("typing", {
-				chatId: activeRoomId,
-				userId: myUserId,
-				username: myUserName,
-			});
-		}
-	});
+  // =========================================================================
+  // TYPING & SENDING PAYLOAD ENHANCEMENTS
+  // =========================================================================
+  messageInput?.addEventListener("input", () => {
+    if (activeRoomId && socket) {
+      socket.emit("typing", {
+        chatId: activeRoomId,
+        userId: myUserId,
+        username: myUserName,
+      });
+    }
+  });
 
-	chatForm?.addEventListener("submit", (e) => {
-		e.preventDefault();
-		const text = messageInput?.value.trim();
-		if (!text || !activeRoomId) return;
+  chatForm?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const text = messageInput?.value.trim();
+    if (!text || !activeRoomId) return;
 
-		// Explicitly package transaction attributes to fit the model constraints perfectly
-		socket?.emit(SOCKET_EVENTS.SEND_MESSAGE, {
-			chatId: activeRoomId,
-			text,
-			senderId: myUserId,
-		});
-		if (messageInput) messageInput.value = "";
-	});
+    // Explicitly package transaction attributes to fit the model constraints perfectly
+    socket?.emit(SOCKET_EVENTS.SEND_MESSAGE, {
+      chatId: activeRoomId,
+      text,
+      senderId: myUserId,
+    });
+    if (messageInput) messageInput.value = "";
+  });
 
-	document
-		.getElementById("open-invite-modal")
-		?.addEventListener("click", () => {
-			document.dispatchEvent(new CustomEvent("open-invite-modal"));
-		});
+  document
+    .getElementById("open-invite-modal")
+    ?.addEventListener("click", () => {
+      document.dispatchEvent(new CustomEvent("open-invite-modal"));
+    });
+
+  // =========================================================================
+  // 10. LEAVE GROUP CHAT LOGIC (USANDO DATA ATTRIBUTES)
+  // =========================================================================
+  
+  document.addEventListener("click", async (e) => {
+    const target = e.target as HTMLElement;
+    const leaveBtn = target.closest("#leave-room-btn");
+    
+    // Check if the leave button was clicked
+    if (!leaveBtn) return;
+
+    // 1. Extract the room ID from the button's data attribute
+    const targetRoomId = leaveBtn.getAttribute("data-room-id");
+    
+    if (!targetRoomId) {
+      console.error("No se encontró el ID de la sala en el botón");
+      return;
+    }
+
+    // 2. Ask for user confirmation before leaving the room
+    const confirmLeave = confirm("Are you sure you want to leave this group chat?");
+    if (!confirmLeave) return;
+
+    try {
+      // 3. Perform the API call to leave the room
+      const res = await fetch("http://localhost:3000/api/chats/leave", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chatId: targetRoomId }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to leave room");
+      }
+
+      console.log("[Frontend] Successfully left room:", data);
+
+      // 4. Update the UI and socket state accordingly
+      
+      // A) Desaparecer el item de la sala del sidebar
+      const sidebarItem = document.getElementById(`sidebar-room-${targetRoomId}`);
+      if (sidebarItem) sidebarItem.remove();
+
+      // B) Desconectar del socket para dejar de recibir mensajes de esa sala
+      if (socket) {
+        socket.emit(SOCKET_EVENTS.LEAVE_CHAT, { chatId: targetRoomId });
+      }
+
+      // C) User feedback
+      closeActiveRoom();
+
+    } catch (error: any) {
+      console.error("[Frontend] Error leaving room:", error);
+      alert(error.message || "There was a problem leaving the room.");
+    }
+  });
 </script>

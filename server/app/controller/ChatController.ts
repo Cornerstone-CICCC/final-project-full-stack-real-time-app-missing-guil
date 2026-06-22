@@ -190,6 +190,47 @@ export const joinGroupChat = async (
   }
 };
 
+export const leaveGroupChat = async (
+  req: express.Request,
+  res: express.Response,
+) => {
+  try {
+    const { chatId } = req.body;
+    const userId = (req as any).session?.userId;
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized: Please log in first." });
+      return;
+    }
+    if (!chatId || typeof chatId !== "string") {
+      res.status(400).json({ error: "Bad Request: Invalid chat ID." });
+      return;
+    }
+    const chat = getChatbyId(chatId);
+    if (!chat) {
+      res.status(404).json({ error: "Not Found: Chat does not exist." });
+      return;
+    }
+    if (!chat.isGroupChat) {
+      res
+        .status(400)
+        .json({ error: "Bad Request: Cannot leave a direct message chat." });
+      return;
+    }
+    if (!chat.participantIds.includes(userId)) {
+      res.status(400).json({
+        error: "Bad Request: User is not a participant of this chat.",
+      });
+      return;
+    }
+
+    chat.participantIds = chat.participantIds.filter((id) => id !== userId);
+    // req.app.get("io").to(chatId).emit("user_left_group", { chatId, userId });
+    res.status(200).json({ message: "Successfully left the group chat." });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 // =========================================================================
 // CONVERSATION MANAGEMENT EVENTS (SOCKET.IO)
 // =========================================================================
