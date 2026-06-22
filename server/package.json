@@ -27,6 +27,7 @@
     "tsx": "^4.22.4"
   },
   "devDependencies": {
-    "@types/node": "^25.9.3"
+    "@types/node": "^25.9.3",
+    "@types/socket.io": "^3.0.2"
   }
 }
