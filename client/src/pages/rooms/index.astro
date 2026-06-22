@@ -396,6 +396,8 @@ try {
   // SOCKET EVENT REGISTRATION
   // =========================================================================
   if (socket) {
+    let typingTimeout: any;
+
     socket.on(SOCKET_EVENTS.MESSAGE_HISTORY, (messages: any[]) => {
       if (messagesList) {
         messagesList.innerHTML = `<div class="mt-auto"></div><div id="scroll-anchor"></div>`;
@@ -406,6 +408,11 @@ try {
     socket.on(SOCKET_EVENTS.NEW_MESSAGE, (message: any) => {
       if (String(message.chatId).trim() === String(activeRoomId).trim()) {
         renderMessage(message);
+
+        if (typingIndicatorWrapper) {
+          typingIndicatorWrapper.classList.add("hidden");
+          clearTimeout(typingTimeout);
+        }
       }
       fetchUserRooms();
     });
@@ -413,9 +420,7 @@ try {
     socket.on("NEW_CHAT_CREATED", (newChatData: any) => {
       if (newChatData.isGroupChat) addRoomToSidebar(newChatData);
     });
-
-    // 💡 FIX 2: TYPING INDICATOR WITH LIVE USERNAME INJECTION
-    let typingTimeout: any;
+    
     socket.on("user_typing", (data: any) => {
       if (
         !data ||
@@ -434,14 +439,14 @@ try {
       if (typingIndicatorWrapper) {
         typingIndicatorWrapper.innerHTML = `
           <div class="flex items-center gap-2 px-2">
-             <p class="text-xs text-text-gray font-medium italic animate-pulse">${typerName} is typing...</p>
+            <p class="text-xs text-text-gray font-medium italic animate-pulse">${typerName} is typing...</p>
           </div>
         `;
         typingIndicatorWrapper.classList.remove("hidden");
         clearTimeout(typingTimeout);
         typingTimeout = setTimeout(() => {
           typingIndicatorWrapper.classList.add("hidden");
-        }, 3000);
+        }, 1500);
       }
     });
   }
