@@ -704,4 +704,34 @@ try {
       alert("There was a problem adding the new contact.");
     }
   });
+
+  // =========================================================================
+  // 9. CHAT SEARCH FILTER LOGIC (POR USERNAME)
+  // =========================================================================
+
+  // Seleccionamos el input directamente por su tipo, sin necesidad de usar un ID
+  const searchInput = document.querySelector('input[type="search"]');
+  const chatSidebarList = document.getElementById("chat-sidebar-list");
+
+  searchInput?.addEventListener("input", (e) => {
+    // 1. Obtener lo que el usuario escribe, en minúsculas
+    const query = (e.target as HTMLInputElement).value.toLowerCase().trim();
+
+    // 2. Obtener todos los enlaces de chats renderizados en el sidebar
+    const allChats = chatSidebarList?.querySelectorAll("a");
+
+    // 3. Evaluar cada chat por su username
+    allChats?.forEach((chatNode) => {
+      // El username del contacto se encuentra en la etiqueta <h3>
+      const usernameEl = chatNode.querySelector("h3");
+      const username = usernameEl?.textContent?.toLowerCase() || "";
+
+      // 4. Si el username incluye la búsqueda, se muestra, si no, se oculta
+      if (username.includes(query)) {
+        chatNode.style.display = ""; // Mantiene su estilo original
+      } else {
+        chatNode.style.display = "none"; // Oculta el contacto
+      }
+    });
+  });
 </script>
