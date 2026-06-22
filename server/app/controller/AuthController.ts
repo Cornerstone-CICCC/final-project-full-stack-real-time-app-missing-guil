@@ -28,12 +28,19 @@ export const registerUser = async (
     }
 
     if (username.length > 15) {
-      return res.status(400).json({ error: "Username must be 15 characters or less", field: "username" });
+      return res
+        .status(400)
+        .json({
+          error: "Username must be 15 characters or less",
+          field: "username",
+        });
     }
 
     const passRegex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{5,})/;
     if (!passRegex.test(password)) {
-      return res.status(400).json({ error: "Invalid password format", field: "password" });
+      return res
+        .status(400)
+        .json({ error: "Invalid password format", field: "password" });
     }
 
     if (
@@ -94,9 +101,7 @@ export const loginUser = async (
 
     // TODO: 2. Validate that both fields are present and not empty strings (return 400 Bad Request if missing).
     if (!email || !password) {
-      return res
-        .status(400)
-        .json({ error: "Email and password are required" });
+      return res.status(400).json({ error: "Email and password are required" });
     }
 
     // TODO: 3. Look up the user record by username using `findUserByName` or using `findUserbyEmail` (return 401 Unauthorized if the user does not exist).
@@ -181,7 +186,13 @@ export const logoutUser = async (
 export const checkAuth = (req: express.Request, res: express.Response) => {
   // @ts-ignore
   if (req.session && req.session.userId) {
-    return res.status(200).json({ authenticated: true });
+    return res
+      .status(200)
+      .json({
+        authenticated: true,
+        userId: req.session.userId,
+        username: req.session.username,
+      });
   }
   return res.status(401).json({ authenticated: false });
 };
