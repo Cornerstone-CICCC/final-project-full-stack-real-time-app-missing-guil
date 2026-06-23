@@ -308,12 +308,13 @@ try {
       `sidebar-room-${roomId}`,
     ) as HTMLAnchorElement;
 
+    const isActive = String(roomId).trim() === String(activeRoomId).trim();
+
     if (!roomItemLink) {
       roomItemLink = document.createElement("a");
       roomItemLink.id = `sidebar-room-${roomId}`;
       roomItemLink.setAttribute("href", `/room/${roomId}`);
-      roomItemLink.className =
-        "room-item flex items-center gap-4 p-4 rounded-lg cursor-pointer transition-colors hover:bg-primary-10";
+      roomItemLink.className = `room-item flex items-center gap-4 p-4 rounded-lg cursor-pointer transition-colors hover:bg-primary-10 ${isActive ? "bg-primary-100 shadow-md" : ""}`;
     }
 
     const roomName = room.name || "Unknown Room";
@@ -467,6 +468,11 @@ try {
       socket.emit(SOCKET_EVENTS.LEAVE_CHAT, { chatId: activeRoomId });
 
     activeRoomId = newRoomId;
+
+    document.querySelectorAll("a.room-item").forEach((el) => {
+      el.classList.remove("bg-primary-10", "shadow-md");
+    });
+    link.classList.add("bg-primary-10", "shadow-md");
 
     const roomTitleEl = link.querySelector("span.font-medium");
     const currentRoomName = roomTitleEl
