@@ -89,7 +89,7 @@ try {
       >
         <div class="home-bg absolute inset-0 opacity-30 pointer-events-none">
         </div>
-        <p class="text-gray-500 text-lg text-center z-10">
+        <p class="text-gray-500 text-lg text-center z-10 bg-bg/60 rounded-full px-4 py-2">
           Select a room to start messaging
         </p>
       </div>
@@ -437,12 +437,16 @@ try {
         data.username || roomUsersMap[typingUserId] || "Someone";
 
       if (typingIndicatorWrapper) {
-        typingIndicatorWrapper.innerHTML = `
-          <div class="flex items-center gap-2 px-2">
-            <p class="text-xs text-text-gray font-medium italic animate-pulse">${typerName} is typing...</p>
-          </div>
-        `;
+        // 2. Search for the TypingIndicator element and update its message
+        const typingTextEl = document.getElementById("typing-indicator");
+        if (typingTextEl && data.username) {
+          typingTextEl.textContent = `${data.username} is typing...`;
+        }
+
+        // 3. Show the typing indicator if it's hidden
         typingIndicatorWrapper.classList.remove("hidden");
+
+        // 4. Hide the typing indicator after 3 seconds of inactivity
         clearTimeout(typingTimeout);
         typingTimeout = setTimeout(() => {
           typingIndicatorWrapper.classList.add("hidden");
